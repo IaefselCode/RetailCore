@@ -1,0 +1,174 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum SaleStatus {
+  PENDING
+  COMPLETED
+  REFUNDED
+  CANCELLED
+}
+
+model User {
+  id        String    @id @default(cuid())
+  clerkId   String    @unique
+  email     String
+  firstName String?
+  lastName  String?
+  imageUrl  String?
+  role      UserRole  @default(EMPLOYEE)
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  employee     Employee?
+  notifications Notification[]
+}
+
+model Shop {
+  id        String   @id @default(cuid())
+  name      String
+  address   String?
+  city      String?
+  state     String?
+  zipCode   String?
+  phone     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employees        Employee[]
+  inventory        Inventory[]
+  sales            Sale[]
+  stockTransactions StockTransaction[]
+}
+
+model Employee {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shopId    String
+  shop      Shop      @relation(fields: [shopId], references: [id])
+  position  String?
+  hireDate  DateTime?
+  salary    Decimal?  @default(0)
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  sales Sale[]
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id            String    @id @default(cuid())
+  name          String
+  sku           String    @unique
+  description   String?
+  price         Decimal   @db.Decimal(10, 2)
+  cost          Decimal?  @db.Decimal(10, 2)
+  categoryId    String?
+  category      Category? @relation(fields: [categoryId], references: [id])
+  imageUrl      String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  inventory        Inventory[]
+  saleItems        SaleItem[]
+  stockTransactions StockTransaction[]
+}
+
+model Inventory {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  shopId    String
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  quantity  Int      @default(0)
+  minStock  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, shopId])
+}
+
+model Sale {
+  id             String     @id @default(cuid())
+  invoiceNo      String     @unique
+  employeeId     String?
+  employee       Employee?  @relation(fields: [employeeId], references: [id])
+  shopId         String
+  shop           Shop       @relation(fields: [shopId], references: [id])
+  customerName   String?
+  customerEmail  String?
+  subtotal       Decimal    @db.Decimal(10, 2)
+  tax            Decimal    @default(0) @db.Decimal(10, 2)
+  discount       Decimal    @default(0) @db.Decimal(10, 2)
+  total          Decimal    @db.Decimal(10, 2)
+  paymentMethod  String?
+  status         SaleStatus @default(COMPLETED)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  items SaleItem[]
+}
+
+model SaleItem {
+  id        String   @id @default(cuid())
+  saleId    String
+  sale      Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Decimal  @db.Decimal(10, 2)
+  subtotal  Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+
+  @@unique([saleId, productId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("info")
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model StockTransaction {
+  id          String   @id @default(cuid())
+  type        String
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  shopId      String
+  shop        Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  quantity    Int
+  reference   String?
+  notes       String?
+  createdAt   DateTime @default(now())
+}
