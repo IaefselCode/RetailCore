@@ -93,7 +93,70 @@
   "dashboard": {
     "greetingMorning": "Good morning",
     "greetingAfternoon": "Good afternoon",
-    "greetingEvening": "Good evening"
+    "greetingEvening": "Good evening",
+    "today": "Today",
+    "shiftOverview": "Shift Overview",
+    "lowStockAlerts": "Low Stock Alerts",
+    "productsBelowReorderLevel": "Products below reorder level",
+    "totalSales": "Total Sales",
+    "totalOrders": "Total Orders",
+    "revenue": "Revenue",
+    "activeCustomers": "Active Customers",
+    "transactionId": "Transaction ID",
+    "customer": "Customer",
+    "product": "Product",
+    "amount": "Amount",
+    "status": "Status"
+  },
+  "employeeDashboard": {
+    "today": "Today",
+    "lowStockAlerts": "Low Stock Alerts",
+    "lastTransactions": "Your last 5 transactions",
+    "recentActivity": "Recent Activity"
+  },
+  "status": {
+    "completed": "Completed",
+    "pending": "Pending",
+    "cancelled": "Cancelled"
+  },
+  "kpi": {
+    "salesTitle": "Today's Sales",
+    "ordersTitle": "Orders Today",
+    "lowStockTitle": "Low Stock Items",
+    "shiftTitle": "Current Shift",
+    "salesDescription": "+12% from yesterday",
+    "ordersDescription": "4 pending",
+    "lowStockDescription": "Below reorder level",
+    "shiftDescription": "4h 32m remaining"
+  },
+  "lowStock": {
+    "inStock": "{count} in stock",
+    "reorderAt": "Reorder at {amount}"
+  },
+  "employeeDashboard": {
+    "today": "Today",
+    "lowStockAlerts": "Low Stock Alerts",
+    "lastTransactions": "Your last 5 transactions",
+    "recentActivity": "Recent Activity"
+  },
+  "status": {
+    "completed": "Completed",
+    "pending": "Pending",
+    "cancelled": "Cancelled"
+  },
+  "kpi": {
+    "salesTitle": "Today's Sales",
+    "ordersTitle": "Orders Today",
+    "lowStockTitle": "Low Stock Items",
+    "shiftTitle": "Current Shift",
+    "salesDescription": "+12% from yesterday",
+    "ordersDescription": "4 pending",
+    "lowStockDescription": "Below reorder level",
+    "shiftDescription": "4h 32m remaining"
+  },
+  "lowStock": {
+    "inStock": "{count} in stock",
+    "reorderAt": "Reorder at {amount}"
   },
   "shops": {
     "title": "Shop Management",

@@ -93,7 +93,16 @@
   "dashboard": {
     "greetingMorning": "Habari za asubuhi",
     "greetingAfternoon": "Habari za mchana",
-    "greetingEvening": "Habari za jioni"
+    "greetingEvening": "Habari za jioni",
+    "today": "Leo",
+    "shiftOverview": "Muafaka wa Kazi",
+    "lowStockAlerts": "Onyo za Hisa Kidogo",
+    "productsBelowReorderLevel": "Bidhaa zilizohisi kidogo"
+  },
+  "employeeDashboard": {
+    "today": "Leo",
+    "lowStockAlerts": "Onyo za Hisa Kidogo",
+    "lastTransactions": "Mana moja kwa moja yako"
   },
   "shops": {
     "title": "Usimamizi wa Maduka",
@@ -176,12 +185,31 @@
     "copied": "Imenakiliwa",
     "loginHint": "Barua pepe ya kuingia"
   },
-  "imageUpload": {
-    "upload": "Pakia picha",
-    "replace": "Badilisha picha",
-    "remove": "Ondoa",
-    "tooLarge": "Picha lazima iwe 10MB au ndogo zaidi.",
-    "failed": "Upakiaji umeshindikana. Jaribu tena.",
-    "saved": "Umeokoa {percent}% ya uhifadhi"
+    "imageUpload": {
+      "upload": "Pakia picha",
+      "replace": "Badilisha picha",
+      "remove": "Ondoa",
+      "tooLarge": "Picha lazima iwe 10MB au ndogo zaidi.",
+      "failed": "Upakiaji umeshindikana. Jaribu tena.",
+      "saved": "Umeokoa {percent}% ya uhifadhi"
+    },
+    "status": {
+      "completed": "Imekamilika",
+      "pending": "Inakusudiwa",
+      "cancelled": "Imefutwa"
+    },
+    "kpi": {
+      "salesTitle": "Mauzo ya Leo",
+      "ordersTitle": "Maagizo Leo",
+      "lowStockTitle": "Vipengele vya Hisa Kidogo",
+      "shiftTitle": "Muafaka wa Kazi",
+      "salesDescription": "+12% kutoka jana",
+      "ordersDescription": "4 inakusudiwa",
+      "lowStockDescription": "Chini ya kiwango cha kuongeza",
+      "shiftDescription": "4h 32m bado"
+    },
+    "lowStock": {
+      "inStock": "{count} zipo",
+      "reorderAt": "Kusanya tena katika {amount}"
+    }
   }
-}

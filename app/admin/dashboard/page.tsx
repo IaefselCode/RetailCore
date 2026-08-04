@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from "motion/react"
+import { useTranslations } from "next-intl"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button as AnimatedButton } from "@/components/ui/animated-button"
@@ -28,30 +29,36 @@ import Link from "next/link"
 const containerVariants = { hidden: {}, show: { transition: { staggerChildren: 0.1 } } }
 const itemVariants = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }
 
+const statusVariant: Record<string, "default" | "secondary" | "destructive"> = {
+  Completed: "default",
+  Pending: "secondary",
+  Cancelled: "destructive",
+}
+
 const kpiData = [
   {
-    title: "Total Sales",
+    title: t("totalSales"),
     value: "$284,500",
     change: "+12.5%",
     trend: "up",
     icon: DollarSign,
   },
   {
-    title: "Total Orders",
+    title: t("totalOrders"),
     value: "1,247",
     change: "+8.2%",
     trend: "up",
     icon: ShoppingCart,
   },
   {
-    title: "Revenue",
+    title: t("revenue"),
     value: "$312,800",
     change: "+15.3%",
     trend: "up",
     icon: TrendingUp,
   },
   {
-    title: "Active Customers",
+    title: t("activeCustomers"),
     value: "8,432",
     change: "-2.1%",
     trend: "down",
@@ -74,12 +81,6 @@ const lowStockProducts = [
   { name: "Desk Lamp", stock: 8, reorder: 20 },
 ]
 
-const statusVariant: Record<string, "default" | "secondary" | "destructive"> = {
-  Completed: "default",
-  Pending: "secondary",
-  Cancelled: "destructive",
-}
-
 function getGreeting() {
   const hour = new Date().getHours()
   if (hour < 12) return "Good morning"
@@ -88,6 +89,7 @@ function getGreeting() {
 }
 
 export default function DashboardPage() {
+  const t = useTranslations("dashboard")
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -99,7 +101,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">
-          {getGreeting()}, Admin
+          {t("greetingMorning")}, Admin
         </h1>
         <p className="text-sm text-muted-foreground">{today}</p>
       </div>
@@ -170,11 +172,11 @@ export default function DashboardPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Transaction ID</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t("transactionId")}</TableHead>
+                  <TableHead>{t("customer")}</TableHead>
+                  <TableHead>{t("product")}</TableHead>
+                  <TableHead>{t("amount")}</TableHead>
+                  <TableHead>{t("status")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

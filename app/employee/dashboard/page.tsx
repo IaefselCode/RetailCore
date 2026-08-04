@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "motion/react"
+import { useTranslations } from "next-intl"
 import { DollarSign, ShoppingCart, AlertTriangle, Clock, ArrowRight } from "lucide-react"
 import Link from "next/link"
 
@@ -89,12 +90,15 @@ const lowStockItems = [
 ]
 
 export default function EmployeeDashboardPage() {
+  const t = useTranslations("dashboard")
+  const tEmployee = useTranslations("employeeDashboard")
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Good morning, Alex!</h1>
-          <p className="text-sm text-muted-foreground">Here is your shift overview.</p>
+          <p className="text-sm text-muted-foreground">{tEmployee("today")}</p>
         </div>
         <Link href="/employee/record-sale">
           <AnimateButton variant="accent">
@@ -136,8 +140,8 @@ export default function EmployeeDashboardPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <ActivitiesCard
           headerIcon={<ShoppingCart className="size-6 text-gray-500" />}
-          title="Recent Activity"
-          subtitle="Your last 5 transactions"
+          title={tEmployee("recentActivity")}
+          subtitle={tEmployee("lastTransactions")}
           activities={recentActivity}
         />
 
@@ -148,8 +152,8 @@ export default function EmployeeDashboardPage() {
         >
           <Card>
             <CardHeader>
-              <CardTitle>Low Stock Alerts</CardTitle>
-              <CardDescription>Products below reorder level</CardDescription>
+              <CardTitle>{t("lowStockAlerts")}</CardTitle>
+              <CardDescription>{t("productsBelowReorderLevel")}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
