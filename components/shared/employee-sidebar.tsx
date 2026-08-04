@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useSession } from "next-auth/react"
 import {
   LayoutDashboard,
   Warehouse,
@@ -14,7 +15,7 @@ import {
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 
 const navItems = [
@@ -33,6 +34,15 @@ const bottomItems = [
 
 export function EmployeeSidebar() {
   const pathname = usePathname()
+  const { data: session } = useSession()
+  const user = session?.user ?? null
+
+  const initials = (() => {
+    if (!user) return "EM"
+    const parts = (user.name ?? "").split(" ").filter(Boolean)
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+    return (user.name?.[0] ?? user.email?.[0] ?? "E").toUpperCase()
+  })()
 
   return (
     <aside className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
@@ -95,13 +105,16 @@ export function EmployeeSidebar() {
       <div className="border-t border-sidebar-border p-3">
         <div className="flex items-center gap-3 rounded-lg px-3 py-2">
           <Avatar className="size-8">
+            <AvatarImage src={user?.image ?? undefined} alt={user?.name ?? "Employee"} />
             <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-              AR
+              {initials}
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <span className="text-sm font-medium leading-tight">Alex Rivera</span>
-            <span className="text-[11px] leading-tight text-sidebar-foreground/60">Staff Level II</span>
+            <span className="text-sm font-medium leading-tight">{user?.name ?? "Employee"}</span>
+            <span className="text-[11px] leading-tight text-sidebar-foreground/60">
+              {user?.email ?? "Staff Portal"}
+            </span>
           </div>
         </div>
       </div>

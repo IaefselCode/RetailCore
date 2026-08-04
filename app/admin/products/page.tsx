@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
 import Link from "next/link"
@@ -116,13 +117,15 @@ export default async function ProductsPage({
         </Card>
       </div>
 
-      <ProductsTable
-        products={productRows}
-        categories={categories}
-        initialSearch={params.search ?? ""}
-        initialCategory={params.category ?? "all"}
-        initialStatus={params.status ?? "all"}
-      />
+      <Suspense fallback={<div className="text-sm text-muted-foreground">Loading products...</div>}>
+        <ProductsTable
+          products={productRows}
+          categories={categories}
+          initialSearch={params.search ?? ""}
+          initialCategory={params.category ?? "all"}
+          initialStatus={params.status ?? "all"}
+        />
+      </Suspense>
     </div>
   )
 }

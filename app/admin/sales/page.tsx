@@ -1,8 +1,7 @@
-"use client"
-
 import Link from "next/link"
-import { motion } from "motion/react"
-import { DollarSign, TrendingUp, CalendarDays, ShoppingCart, ArrowUpRight } from "lucide-react"
+import { prisma } from "@/lib/prisma"
+import { requireRole } from "@/lib/auth-utils"
+import { DollarSign, TrendingUp, CalendarDays, ShoppingCart } from "lucide-react"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,151 +13,160 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { formatMoney } from "@/lib/money"
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.07 } },
+export const metadata = { title: "Sales | RetailCore" }
+
+const statusBadge: Record<string, "default" | "secondary" | "destructive"> = {
+  COMPLETED: "default",
+  PENDING: "secondary",
+  REFUNDED: "destructive",
+  CANCELLED: "destructive",
 }
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.35 } },
+function startOfDay(d: Date) {
+  const x = new Date(d)
+  x.setHours(0, 0, 0, 0)
+  return x
 }
 
-const transactions = [
-  { id: "TXN-001", customer: "Alice Johnson", items: 3, amount: 299.99, method: "Credit Card", date: "2026-07-18", status: "Completed" },
-  { id: "TXN-002", customer: "Bob Smith", items: 1, amount: 79.99, method: "Cash", date: "2026-07-18", status: "Completed" },
-  { id: "TXN-003", customer: "Carol Davis", items: 5, amount: 549.95, method: "Debit Card", date: "2026-07-17", status: "Pending" },
-  { id: "TXN-004", customer: "David Wilson", items: 2, amount: 199.98, method: "Mobile Pay", date: "2026-07-17", status: "Completed" },
-  { id: "TXN-005", customer: "Eve Martinez", items: 1, amount: 299.99, method: "Credit Card", date: "2026-07-16", status: "Refunded" },
-  { id: "TXN-006", customer: "Frank Lee", items: 4, amount: 159.96, method: "Cash", date: "2026-07-16", status: "Completed" },
-  { id: "TXN-007", customer: "Grace Kim", items: 2, amount: 89.98, method: "Mobile Pay", date: "2026-07-15", status: "Completed" },
-  { id: "TXN-008", customer: "Henry Brown", items: 1, amount: 1299.99, method: "Credit Card", date: "2026-07-15", status: "Refunded" },
-]
-
-const statusBadge: Record<string, "default" | "secondary" | "outline" | "destructive" | "ghost" | "link"> = {
-  Completed: "default",
-  Pending: "secondary",
-  Refunded: "destructive",
+function startOfWeek(d: Date) {
+  const x = startOfDay(d)
+  x.setDate(x.getDate() - x.getDay())
+  return x
 }
 
-export default function SalesPage() {
+function startOfMonth(d: Date) {
+  return new Date(d.getFullYear(), d.getMonth(), 1)
+}
+
+export default async function SalesPage() {
+  await requireRole("ADMIN")
+
+  const now = new Date()
+  const todayStart = startOfDay(now)
+  const weekStart = startOfWeek(now)
+  const monthStart = startOfMonth(now)
+
+  const [todayAgg, weekAgg, monthAgg, recentSales] = await Promise.all([
+    prisma.sale.aggregate({
+      where: { status: "COMPLETED", createdAt: { gte: todayStart } },
+      _sum: { total: true },
+      _count: true,
+    }),
+    prisma.sale.aggregate({
+      where: { status: "COMPLETED", createdAt: { gte: weekStart } },
+      _sum: { total: true },
+    }),
+    prisma.sale.aggregate({
+      where: { status: "COMPLETED", createdAt: { gte: monthStart } },
+      _sum: { total: true },
+    }),
+    prisma.sale.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      include: {
+        shop: { select: { name: true } },
+        items: { select: { quantity: true } },
+      },
+    }),
+  ])
+
   return (
     <div className="space-y-6">
       <nav className="text-sm text-muted-foreground">
         Dashboard <span className="mx-1">/</span> <span className="text-foreground">Sales</span>
       </nav>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">Sales Management</h1>
-        <Link href="/employee/record-sale">
-          <AnimateButton variant="accent">
-            <ShoppingCart className="size-4" />
-            Record New Sale
-          </AnimateButton>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/admin/sales/history">
+            <AnimateButton variant="outline">View History</AnimateButton>
+          </Link>
+          <Link href="/employee/record-sale">
+            <AnimateButton variant="accent">
+              <ShoppingCart className="size-4" />
+              Record New Sale
+            </AnimateButton>
+          </Link>
+        </div>
       </div>
 
-      <motion.div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.div variants={itemVariants}>
-          <Card>
-            <CardHeader>
-              <CardTitle>Today&apos;s Sales</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center gap-2 text-2xl font-bold">
-              <DollarSign className="size-5 text-green-500" />
-              $12,450
-            </CardContent>
-          </Card>
-        </motion.div>
-        <motion.div variants={itemVariants}>
-          <Card>
-            <CardHeader>
-              <CardTitle>This Week</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center gap-2 text-2xl font-bold">
-              <TrendingUp className="size-5 text-blue-500" />
-              $78,300
-            </CardContent>
-          </Card>
-        </motion.div>
-        <motion.div variants={itemVariants}>
-          <Card>
-            <CardHeader>
-              <CardTitle>This Month</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center gap-2 text-2xl font-bold">
-              <CalendarDays className="size-5 text-purple-500" />
-              $284,500
-            </CardContent>
-          </Card>
-        </motion.div>
-        <motion.div variants={itemVariants}>
-          <Card>
-            <CardHeader>
-              <CardTitle>Avg Order Value</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center gap-2 text-2xl font-bold">
-              <ArrowUpRight className="size-5 text-orange-500" />
-              $228
-            </CardContent>
-          </Card>
-        </motion.div>
-      </motion.div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Today&apos;s Sales</CardTitle></CardHeader>
+          <CardContent className="flex items-center gap-2 text-2xl font-bold">
+            <DollarSign className="size-5 text-green-500" />
+            {formatMoney(todayAgg._sum.total)}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">This Week</CardTitle></CardHeader>
+          <CardContent className="flex items-center gap-2 text-2xl font-bold">
+            <TrendingUp className="size-5 text-blue-500" />
+            {formatMoney(weekAgg._sum.total)}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">This Month</CardTitle></CardHeader>
+          <CardContent className="flex items-center gap-2 text-2xl font-bold">
+            <CalendarDays className="size-5 text-purple-500" />
+            {formatMoney(monthAgg._sum.total)}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Transactions Today</CardTitle></CardHeader>
+          <CardContent className="text-2xl font-bold">{todayAgg._count}</CardContent>
+        </Card>
+      </div>
 
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Recent Transactions</CardTitle>
-            <Link href="/admin/sales/history">
-              <AnimateButton variant="link" size="sm">View Sales History</AnimateButton>
-            </Link>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
+        <CardHeader><CardTitle>Recent Transactions</CardTitle></CardHeader>
+        <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Transaction ID</TableHead>
+                <TableHead>Invoice</TableHead>
                 <TableHead>Customer</TableHead>
+                <TableHead>Shop</TableHead>
                 <TableHead>Items</TableHead>
                 <TableHead>Amount</TableHead>
-                <TableHead>Payment Method</TableHead>
+                <TableHead>Payment</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {transactions.map((tx, i) => (
-                <motion.tr
-                  key={tx.id}
-                  custom={i}
-                  variants={itemVariants}
-                  initial="hidden"
-                  animate="visible"
-                  className="border-b transition-colors hover:bg-muted/50"
-                >
-                  <TableCell className="font-mono text-xs">{tx.id}</TableCell>
-                  <TableCell className="font-medium">{tx.customer}</TableCell>
-                  <TableCell>{tx.items}</TableCell>
-                  <TableCell>${tx.amount.toFixed(2)}</TableCell>
-                  <TableCell>{tx.method}</TableCell>
-                  <TableCell className="text-muted-foreground">{tx.date}</TableCell>
-                  <TableCell>
-                    <Badge variant={statusBadge[tx.status]}>{tx.status}</Badge>
+              {recentSales.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
+                    No sales yet
                   </TableCell>
-                </motion.tr>
-              ))}
+                </TableRow>
+              )}
+              {recentSales.map((sale) => {
+                const itemCount = sale.items.reduce((sum, i) => sum + i.quantity, 0)
+                return (
+                  <TableRow key={sale.id} className="transition-colors hover:bg-muted/50">
+                    <TableCell className="font-mono text-xs">{sale.invoiceNo}</TableCell>
+                    <TableCell>{sale.customerName ?? "—"}</TableCell>
+                    <TableCell>{sale.shop.name}</TableCell>
+                    <TableCell>{itemCount}</TableCell>
+                    <TableCell className="font-medium">{formatMoney(sale.total)}</TableCell>
+                    <TableCell>{sale.paymentMethod ?? "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(sale.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={statusBadge[sale.status] ?? "default"}>{sale.status}</Badge>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
-          </div>
-        </CardContent>
+        </div>
       </Card>
     </div>
   )

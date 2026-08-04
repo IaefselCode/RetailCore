@@ -172,3 +172,39 @@ export async function toggleProductActive(formData: FormData): Promise<ActionRes
     return fail("Something went wrong. Please try again.")
   }
 }
+
+export async function deleteProduct(formData: FormData): Promise<ActionResult> {
+  const actorId = await requireAdmin()
+  if (!actorId) return fail("You do not have permission to do that.")
+
+  try {
+    const id = str(formData.get("id"))
+    if (!id) return fail("Missing product id.")
+
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: { _count: { select: { saleItems: true } } },
+    })
+    if (!product) return fail("Product not found.")
+    if (product._count.saleItems > 0) {
+      return fail("Cannot delete a product with sales history. Deactivate it instead.")
+    }
+
+    await prisma.product.delete({ where: { id } })
+
+    const meta = await getRequestMeta()
+    await logAuditEvent("product_deleted", {
+      actorId,
+      entityType: "Product",
+      entityId: id,
+      detail: `${product.name} (${product.sku})`,
+      ip: meta.ip,
+    })
+    revalidatePath("/admin/products")
+    revalidatePath("/employee/products")
+    return { success: true, message: "Product deleted." }
+  } catch (err) {
+    console.error("deleteProduct failed:", err)
+    return fail("Something went wrong. Please try again.")
+  }
+}

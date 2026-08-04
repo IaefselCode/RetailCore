@@ -1,11 +1,10 @@
-"use client"
-
+import { prisma } from "@/lib/prisma"
+import { requireRole } from "@/lib/auth-utils"
 import Link from "next/link"
-import { motion } from "motion/react"
-import { Package, AlertTriangle, XCircle, Layers, ShoppingCart, ArrowRightLeft } from "lucide-react"
-import { Button as AnimateButton } from "@/components/ui/animate-button"
-import { Badge } from "@/components/ui/badge"
+import { Package, AlertTriangle, XCircle, ShoppingCart, ArrowRightLeft } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button as AnimateButton } from "@/components/ui/animate-button"
 import {
   Table,
   TableBody,
@@ -15,37 +14,29 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-const rowVariants = {
-  hidden: { opacity: 0, y: 8 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.04, duration: 0.3 },
-  }),
+export const metadata = { title: "Inventory | RetailCore" }
+
+function stockStatus(quantity: number, minStock: number) {
+  if (quantity <= 0) return { label: "Out of Stock", variant: "destructive" as const }
+  if (quantity <= minStock) return { label: "Low Stock", variant: "secondary" as const }
+  return { label: "In Stock", variant: "default" as const }
 }
 
-const inventory = [
-  { id: "1", product: "SonicFlow X1 Headphones", sku: "SF-X1-001", warehouse: 30, shop: 15, total: 45, reorder: 10, status: "In Stock" },
-  { id: "2", product: "QuantumCharge Pro Power Bank", sku: "QC-PB-002", warehouse: 80, shop: 40, total: 120, reorder: 20, status: "In Stock" },
-  { id: "3", product: "NebulaSmart Home Hub", sku: "NS-HH-003", warehouse: 0, shop: 0, total: 0, reorder: 15, status: "Out of Stock" },
-  { id: "4", product: "AeroGlide Wireless Mouse", sku: "AG-WM-004", warehouse: 150, shop: 50, total: 200, reorder: 30, status: "In Stock" },
-  { id: "5", product: "PixelMax 4K Monitor", sku: "PM-4K-005", warehouse: 5, shop: 10, total: 15, reorder: 20, status: "Low Stock" },
-  { id: "6", product: "EcoCharge Solar Panel", sku: "EC-SP-006", warehouse: 0, shop: 0, total: 0, reorder: 5, status: "Out of Stock" },
-  { id: "7", product: "SwiftBook Pro Laptop", sku: "SB-PRO-007", warehouse: 3, shop: 5, total: 8, reorder: 10, status: "Low Stock" },
-  { id: "8", product: "AquaPure Water Filter", sku: "AP-WF-008", warehouse: 0, shop: 0, total: 0, reorder: 25, status: "Out of Stock" },
-]
+export default async function InventoryPage() {
+  await requireRole("ADMIN")
 
-const statusConfig: Record<string, { variant: "default" | "secondary" | "outline" | "destructive" | "ghost" | "link"; label: string }> = {
-  "In Stock": { variant: "default", label: "In Stock" },
-  "Low Stock": { variant: "secondary", label: "Low Stock" },
-  "Out of Stock": { variant: "destructive", label: "Out of Stock" },
-}
+  const rows = await prisma.inventory.findMany({
+    orderBy: [{ shop: { name: "asc" } }, { product: { name: "asc" } }],
+    include: {
+      product: { select: { name: true, sku: true } },
+      shop: { select: { name: true } },
+    },
+  })
 
-export default function InventoryPage() {
-  const totalItems = inventory.reduce((sum, i) => sum + i.total, 0)
-  const lowStock = inventory.filter((i) => i.status === "Low Stock").length
-  const outOfStock = inventory.filter((i) => i.status === "Out of Stock").length
-  const overstocked = inventory.filter((i) => i.total > 100).length
+  const totalItems = rows.reduce((sum, r) => sum + r.quantity, 0)
+  const lowStock = rows.filter((r) => r.quantity > 0 && r.quantity <= r.minStock).length
+  const outOfStock = rows.filter((r) => r.quantity <= 0).length
+  const overstocked = rows.filter((r) => r.quantity > 100).length
 
   return (
     <div className="space-y-6">
@@ -53,7 +44,7 @@ export default function InventoryPage() {
         Home <span className="mx-1">/</span> <span className="text-foreground">Inventory</span>
       </nav>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">Inventory Management</h1>
         <div className="flex gap-2">
           <Link href="/admin/inventory/purchase-stock">
@@ -71,84 +62,74 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader>
-            <CardTitle>Total Items</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Total Units</CardTitle></CardHeader>
           <CardContent className="flex items-center gap-2 text-2xl font-bold">
             <Package className="size-5 text-muted-foreground" />
             {totalItems.toLocaleString()}
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>Low Stock</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Low Stock</CardTitle></CardHeader>
           <CardContent className="flex items-center gap-2 text-2xl font-bold text-yellow-600">
             <AlertTriangle className="size-5" />
             {lowStock}
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>Out of Stock</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Out of Stock</CardTitle></CardHeader>
           <CardContent className="flex items-center gap-2 text-2xl font-bold text-red-600">
             <XCircle className="size-5" />
             {outOfStock}
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>Overstocked</CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center gap-2 text-2xl font-bold text-blue-600">
-            <Layers className="size-5" />
-            {overstocked}
-          </CardContent>
+          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Overstocked</CardTitle></CardHeader>
+          <CardContent className="text-2xl font-bold text-blue-600">{overstocked}</CardContent>
         </Card>
       </div>
 
       <Card>
         <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Product</TableHead>
-              <TableHead>SKU</TableHead>
-              <TableHead>Warehouse Stock</TableHead>
-              <TableHead>Shop Stock</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead>Reorder Level</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {inventory.map((item, i) => (
-              <motion.tr
-                key={item.id}
-                custom={i}
-                variants={rowVariants}
-                initial="hidden"
-                animate="visible"
-                className="border-b transition-colors hover:bg-muted/50"
-              >
-                <TableCell className="font-medium">{item.product}</TableCell>
-                <TableCell className="text-muted-foreground">{item.sku}</TableCell>
-                <TableCell>{item.warehouse}</TableCell>
-                <TableCell>{item.shop}</TableCell>
-                <TableCell className="font-semibold">{item.total}</TableCell>
-                <TableCell>{item.reorder}</TableCell>
-                <TableCell>
-                  <Badge variant={statusConfig[item.status].variant}>{statusConfig[item.status].label}</Badge>
-                </TableCell>
-              </motion.tr>
-            ))}
-          </TableBody>
-            </Table>
-          </div>
-          </Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead>SKU</TableHead>
+                <TableHead>Shop</TableHead>
+                <TableHead>Quantity</TableHead>
+                <TableHead>Min Stock</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
+                    No inventory records yet
+                  </TableCell>
+                </TableRow>
+              )}
+              {rows.map((row) => {
+                const status = stockStatus(row.quantity, row.minStock)
+                return (
+                  <TableRow key={row.id} className="transition-colors hover:bg-muted/50">
+                    <TableCell className="font-medium">{row.product.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{row.product.sku}</TableCell>
+                    <TableCell>{row.shop.name}</TableCell>
+                    <TableCell className="font-semibold">{row.quantity}</TableCell>
+                    <TableCell>{row.minStock}</TableCell>
+                    <TableCell>
+                      <Badge variant={status.variant}>{status.label}</Badge>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
     </div>
   )
 }

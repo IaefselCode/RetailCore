@@ -9,6 +9,15 @@ export type AuditEvent =
   | "employee_updated"
   | "employee_deactivated"
   | "employee_activated"
+  | "product_created"
+  | "product_updated"
+  | "product_activated"
+  | "product_deactivated"
+  | "product_deleted"
+  | "stock_purchased"
+  | "stock_distributed"
+  | "sale_recorded"
+  | "sale_refunded"
 
 export async function logAuditEvent(
   event: AuditEvent,

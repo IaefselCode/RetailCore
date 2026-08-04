@@ -1,8 +1,8 @@
-export type MoneyLike = string | number | null | undefined
+export type MoneyLike = string | number | null | undefined | { toString(): string }
 
 export function toNumber(value: MoneyLike): number {
   if (value == null || value === "") return 0
-  const n = Number(value)
+  const n = Number(typeof value === "object" ? value.toString() : value)
   return Number.isFinite(n) ? n : 0
 }
 
