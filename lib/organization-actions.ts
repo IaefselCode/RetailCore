@@ -1,0 +1,312 @@
+"use server"
+
+import { revalidatePath } from "next/cache"
+import { randomBytes } from "crypto"
+import bcrypt from "bcryptjs"
+import { prisma } from "@/lib/prisma"
+import { getSignedInRole } from "@/lib/auth-utils"
+import { getRequestMeta, type ActionResult } from "@/lib/actions"
+import { logAuditEvent } from "@/lib/audit-log"
+
+export type EmployeeActionResult = ActionResult & { temporaryPassword?: string }
+
+function fail(message: string): ActionResult {
+  return { success: false, message }
+}
+
+function str(value: FormDataEntryValue | null): string {
+  return String(value ?? "").trim()
+}
+
+function bool(value: FormDataEntryValue | null): boolean {
+  return value === "on" || value === "true" || value === "1"
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function generateTemporaryPassword(): string {
+  const letters = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz"
+  const digits = "23456789"
+  const bytes = randomBytes(11)
+  let body = ""
+  for (let i = 0; i < 10; i++) body += letters[bytes[i] % letters.length]
+  body += digits[bytes[10] % digits.length]
+  return `Rc!${body}`
+}
+
+async function requireAdmin() {
+  const { userId, role } = await getSignedInRole()
+  if (!userId || role !== "ADMIN") return null
+  return userId
+}
+
+export async function createShop(formData: FormData): Promise<ActionResult> {
+  const actorId = await requireAdmin()
+  if (!actorId) return fail("You do not have permission to do that.")
+
+  try {
+    const name = str(formData.get("name"))
+    if (name.length < 2) return fail("Shop name is required.")
+
+    const shop = await prisma.shop.create({
+      data: {
+        name,
+        address: str(formData.get("address")) || null,
+        city: str(formData.get("city")) || null,
+        state: str(formData.get("state")) || null,
+        zipCode: str(formData.get("zipCode")) || null,
+        phone: str(formData.get("phone")) || null,
+      },
+    })
+
+    const meta = await getRequestMeta()
+    await logAuditEvent("shop_created", {
+      actorId,
+      entityType: "Shop",
+      entityId: shop.id,
+      detail: name,
+      ip: meta.ip,
+    })
+    revalidatePath("/admin/shops")
+    return { success: true, message: "Shop created." }
+  } catch (err) {
+    console.error("createShop failed:", err)
+    return fail("Something went wrong. Please try again.")
+  }
+}
+
+export async function updateShop(formData: FormData): Promise<ActionResult> {
+  const actorId = await requireAdmin()
+  if (!actorId) return fail("You do not have permission to do that.")
+
+  try {
+    const id = str(formData.get("id"))
+    const name = str(formData.get("name"))
+    if (!id || name.length < 2) return fail("Shop name is required.")
+
+    const shop = await prisma.shop.update({
+      where: { id },
+      data: {
+        name,
+        address: str(formData.get("address")) || null,
+        city: str(formData.get("city")) || null,
+        state: str(formData.get("state")) || null,
+        zipCode: str(formData.get("zipCode")) || null,
+        phone: str(formData.get("phone")) || null,
+        isActive: bool(formData.get("isActive")),
+      },
+    })
+
+    const meta = await getRequestMeta()
+    await logAuditEvent(shop.isActive ? "shop_updated" : "shop_deactivated", {
+      actorId,
+      entityType: "Shop",
+      entityId: shop.id,
+      detail: name,
+      ip: meta.ip,
+    })
+    revalidatePath("/admin/shops")
+    return { success: true, message: shop.isActive ? "Shop updated." : "Shop deactivated." }
+  } catch (err) {
+    console.error("updateShop failed:", err)
+    return fail("Something went wrong. Please try again.")
+  }
+}
+
+export async function setShopActive(formData: FormData): Promise<ActionResult> {
+  const actorId = await requireAdmin()
+  if (!actorId) return fail("You do not have permission to do that.")
+
+  try {
+    const id = str(formData.get("id"))
+    const active = bool(formData.get("active"))
+    if (!id) return fail("Missing shop id.")
+
+    const shop = await prisma.shop.update({ where: { id }, data: { isActive: active } })
+    const meta = await getRequestMeta()
+    await logAuditEvent(active ? "shop_activated" : "shop_deactivated", {
+      actorId,
+      entityType: "Shop",
+      entityId: shop.id,
+      detail: shop.name,
+      ip: meta.ip,
+    })
+    revalidatePath("/admin/shops")
+    return { success: true, message: active ? "Shop activated." : "Shop deactivated." }
+  } catch (err) {
+    console.error("setShopActive failed:", err)
+    return fail("Something went wrong. Please try again.")
+  }
+}
+
+export async function createEmployee(formData: FormData): Promise<EmployeeActionResult> {
+  const actorId = await requireAdmin()
+  if (!actorId) return fail("You do not have permission to do that.")
+
+  try {
+    const firstName = str(formData.get("firstName"))
+    const lastName = str(formData.get("lastName"))
+    const email = str(formData.get("email")).toLowerCase()
+    const position = str(formData.get("position"))
+    const shopId = str(formData.get("shopId"))
+
+    if (!firstName || !lastName) return fail("First and last name are required.")
+    if (!EMAIL_RE.test(email)) return fail("Enter a valid email address.")
+    if (!shopId) return fail("Select a shop.")
+
+    const existing = await prisma.user.findUnique({ where: { email } })
+    if (existing) return fail("An account with that email already exists.")
+
+    const shop = await prisma.shop.findUnique({ where: { id: shopId } })
+    if (!shop) return fail("Select a valid shop.")
+
+    const salaryRaw = str(formData.get("salary"))
+    const salary = salaryRaw ? Number(salaryRaw) : 0
+    if (Number.isNaN(salary) || salary < 0) return fail("Enter a valid salary.")
+
+    const hireDateRaw = str(formData.get("hireDate"))
+    const hireDate = hireDateRaw ? new Date(hireDateRaw) : null
+    if (hireDate && Number.isNaN(hireDate.getTime())) return fail("Enter a valid hire date.")
+
+    const temporaryPassword = generateTemporaryPassword()
+    const passwordHash = await bcrypt.hash(temporaryPassword, 12)
+
+    const employee = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          email,
+          passwordHash,
+          firstName,
+          lastName,
+          role: "EMPLOYEE",
+          locale: "en",
+          isActive: true,
+        },
+      })
+      return tx.employee.create({
+        data: {
+          userId: user.id,
+          shopId,
+          position: position || null,
+          hireDate,
+          salary,
+          isActive: true,
+        },
+      })
+    })
+
+    const meta = await getRequestMeta()
+    await logAuditEvent("employee_created", {
+      actorId,
+      entityType: "Employee",
+      entityId: employee.id,
+      detail: `${firstName} ${lastName} <${email}>`,
+      ip: meta.ip,
+    })
+    revalidatePath("/admin/employees")
+    return {
+      success: true,
+      message: "Employee created.",
+      temporaryPassword,
+    }
+  } catch (err) {
+    console.error("createEmployee failed:", err)
+    return fail(
+      err instanceof Error && err.message.includes("unique")
+        ? "An account with that email already exists."
+        : "Something went wrong. Please try again."
+    )
+  }
+}
+
+export async function updateEmployee(formData: FormData): Promise<ActionResult> {
+  const actorId = await requireAdmin()
+  if (!actorId) return fail("You do not have permission to do that.")
+
+  try {
+    const id = str(formData.get("id"))
+    const firstName = str(formData.get("firstName"))
+    const lastName = str(formData.get("lastName"))
+    const email = str(formData.get("email")).toLowerCase()
+    const position = str(formData.get("position"))
+    const shopId = str(formData.get("shopId"))
+    const isActive = bool(formData.get("isActive"))
+
+    if (!id || !firstName || !lastName) return fail("First and last name are required.")
+    if (!EMAIL_RE.test(email)) return fail("Enter a valid email address.")
+    if (!shopId) return fail("Select a shop.")
+
+    const employee = await prisma.employee.findUnique({ where: { id } })
+    if (!employee) return fail("Employee not found.")
+
+    const emailTaken = await prisma.user.findFirst({
+      where: { email, NOT: { id: employee.userId } },
+    })
+    if (emailTaken) return fail("An account with that email already exists.")
+
+    const salaryRaw = str(formData.get("salary"))
+    const salary = salaryRaw ? Number(salaryRaw) : 0
+    if (Number.isNaN(salary) || salary < 0) return fail("Enter a valid salary.")
+
+    const hireDateRaw = str(formData.get("hireDate"))
+    const hireDate = hireDateRaw ? new Date(hireDateRaw) : null
+    if (hireDate && Number.isNaN(hireDate.getTime())) return fail("Enter a valid hire date.")
+
+    const updated = await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: employee.userId },
+        data: { firstName, lastName, email, isActive },
+      })
+      return tx.employee.update({
+        where: { id },
+        data: { shopId, position: position || null, hireDate, salary, isActive },
+      })
+    })
+
+    const meta = await getRequestMeta()
+    await logAuditEvent(isActive ? "employee_updated" : "employee_deactivated", {
+      actorId,
+      entityType: "Employee",
+      entityId: updated.id,
+      detail: `${firstName} ${lastName} <${email}>`,
+      ip: meta.ip,
+    })
+    revalidatePath("/admin/employees")
+    return { success: true, message: isActive ? "Employee updated." : "Employee deactivated." }
+  } catch (err) {
+    console.error("updateEmployee failed:", err)
+    return fail("Something went wrong. Please try again.")
+  }
+}
+
+export async function setEmployeeActive(formData: FormData): Promise<ActionResult> {
+  const actorId = await requireAdmin()
+  if (!actorId) return fail("You do not have permission to do that.")
+
+  try {
+    const id = str(formData.get("id"))
+    const active = bool(formData.get("active"))
+    if (!id) return fail("Missing employee id.")
+
+    const employee = await prisma.employee.findUnique({ where: { id } })
+    if (!employee) return fail("Employee not found.")
+
+    await prisma.$transaction([
+      prisma.user.update({ where: { id: employee.userId }, data: { isActive: active } }),
+      prisma.employee.update({ where: { id }, data: { isActive: active } }),
+    ])
+
+    const meta = await getRequestMeta()
+    await logAuditEvent(active ? "employee_activated" : "employee_deactivated", {
+      actorId,
+      entityType: "Employee",
+      entityId: employee.id,
+      ip: meta.ip,
+    })
+    revalidatePath("/admin/employees")
+    return { success: true, message: active ? "Employee activated." : "Employee deactivated." }
+  } catch (err) {
+    console.error("setEmployeeActive failed:", err)
+    return fail("Something went wrong. Please try again.")
+  }
+}

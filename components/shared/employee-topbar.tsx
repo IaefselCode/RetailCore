@@ -11,6 +11,7 @@ import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
+import { LanguageSwitcher } from "@/components/shared/language-switcher"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -69,6 +70,7 @@ export function EmployeeTopbar() {
       </motion.div>
 
       <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+        <LanguageSwitcher />
         <ThemeToggle />
         <motion.div
           animate={{ y: [0, -3, 0] }}

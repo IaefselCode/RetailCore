@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { signOut, useSession } from "next-auth/react"
 import {
   LayoutDashboard,
   Store,
@@ -13,6 +14,7 @@ import {
   FileText,
   Settings,
   User,
+  LogOut,
   ScrollText,
 } from "lucide-react"
 
@@ -46,6 +48,16 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ onNavClick }: AdminSidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
+  const { data: session } = useSession()
+  const user = session?.user ?? null
+
+  const initials = (() => {
+    if (!user) return "AU"
+    const parts = (user.name ?? "").split(" ").filter(Boolean)
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+    return (user.name?.[0] ?? user.email?.[0] ?? "A").toUpperCase()
+  })()
 
   return (
     <div className="flex h-full flex-col">
@@ -97,23 +109,26 @@ export function AdminSidebar({ onNavClick }: AdminSidebarProps) {
         <DropdownMenu>
           <DropdownMenuTrigger className="flex w-full cursor-default items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground">
             <Avatar className="size-8">
-              <AvatarImage src="/avatars/admin.png" alt="Admin" />
-              <AvatarFallback>AU</AvatarFallback>
+              <AvatarImage src={user?.image ?? undefined} alt={user?.name ?? "Admin"} />
+              <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col items-start text-left">
-              <span className="text-sm font-medium">Admin User</span>
+              <span className="text-sm font-medium">{user?.name ?? "Admin User"}</span>
               <span className="text-xs text-muted-foreground">RMS Admin</span>
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" side="right" className="w-48">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/admin/profile")}>
               <User className="size-4" />
               Profile
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Sign out</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
+              <LogOut className="size-4" />
+              Sign out
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

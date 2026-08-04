@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { getClientIp, rateLimit } from "@/lib/rate-limit"
 import { logAuthEvent } from "@/lib/auth-log"
+import { DEFAULT_LOCALE, normalizeLocale } from "@/lib/i18n"
 
 const LOGIN_MAX_ATTEMPTS = 10
 const LOGIN_WINDOW_MS = 15 * 60 * 1000
@@ -62,6 +63,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             undefined,
           image: user.imageUrl ?? undefined,
           role: user.role,
+          locale: normalizeLocale(user.locale),
         }
       },
     }),
@@ -71,6 +73,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.uid = user.id
         token.role = user.role
+        token.locale = user.locale ?? DEFAULT_LOCALE
       }
       return token
     },
@@ -78,6 +81,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user && token.uid) {
         session.user.id = token.uid
         session.user.role = token.role ?? "EMPLOYEE"
+        session.user.locale = token.locale ?? DEFAULT_LOCALE
       }
       return session
     },

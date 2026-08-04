@@ -9,6 +9,7 @@ import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
+import { LanguageSwitcher } from "@/components/shared/language-switcher"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +51,7 @@ export function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
         <Input placeholder="Search..." className="pl-8" />
       </motion.div>
       <div className="flex items-center gap-1 shrink-0">
+        <LanguageSwitcher />
         <ThemeToggle />
         <motion.div
           animate={{ y: [0, -3, 0] }}

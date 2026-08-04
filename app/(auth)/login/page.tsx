@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { signIn } from "next-auth/react"
+import { useTranslations } from "next-intl"
 import {
   CardHeader,
   CardTitle,
@@ -20,17 +21,23 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { toast } from "sonner"
+import { LanguageSwitcher } from "@/components/shared/language-switcher"
 
-const loginSchema = z.object({
-  email: z.string().email("Enter a valid email address"),
-  password: z.string().min(1, "Password is required"),
-})
+type LoginForm = z.infer<ReturnType<typeof buildSchema>>
 
-type LoginForm = z.infer<typeof loginSchema>
+function buildSchema(t: (key: string) => string) {
+  return z.object({
+    email: z.string().email(t("invalidEmail")),
+    password: z.string().min(1, t("passwordRequired")),
+  })
+}
 
 export default function LoginPage() {
   const router = useRouter()
+  const t = useTranslations("auth")
   const [showPassword, setShowPassword] = useState(false)
+
+  const loginSchema = buildSchema((key) => t(key))
 
   const {
     handleSubmit,
@@ -54,15 +61,15 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        toast.error("Invalid email or password. Please try again.")
+        toast.error(t("invalidCredentials"))
         return
       }
 
-      toast.success("Signed in successfully")
+      toast.success(t("signedIn"))
       router.push("/")
       router.refresh()
     } catch {
-      toast.error("Invalid email or password. Please try again.")
+      toast.error(t("invalidCredentials"))
     }
   }
 
@@ -73,18 +80,23 @@ export default function LoginPage() {
       transition={{ duration: 0.5 }}
     >
       <CardHeader>
-        <CardTitle className="text-xl">Welcome back</CardTitle>
-        <CardDescription>Sign in to your account</CardDescription>
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <CardTitle className="text-xl">{t("welcomeBack")}</CardTitle>
+            <CardDescription>{t("signInTitle")}</CardDescription>
+          </div>
+          <LanguageSwitcher compact />
+        </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("email")}</Label>
             <Input
               id="email"
               name="email"
               type="email"
-              placeholder="name@example.com"
+              placeholder={t("emailPlaceholder")}
               value={emailValue}
               onChange={(e) => setValue("email", e.target.value)}
               aria-invalid={!!errors.email}
@@ -102,12 +114,12 @@ export default function LoginPage() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("password")}</Label>
               <Link
                 href="/forgot-password"
                 className="text-xs text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
               >
-                Forgot password?
+                {t("forgotPassword")}
               </Link>
             </div>
             <div className="relative">
@@ -115,7 +127,7 @@ export default function LoginPage() {
                 id="password"
                 name="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
+                placeholder={t("passwordPlaceholder")}
                 value={passwordValue}
                 onChange={(e) => setValue("password", e.target.value)}
                 aria-invalid={!!errors.password}
@@ -150,10 +162,10 @@ export default function LoginPage() {
             {isSubmitting ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="size-4 animate-spin" />
-                Signing in...
+                {t("signingIn")}
               </span>
             ) : (
-              "Sign in"
+              t("signIn")
             )}
           </AnimateButton>
         </form>
@@ -164,20 +176,20 @@ export default function LoginPage() {
             href="/privacy"
             className="underline-offset-4 hover:text-primary hover:underline"
           >
-            Privacy Policy
+            {t("privacyPolicy")}
           </Link>
           <Link
             href="/terms"
             className="underline-offset-4 hover:text-primary hover:underline"
           >
-            Terms of Service
+            {t("termsOfService")}
           </Link>
         </div>
         <Link
           href="/contact"
           className="text-xs text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
         >
-          Contact Support
+          {t("contactSupport")}
         </Link>
       </CardFooter>
     </motion.div>

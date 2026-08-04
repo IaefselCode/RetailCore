@@ -27,6 +27,7 @@ model User {
   lastName     String?
   imageUrl     String?
   role         UserRole  @default(EMPLOYEE)
+  locale       String    @default("en")
   isActive     Boolean   @default(true)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -194,4 +195,18 @@ model StockTransaction {
   reference   String?
   notes       String?
   createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  event      String
+  entityType String?
+  entityId   String?
+  detail     String?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
 }
