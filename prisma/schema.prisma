@@ -8,9 +8,7 @@ datasource db {
 }
 
 enum UserRole {
-  SUPER_ADMIN
   ADMIN
-  MANAGER
   EMPLOYEE
 }
 
@@ -22,16 +20,16 @@ enum SaleStatus {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  clerkId   String    @unique
-  email     String
-  firstName String?
-  lastName  String?
-  imageUrl  String?
-  role      UserRole  @default(EMPLOYEE)
-  isActive  Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String?
+  firstName    String?
+  lastName     String?
+  imageUrl     String?
+  role         UserRole  @default(EMPLOYEE)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   employee     Employee?
   notifications Notification[]
@@ -158,6 +156,31 @@ model Notification {
   type      String   @default("info")
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+model AuthLog {
+  id        String   @id @default(cuid())
+  email     String
+  event     String
+  userId    String?
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@index([createdAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  email     String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email])
+  @@index([expiresAt])
 }
 
 model StockTransaction {

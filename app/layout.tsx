@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, JetBrains_Mono } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
+import { AuthProvider } from "@/components/providers/auth-provider";
 import { ThemeProvider } from "next-themes"
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner"
@@ -26,19 +26,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html
-        lang="en"
-        className={`${bricolageGrotesque.variable} ${jetbrainsMono.variable} h-full antialiased`}
-        suppressHydrationWarning
-      >
-        <body className="min-h-full flex flex-col">
+    <html
+      lang="en"
+      className={`${bricolageGrotesque.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <body className="min-h-full flex flex-col">
+        <AuthProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             {children}
           </ThemeProvider>
           <Toaster />
-        </body>
-      </html>
-    </ClerkProvider>
+        </AuthProvider>
+      </body>
+    </html>
   );
 }

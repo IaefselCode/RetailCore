@@ -300,7 +300,11 @@ const ATTACHMENT_ITEMS = [
 
 const AttachmentMenu = () => (
   <DropdownMenu>
-    <DropdownMenuTrigger render={<button className="group rounded-lg border border-neutral-200 bg-neutral-100 p-2 text-neutral-500 sm:p-2.5 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400" />}><Plus className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-45 sm:h-5 sm:w-5" /></DropdownMenuTrigger>
+    <DropdownMenuTrigger asChild>
+      <button className="group rounded-lg border border-neutral-200 bg-neutral-100 p-2 text-neutral-500 sm:p-2.5 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+        <Plus className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-45 sm:h-5 sm:w-5" />
+      </button>
+    </DropdownMenuTrigger>
 
     <DropdownMenuContent
       align="start"
@@ -330,7 +334,13 @@ const ModelSelector = ({
   onSelect: (model: Model) => void;
 }) => (
   <DropdownMenu>
-    <DropdownMenuTrigger render={<button className="flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-100 p-2 text-sm text-neutral-700 sm:p-2.5 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200" />}>{selectedModel.icon}<span className="hidden md:inline">{selectedModel.name}</span><ChevronDown className="h-3 w-3" /></DropdownMenuTrigger>
+    <DropdownMenuTrigger asChild>
+      <button className="flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-100 p-2 text-sm text-neutral-700 sm:p-2.5 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200">
+        {selectedModel.icon}
+        <span className="hidden md:inline">{selectedModel.name}</span>
+        <ChevronDown className="h-3 w-3" />
+      </button>
+    </DropdownMenuTrigger>
 
     <DropdownMenuContent
       align="start"

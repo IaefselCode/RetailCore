@@ -1,0 +1,569 @@
+
+> point-of-sales@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.12 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://10.192.202.133:3000
+- Environments: .env
+✓ Ready in 1433ms
+
+Attention: Clerk collects telemetry data from its SDKs when connected to development instances.
+The data collected is used to inform Clerk's product roadmap.
+To learn more, including how to opt-out from the telemetry program, visit: https://clerk.com/docs/telemetry.
+
+○ Compiling /login ...
+ GET /login 200 in 9.2s (next.js: 7.5s, proxy.ts: 395ms, application-code: 1357ms)
+ GET /login 200 in 211ms (next.js: 20ms, proxy.ts: 25ms, application-code: 166ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 147ms (next.js: 11ms, proxy.ts: 16ms, application-code: 120ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /admin/dashboard 307 in 2.8s (next.js: 2.4s, proxy.ts: 19ms, application-code: 351ms)
+ GET /login 200 in 146ms (next.js: 12ms, proxy.ts: 21ms, application-code: 114ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 144ms (next.js: 11ms, proxy.ts: 17ms, application-code: 116ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+✓ Compiled in 221ms
+ GET /login 200 in 641ms (next.js: 241ms, proxy.ts: 210ms, application-code: 189ms)
+ GET /login 200 in 98ms (next.js: 13ms, proxy.ts: 13ms, application-code: 72ms)
+✓ Compiled in 237ms
+ GET /login 200 in 429ms (next.js: 172ms, proxy.ts: 178ms, application-code: 79ms)
+ GET /login 200 in 97ms (next.js: 13ms, proxy.ts: 12ms, application-code: 72ms)
+✓ Compiled in 207ms
+ GET /login 200 in 587ms (next.js: 215ms, proxy.ts: 175ms, application-code: 197ms)
+ GET /login 200 in 122ms (next.js: 13ms, proxy.ts: 16ms, application-code: 92ms)
+ GET /login 200 in 514ms (next.js: 133ms, proxy.ts: 199ms, application-code: 181ms)
+ GET /login 200 in 568ms (next.js: 12ms, proxy.ts: 16ms, application-code: 540ms)
+ GET /login 200 in 486ms (next.js: 33ms, proxy.ts: 46ms, application-code: 407ms)
+ GET /login 200 in 483ms (next.js: 172ms, proxy.ts: 49ms, application-code: 262ms)
+ GET /login 200 in 487ms (next.js: 103ms, proxy.ts: 48ms, application-code: 336ms)
+ GET /login 200 in 483ms (next.js: 243ms, proxy.ts: 49ms, application-code: 191ms)
+ GET /login 200 in 563ms (next.js: 314ms, proxy.ts: 53ms, application-code: 196ms)
+ GET /login 200 in 556ms (next.js: 19ms, proxy.ts: 16ms, application-code: 521ms)
+ GET /login 200 in 460ms (next.js: 102ms, proxy.ts: 46ms, application-code: 312ms)
+ GET /login 200 in 465ms (next.js: 38ms, proxy.ts: 45ms, application-code: 382ms)
+ GET /login 200 in 463ms (next.js: 152ms, proxy.ts: 52ms, application-code: 259ms)
+ GET /login 200 in 468ms (next.js: 221ms, proxy.ts: 52ms, application-code: 196ms)
+ GET /login 200 in 471ms (next.js: 285ms, proxy.ts: 52ms, application-code: 134ms)
+ GET /login 200 in 533ms (next.js: 34ms, proxy.ts: 21ms, application-code: 479ms)
+ GET /login 200 in 522ms (next.js: 35ms, proxy.ts: 106ms, application-code: 381ms)
+ GET /login 200 in 519ms (next.js: 103ms, proxy.ts: 104ms, application-code: 311ms)
+ GET /login 200 in 517ms (next.js: 169ms, proxy.ts: 106ms, application-code: 242ms)
+ GET /login 200 in 516ms (next.js: 235ms, proxy.ts: 108ms, application-code: 173ms)
+ GET /login 200 in 459ms (next.js: 306ms, proxy.ts: 38ms, application-code: 116ms)
+ GET /login 200 in 569ms (next.js: 45ms, proxy.ts: 29ms, application-code: 496ms)
+ GET /login 200 in 558ms (next.js: 116ms, proxy.ts: 44ms, application-code: 398ms)
+ GET /login 200 in 560ms (next.js: 106ms, proxy.ts: 132ms, application-code: 322ms)
+ GET /login 200 in 570ms (next.js: 168ms, proxy.ts: 129ms, application-code: 272ms)
+ GET /login 200 in 582ms (next.js: 241ms, proxy.ts: 130ms, application-code: 211ms)
+ GET /login 200 in 571ms (next.js: 236ms, proxy.ts: 192ms, application-code: 143ms)
+ GET /login 200 in 579ms (next.js: 39ms, proxy.ts: 48ms, application-code: 492ms)
+ GET /login 200 in 552ms (next.js: 107ms, proxy.ts: 37ms, application-code: 408ms)
+ GET /login 200 in 556ms (next.js: 104ms, proxy.ts: 121ms, application-code: 330ms)
+ GET /login 200 in 552ms (next.js: 104ms, proxy.ts: 196ms, application-code: 252ms)
+ GET /login 200 in 542ms (next.js: 177ms, proxy.ts: 189ms, application-code: 177ms)
+ GET /login 200 in 474ms (next.js: 168ms, proxy.ts: 190ms, application-code: 116ms)
+ GET /login 200 in 608ms (next.js: 42ms, proxy.ts: 32ms, application-code: 535ms)
+ GET /login 200 in 602ms (next.js: 107ms, proxy.ts: 41ms, application-code: 454ms)
+ GET /login 200 in 600ms (next.js: 110ms, proxy.ts: 122ms, application-code: 367ms)
+ GET /login 200 in 588ms (next.js: 102ms, proxy.ts: 192ms, application-code: 294ms)
+ GET /login 200 in 587ms (next.js: 182ms, proxy.ts: 193ms, application-code: 212ms)
+ GET /login 200 in 596ms (next.js: 256ms, proxy.ts: 186ms, application-code: 155ms)
+ GET /login 200 in 562ms (next.js: 41ms, proxy.ts: 39ms, application-code: 481ms)
+ GET /login 200 in 561ms (next.js: 111ms, proxy.ts: 39ms, application-code: 411ms)
+ GET /login 200 in 544ms (next.js: 112ms, proxy.ts: 188ms, application-code: 243ms)
+ GET /login 200 in 550ms (next.js: 174ms, proxy.ts: 42ms, application-code: 334ms)
+ GET /login 200 in 549ms (next.js: 193ms, proxy.ts: 192ms, application-code: 163ms)
+ GET /login 200 in 562ms (next.js: 85ms, proxy.ts: 344ms, application-code: 132ms)
+ GET /login 200 in 492ms (next.js: 26ms, proxy.ts: 45ms, application-code: 421ms)
+ GET /login 200 in 491ms (next.js: 88ms, proxy.ts: 48ms, application-code: 355ms)
+ GET /login 200 in 486ms (next.js: 101ms, proxy.ts: 104ms, application-code: 281ms)
+ GET /login 200 in 484ms (next.js: 164ms, proxy.ts: 104ms, application-code: 215ms)
+ GET /login 200 in 469ms (next.js: 217ms, proxy.ts: 91ms, application-code: 161ms)
+ GET /login 200 in 422ms (next.js: 13ms, proxy.ts: 282ms, application-code: 126ms)
+ GET /login 200 in 461ms (next.js: 29ms, proxy.ts: 28ms, application-code: 404ms)
+ GET /login 200 in 459ms (next.js: 98ms, proxy.ts: 35ms, application-code: 327ms)
+ GET /login 200 in 447ms (next.js: 193ms, proxy.ts: 99ms, application-code: 155ms)
+ GET /login 200 in 452ms (next.js: 143ms, proxy.ts: 98ms, application-code: 211ms)
+ GET /login 200 in 455ms (next.js: 82ms, proxy.ts: 98ms, application-code: 275ms)
+ GET /login 200 in 385ms (next.js: 14ms, proxy.ts: 261ms, application-code: 111ms)
+ GET /login 200 in 451ms (next.js: 27ms, proxy.ts: 29ms, application-code: 395ms)
+ GET /login 200 in 448ms (next.js: 94ms, proxy.ts: 34ms, application-code: 320ms)
+ GET /login 200 in 442ms (next.js: 96ms, proxy.ts: 90ms, application-code: 256ms)
+ GET /login 200 in 443ms (next.js: 146ms, proxy.ts: 91ms, application-code: 205ms)
+ GET /login 200 in 443ms (next.js: 196ms, proxy.ts: 93ms, application-code: 154ms)
+ GET /login 200 in 382ms (next.js: 29ms, proxy.ts: 246ms, application-code: 107ms)
+ GET /login 200 in 430ms (next.js: 27ms, proxy.ts: 31ms, application-code: 372ms)
+ GET /login 200 in 426ms (next.js: 86ms, proxy.ts: 34ms, application-code: 307ms)
+ GET /login 200 in 418ms (next.js: 78ms, proxy.ts: 88ms, application-code: 253ms)
+ GET /login 200 in 418ms (next.js: 130ms, proxy.ts: 87ms, application-code: 201ms)
+ GET /login 200 in 419ms (next.js: 185ms, proxy.ts: 88ms, application-code: 146ms)
+ GET /login 200 in 367ms (next.js: 12ms, proxy.ts: 241ms, application-code: 113ms)
+ GET /login 200 in 447ms (next.js: 30ms, proxy.ts: 31ms, application-code: 386ms)
+ GET /login 200 in 443ms (next.js: 83ms, proxy.ts: 34ms, application-code: 325ms)
+ GET /login 200 in 438ms (next.js: 133ms, proxy.ts: 34ms, application-code: 272ms)
+ GET /login 200 in 439ms (next.js: 128ms, proxy.ts: 89ms, application-code: 222ms)
+ GET /login 200 in 437ms (next.js: 189ms, proxy.ts: 88ms, application-code: 160ms)
+ GET /login 200 in 338ms (next.js: 12ms, proxy.ts: 200ms, application-code: 126ms)
+ GET /login 200 in 491ms (next.js: 41ms, proxy.ts: 34ms, application-code: 416ms)
+ GET /login 200 in 485ms (next.js: 95ms, proxy.ts: 40ms, application-code: 350ms)
+ GET /login 200 in 471ms (next.js: 211ms, proxy.ts: 38ms, application-code: 223ms)
+ GET /login 200 in 478ms (next.js: 145ms, proxy.ts: 38ms, application-code: 294ms)
+ GET /login 200 in 480ms (next.js: 160ms, proxy.ts: 163ms, application-code: 156ms)
+ GET /login 200 in 353ms (next.js: 13ms, proxy.ts: 215ms, application-code: 125ms)
+ GET /login 200 in 459ms (next.js: 84ms, proxy.ts: 39ms, application-code: 336ms)
+ GET /login 200 in 464ms (next.js: 33ms, proxy.ts: 35ms, application-code: 396ms)
+ GET /login 200 in 454ms (next.js: 139ms, proxy.ts: 37ms, application-code: 278ms)
+ GET /login 200 in 453ms (next.js: 192ms, proxy.ts: 37ms, application-code: 223ms)
+ GET /login 200 in 459ms (next.js: 139ms, proxy.ts: 153ms, application-code: 166ms)
+ GET /login 200 in 336ms (next.js: 29ms, proxy.ts: 204ms, application-code: 104ms)
+ GET /login 200 in 860ms (next.js: 31ms, proxy.ts: 36ms, application-code: 793ms)
+ GET /login 200 in 865ms (next.js: 150ms, proxy.ts: 40ms, application-code: 675ms)
+ GET /login 200 in 864ms (next.js: 277ms, proxy.ts: 36ms, application-code: 551ms)
+ GET /login 200 in 880ms (next.js: 381ms, proxy.ts: 36ms, application-code: 462ms)
+ GET /login 200 in 888ms (next.js: 389ms, proxy.ts: 120ms, application-code: 378ms)
+ GET /login 200 in 1185ms (next.js: 29ms, proxy.ts: 529ms, application-code: 627ms)
+ GET /login 200 in 847ms (next.js: 48ms, proxy.ts: 63ms, application-code: 736ms)
+ GET /login 200 in 843ms (next.js: 256ms, proxy.ts: 69ms, application-code: 518ms)
+ GET /login 200 in 848ms (next.js: 150ms, proxy.ts: 69ms, application-code: 629ms)
+ GET /login 200 in 839ms (next.js: 358ms, proxy.ts: 72ms, application-code: 409ms)
+ GET /login 200 in 823ms (next.js: 376ms, proxy.ts: 160ms, application-code: 287ms)
+ GET /login 200 in 723ms (next.js: 17ms, proxy.ts: 297ms, application-code: 408ms)
+ GET /login 200 in 645ms (next.js: 38ms, proxy.ts: 57ms, application-code: 550ms)
+ GET /login 200 in 755ms (next.js: 151ms, proxy.ts: 56ms, application-code: 548ms)
+ GET /login 200 in 761ms (next.js: 251ms, proxy.ts: 57ms, application-code: 452ms)
+ GET /login 200 in 775ms (next.js: 227ms, proxy.ts: 168ms, application-code: 379ms)
+ GET /login 200 in 756ms (next.js: 313ms, proxy.ts: 153ms, application-code: 290ms)
+ GET /login 200 in 1046ms (next.js: 32ms, proxy.ts: 227ms, application-code: 786ms)
+ GET /login 200 in 924ms (next.js: 54ms, proxy.ts: 46ms, application-code: 824ms)
+ GET /login 200 in 1140ms (next.js: 157ms, proxy.ts: 62ms, application-code: 921ms)
+ GET /login 200 in 1147ms (next.js: 162ms, proxy.ts: 175ms, application-code: 809ms)
+ GET /login 200 in 1149ms (next.js: 329ms, proxy.ts: 159ms, application-code: 662ms)
+ GET /login 200 in 1170ms (next.js: 359ms, proxy.ts: 277ms, application-code: 534ms)
+ GET /login 200 in 767ms (next.js: 55ms, proxy.ts: 48ms, application-code: 664ms)
+ GET /login 200 in 784ms (next.js: 67ms, proxy.ts: 290ms, application-code: 427ms)
+ GET /login 200 in 519ms (next.js: 99ms, proxy.ts: 198ms, application-code: 222ms)
+ GET /login 200 in 531ms (next.js: 38ms, proxy.ts: 203ms, application-code: 290ms)
+ GET /login 200 in 567ms (next.js: 145ms, proxy.ts: 184ms, application-code: 239ms)
+ GET /login 200 in 424ms (next.js: 79ms, proxy.ts: 168ms, application-code: 177ms)
+ GET /login 200 in 555ms (next.js: 20ms, proxy.ts: 15ms, application-code: 520ms)
+ GET /login 200 in 573ms (next.js: 35ms, proxy.ts: 85ms, application-code: 453ms)
+ GET /login 200 in 518ms (next.js: 29ms, proxy.ts: 113ms, application-code: 376ms)
+ GET /login 200 in 517ms (next.js: 100ms, proxy.ts: 114ms, application-code: 303ms)
+ GET /login 200 in 528ms (next.js: 20ms, proxy.ts: 178ms, application-code: 330ms)
+ GET /login 200 in 603ms (next.js: 108ms, proxy.ts: 175ms, application-code: 320ms)
+ GET /login 200 in 566ms (next.js: 39ms, proxy.ts: 27ms, application-code: 500ms)
+ GET /login 200 in 716ms (next.js: 117ms, proxy.ts: 38ms, application-code: 562ms)
+ GET /login 200 in 714ms (next.js: 24ms, proxy.ts: 194ms, application-code: 496ms)
+ GET /login 200 in 714ms (next.js: 96ms, proxy.ts: 194ms, application-code: 424ms)
+ GET /login 200 in 670ms (next.js: 38ms, proxy.ts: 174ms, application-code: 458ms)
+ GET /login 200 in 815ms (next.js: 160ms, proxy.ts: 183ms, application-code: 472ms)
+ GET /login 200 in 847ms (next.js: 49ms, proxy.ts: 30ms, application-code: 767ms)
+ GET /login 200 in 973ms (next.js: 166ms, proxy.ts: 45ms, application-code: 762ms)
+ GET /login 200 in 962ms (next.js: 42ms, proxy.ts: 267ms, application-code: 653ms)
+ GET /login 200 in 971ms (next.js: 210ms, proxy.ts: 267ms, application-code: 494ms)
+ GET /login 200 in 837ms (next.js: 383ms, proxy.ts: 150ms, application-code: 304ms)
+ GET /login 200 in 573ms (next.js: 22ms, proxy.ts: 141ms, application-code: 409ms)
+ GET /login 200 in 642ms (next.js: 43ms, proxy.ts: 56ms, application-code: 543ms)
+ GET /login 200 in 609ms (next.js: 148ms, proxy.ts: 44ms, application-code: 417ms)
+ GET /login 200 in 608ms (next.js: 30ms, proxy.ts: 230ms, application-code: 348ms)
+ GET /login 200 in 608ms (next.js: 83ms, proxy.ts: 228ms, application-code: 298ms)
+ GET /login 200 in 626ms (next.js: 131ms, proxy.ts: 107ms, application-code: 388ms)
+ GET /login 200 in 673ms (next.js: 12ms, proxy.ts: 206ms, application-code: 455ms)
+ GET /login 200 in 688ms (next.js: 42ms, proxy.ts: 43ms, application-code: 603ms)
+ GET /login 200 in 786ms (next.js: 168ms, proxy.ts: 49ms, application-code: 568ms)
+ GET /login 200 in 755ms (next.js: 150ms, proxy.ts: 160ms, application-code: 445ms)
+ GET /login 200 in 756ms (next.js: 237ms, proxy.ts: 160ms, application-code: 359ms)
+ GET /login 200 in 634ms (next.js: 32ms, proxy.ts: 328ms, application-code: 274ms)
+ GET /login 200 in 602ms (next.js: 144ms, proxy.ts: 203ms, application-code: 255ms)
+ GET /login 200 in 602ms (next.js: 30ms, proxy.ts: 29ms, application-code: 543ms)
+ GET /login 200 in 719ms (next.js: 34ms, proxy.ts: 122ms, application-code: 563ms)
+ GET /login 200 in 707ms (next.js: 98ms, proxy.ts: 116ms, application-code: 493ms)
+ GET /login 200 in 716ms (next.js: 178ms, proxy.ts: 116ms, application-code: 422ms)
+ GET /login 200 in 745ms (next.js: 147ms, proxy.ts: 177ms, application-code: 421ms)
+ GET /login 200 in 579ms (next.js: 177ms, proxy.ts: 127ms, application-code: 275ms)
+ GET /login 200 in 285ms (next.js: 36ms, proxy.ts: 30ms, application-code: 218ms)
+ GET /login 200 in 269ms (next.js: 21ms, proxy.ts: 140ms, application-code: 108ms)
+ GET /sso-callback 200 in 1388ms (next.js: 1015ms, proxy.ts: 12ms, application-code: 361ms)
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /login 200 in 591ms (next.js: 12ms, proxy.ts: 26ms, application-code: 552ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 156ms (next.js: 11ms, proxy.ts: 18ms, application-code: 127ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 162ms (next.js: 10ms, proxy.ts: 14ms, application-code: 138ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /login 200 in 172ms (next.js: 11ms, proxy.ts: 27ms, application-code: 135ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /login 200 in 151ms (next.js: 11ms, proxy.ts: 24ms, application-code: 116ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 168ms (next.js: 9ms, proxy.ts: 20ms, application-code: 140ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /login 200 in 151ms (next.js: 14ms, proxy.ts: 9ms, application-code: 128ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 151ms (next.js: 12ms, proxy.ts: 11ms, application-code: 129ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /login 200 in 225ms (next.js: 25ms, proxy.ts: 21ms, application-code: 179ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /login 200 in 181ms (next.js: 11ms, proxy.ts: 28ms, application-code: 141ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+✓ Compiled in 173ms
+ GET /login 200 in 575ms (next.js: 241ms, proxy.ts: 221ms, application-code: 114ms)
+ GET /login 200 in 159ms (next.js: 10ms, proxy.ts: 11ms, application-code: 138ms)
+ GET /login 200 in 91ms (next.js: 12ms, proxy.ts: 12ms, application-code: 67ms)
+ GET /login 200 in 84ms (next.js: 11ms, proxy.ts: 14ms, application-code: 60ms)
+✓ Compiled in 182ms
+ GET /login 200 in 637ms (next.js: 341ms, proxy.ts: 194ms, application-code: 102ms)
+ GET /login 200 in 74ms (next.js: 10ms, proxy.ts: 14ms, application-code: 49ms)
+✓ Compiled in 224ms
+ GET /login 200 in 710ms (next.js: 349ms, proxy.ts: 237ms, application-code: 124ms)
+ GET /login 200 in 83ms (next.js: 12ms, proxy.ts: 11ms, application-code: 60ms)
+✓ Compiled in 168ms
+ GET /login 200 in 613ms (next.js: 294ms, proxy.ts: 217ms, application-code: 102ms)
+ GET /login 200 in 91ms (next.js: 12ms, proxy.ts: 11ms, application-code: 69ms)
+✓ Compiled in 161ms
+ GET /login 200 in 578ms (next.js: 281ms, proxy.ts: 188ms, application-code: 108ms)
+ GET /login 200 in 81ms (next.js: 10ms, proxy.ts: 14ms, application-code: 58ms)
+  Reload env: .env
+ GET /login 200 in 1848ms (next.js: 1020ms, proxy.ts: 327ms, application-code: 500ms)
+ GET /login 200 in 228ms (next.js: 51ms, proxy.ts: 37ms, application-code: 140ms)
+ GET /login 200 in 663ms (next.js: 9ms, proxy.ts: 22ms, application-code: 631ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+✓ Compiled in 238ms
+ GET /login 200 in 830ms (next.js: 486ms, proxy.ts: 224ms, application-code: 120ms)
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /login 200 in 665ms (next.js: 13ms, proxy.ts: 20ms, application-code: 633ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+[browser] Base UI: A component is changing the uncontrolled value state of FieldControl to be controlled.
+Elements should not switch from uncontrolled to controlled (or vice versa).
+Decide between using a controlled or uncontrolled FieldControl element for the lifetime of the component.
+The nature of the state is determined during the first render. It's considered controlled if the value is not `undefined`.
+More info: https://fb.me/react-controlled-components 
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /login 200 in 157ms (next.js: 10ms, proxy.ts: 9ms, application-code: 138ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+[browser] Base UI: A component is changing the uncontrolled value state of FieldControl to be controlled.
+Elements should not switch from uncontrolled to controlled (or vice versa).
+Decide between using a controlled or uncontrolled FieldControl element for the lifetime of the component.
+The nature of the state is determined during the first render. It's considered controlled if the value is not `undefined`.
+More info: https://fb.me/react-controlled-components 
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /login 200 in 135ms (next.js: 9ms, proxy.ts: 10ms, application-code: 116ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+[browser] Base UI: A component is changing the uncontrolled value state of FieldControl to be controlled.
+Elements should not switch from uncontrolled to controlled (or vice versa).
+Decide between using a controlled or uncontrolled FieldControl element for the lifetime of the component.
+The nature of the state is determined during the first render. It's considered controlled if the value is not `undefined`.
+More info: https://fb.me/react-controlled-components 
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /login 200 in 143ms (next.js: 9ms, proxy.ts: 19ms, application-code: 115ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+[browser] Base UI: A component is changing the uncontrolled value state of FieldControl to be controlled.
+Elements should not switch from uncontrolled to controlled (or vice versa).
+Decide between using a controlled or uncontrolled FieldControl element for the lifetime of the component.
+The nature of the state is determined during the first render. It's considered controlled if the value is not `undefined`.
+More info: https://fb.me/react-controlled-components 
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /login 200 in 122ms (next.js: 10ms, proxy.ts: 11ms, application-code: 101ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+[browser] Base UI: A component is changing the uncontrolled value state of FieldControl to be controlled.
+Elements should not switch from uncontrolled to controlled (or vice versa).
+Decide between using a controlled or uncontrolled FieldControl element for the lifetime of the component.
+The nature of the state is determined during the first render. It's considered controlled if the value is not `undefined`.
+More info: https://fb.me/react-controlled-components 
+ GET /login 200 in 195ms (next.js: 18ms, proxy.ts: 24ms, application-code: 153ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 184ms (next.js: 10ms, proxy.ts: 21ms, application-code: 153ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+[browser] Base UI: A component is changing the uncontrolled value state of FieldControl to be controlled.
+Elements should not switch from uncontrolled to controlled (or vice versa).
+Decide between using a controlled or uncontrolled FieldControl element for the lifetime of the component.
+The nature of the state is determined during the first render. It's considered controlled if the value is not `undefined`.
+More info: https://fb.me/react-controlled-components 
+✓ Compiled in 318ms
+ GET /login 200 in 773ms (next.js: 360ms, proxy.ts: 276ms, application-code: 137ms)
+✓ Compiled in 188ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⨯ ReferenceError: step is not defined
+    at LoginPage (app\(auth)\login\page.tsx:131:3)
+  129 |   }
+  130 |
+> 131 |   if (step === "verify") {
+      |   ^
+  132 |     return (
+  133 |       <motion.div
+  134 |         initial={{ opacity: 0, y: 20 }} {
+  digest: '1506353612'
+}
+ GET /login 500 in 1556ms (next.js: 417ms, proxy.ts: 219ms, application-code: 921ms)
+✓ Compiled in 258ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⨯ ReferenceError: step is not defined
+    at LoginPage (app\(auth)\login\page.tsx:131:3)
+  129 |   }
+  130 |
+> 131 |   if (step === "verify") {
+      |   ^
+  132 |     return (
+  133 |       <motion.div
+  134 |         initial={{ opacity: 0, y: 20 }} {
+  digest: '1506353612'
+}
+ GET /login 500 in 1470ms (next.js: 341ms, proxy.ts: 234ms, application-code: 895ms)
+✓ Compiled in 208ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⨯ ReferenceError: step is not defined
+    at LoginPage (app\(auth)\login\page.tsx:131:3)
+  129 |   }
+  130 |
+> 131 |   if (step === "verify") {
+      |   ^
+  132 |     return (
+  133 |       <motion.div
+  134 |         initial={{ opacity: 0, y: 20 }} {
+  digest: '1506353612'
+}
+ GET /login 500 in 1504ms (next.js: 345ms, proxy.ts: 239ms, application-code: 920ms)
+✓ Compiled in 194ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⨯ ReferenceError: step is not defined
+    at LoginPage (app\(auth)\login\page.tsx:131:3)
+  129 |   }
+  130 |
+> 131 |   if (step === "verify") {
+      |   ^
+  132 |     return (
+  133 |       <motion.div
+  134 |         initial={{ opacity: 0, y: 20 }} {
+  digest: '1506353612'
+}
+ GET /login 500 in 1224ms (next.js: 303ms, proxy.ts: 213ms, application-code: 708ms)
+✓ Compiled in 212ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⨯ ReferenceError: step is not defined
+    at LoginPage (app\(auth)\login\page.tsx:131:3)
+  129 |   }
+  130 |
+> 131 |   if (step === "verify") {
+      |   ^
+  132 |     return (
+  133 |       <motion.div
+  134 |         initial={{ opacity: 0, y: 20 }} {
+  digest: '1506353612'
+}
+ GET /login 500 in 1306ms (next.js: 346ms, proxy.ts: 205ms, application-code: 754ms)
+✓ Compiled in 217ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⨯ ReferenceError: step is not defined
+    at LoginPage (app\(auth)\login\page.tsx:131:3)
+  129 |   }
+  130 |
+> 131 |   if (step === "verify") {
+      |   ^
+  132 |     return (
+  133 |       <motion.div
+  134 |         initial={{ opacity: 0, y: 20 }} {
+  digest: '1506353612'
+}
+ GET /login 500 in 1428ms (next.js: 372ms, proxy.ts: 233ms, application-code: 822ms)
+✓ Compiled in 207ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⨯ ReferenceError: step is not defined
+    at LoginPage (app\(auth)\login\page.tsx:130:3)
+  128 |   }
+  129 |
+> 130 |   if (step === "verify") {
+      |   ^
+  131 |     return (
+  132 |       <motion.div
+  133 |         initial={{ opacity: 0, y: 20 }} {
+  digest: '1506353612'
+}
+ GET /login 500 in 1337ms (next.js: 339ms, proxy.ts: 217ms, application-code: 782ms)
+✓ Compiled in 190ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /login 200 in 1363ms (next.js: 362ms, proxy.ts: 289ms, application-code: 712ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /login 200 in 134ms (next.js: 9ms, proxy.ts: 9ms, application-code: 116ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /login 200 in 128ms (next.js: 8ms, proxy.ts: 11ms, application-code: 108ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://modest-giraffe-24.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+  Reload env: .env
+✓ Compiled in 0ms
+⚠ Fast Refresh had to perform a full reload when ./node_modules/@clerk/nextjs/dist/esm/server/constants.js changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /login 200 in 661ms (next.js: 325ms, proxy.ts: 219ms, application-code: 117ms)
+ GET /login 200 in 150ms (next.js: 14ms, proxy.ts: 13ms, application-code: 123ms)
+ GET /login 200 in 89ms (next.js: 10ms, proxy.ts: 12ms, application-code: 67ms)
+ GET /login 200 in 85ms (next.js: 11ms, proxy.ts: 13ms, application-code: 61ms)
+ GET /login 200 in 151ms (next.js: 12ms, proxy.ts: 11ms, application-code: 128ms)
+ GET /login 200 in 87ms (next.js: 11ms, proxy.ts: 12ms, application-code: 64ms)
+ GET /login 200 in 92ms (next.js: 11ms, proxy.ts: 11ms, application-code: 70ms)
+ GET /login 200 in 667ms (next.js: 9ms, proxy.ts: 18ms, application-code: 641ms)
+ GET /login 200 in 195ms (next.js: 21ms, proxy.ts: 21ms, application-code: 153ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 158ms (next.js: 10ms, proxy.ts: 18ms, application-code: 130ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 141ms (next.js: 10ms, proxy.ts: 24ms, application-code: 107ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 150ms (next.js: 10ms, proxy.ts: 25ms, application-code: 116ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /employee 307 in 2.8s (next.js: 2.7s, proxy.ts: 21ms, application-code: 154ms)
+ GET /login 200 in 131ms (next.js: 11ms, proxy.ts: 10ms, application-code: 110ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 169ms (next.js: 9ms, proxy.ts: 18ms, application-code: 142ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ POST /login 200 in 115ms (next.js: 9ms, proxy.ts: 18ms, application-code: 88ms)
+  └─ ƒ invalidateCacheAction() in 21ms node_modules/@clerk/nextjs/dist/esm/app-router/server-actions.js
+ GET /login 200 in 819ms (next.js: 14ms, proxy.ts: 738ms, application-code: 66ms)
+ GET / 200 in 1541ms (next.js: 750ms, proxy.ts: 740ms, application-code: 52ms)
+ GET /employee/dashboard 200 in 1265ms (next.js: 1162ms, proxy.ts: 25ms, application-code: 77ms)
+ GET /employee/dashboard 200 in 90ms (next.js: 14ms, proxy.ts: 19ms, application-code: 57ms)
+ GET /login 200 in 124ms (next.js: 21ms, proxy.ts: 28ms, application-code: 75ms)
+ GET /login 200 in 85ms (next.js: 12ms, proxy.ts: 20ms, application-code: 53ms)
+ GET /login 200 in 118ms (next.js: 10ms, proxy.ts: 10ms, application-code: 99ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 156ms (next.js: 10ms, proxy.ts: 25ms, application-code: 121ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+✓ Compiled in 177ms
+ GET /login 200 in 1568ms (next.js: 157ms, proxy.ts: 708ms, application-code: 703ms)
+ GET /login 200 in 622ms (next.js: 512ms, proxy.ts: 30ms, application-code: 81ms)
+ GET /login 200 in 1033ms (next.js: 17ms, proxy.ts: 28ms, application-code: 988ms)
+ GET /login 200 in 430ms (next.js: 101ms, proxy.ts: 76ms, application-code: 253ms)
+ GET /login 200 in 434ms (next.js: 42ms, proxy.ts: 76ms, application-code: 315ms)
+ GET /login 200 in 412ms (next.js: 146ms, proxy.ts: 68ms, application-code: 198ms)
+ GET /login 200 in 408ms (next.js: 203ms, proxy.ts: 66ms, application-code: 139ms)
+ GET /login 200 in 413ms (next.js: 260ms, proxy.ts: 73ms, application-code: 80ms)
+ GET /login 200 in 110ms (next.js: 14ms, proxy.ts: 25ms, application-code: 71ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+✓ Compiled in 129ms
+ GET /login 200 in 658ms (next.js: 196ms, proxy.ts: 259ms, application-code: 203ms)
+ GET /login 200 in 108ms (next.js: 14ms, proxy.ts: 17ms, application-code: 78ms)
+ GET /login 200 in 101ms (next.js: 12ms, proxy.ts: 14ms, application-code: 75ms)
+ GET /login 200 in 127ms (next.js: 11ms, proxy.ts: 18ms, application-code: 98ms)
+ GET /login 200 in 3.0s (next.js: 39ms, proxy.ts: 1913ms, application-code: 1001ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 141ms (next.js: 11ms, proxy.ts: 22ms, application-code: 108ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 158ms (next.js: 11ms, proxy.ts: 17ms, application-code: 130ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 155ms (next.js: 11ms, proxy.ts: 19ms, application-code: 125ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /dashboard 404 in 2.1s (next.js: 1984ms, proxy.ts: 33ms, application-code: 125ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /employee 307 in 997ms (next.js: 278ms, proxy.ts: 27ms, application-code: 692ms)
+ GET /login 200 in 191ms (next.js: 10ms, proxy.ts: 64ms, application-code: 117ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 163ms (next.js: 15ms, proxy.ts: 15ms, application-code: 133ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 151ms (next.js: 11ms, proxy.ts: 21ms, application-code: 119ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 138ms (next.js: 10ms, proxy.ts: 11ms, application-code: 117ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 142ms (next.js: 10ms, proxy.ts: 16ms, application-code: 117ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ GET /login 200 in 186ms (next.js: 9ms, proxy.ts: 26ms, application-code: 151ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /login 200 in 157ms (next.js: 12ms, proxy.ts: 12ms, application-code: 132ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ POST /login 200 in 107ms (next.js: 11ms, proxy.ts: 17ms, application-code: 79ms)
+  └─ ƒ invalidateCacheAction() in 11ms node_modules/@clerk/nextjs/dist/esm/app-router/server-actions.js
+ GET / 200 in 536ms (next.js: 393ms, proxy.ts: 19ms, application-code: 124ms)
+ GET /login 200 in 543ms (next.js: 26ms, proxy.ts: 16ms, application-code: 501ms)
+ GET /employee/dashboard 200 in 496ms (next.js: 268ms, proxy.ts: 20ms, application-code: 208ms)
+ GET /employee/dashboard 200 in 119ms (next.js: 18ms, proxy.ts: 24ms, application-code: 77ms)
+ GET /login 200 in 90ms (next.js: 12ms, proxy.ts: 24ms, application-code: 54ms)
+ GET /login 200 in 77ms (next.js: 10ms, proxy.ts: 15ms, application-code: 52ms)
+ GET /login 200 in 637ms (next.js: 13ms, proxy.ts: 466ms, application-code: 159ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /login 200 in 157ms (next.js: 9ms, proxy.ts: 25ms, application-code: 123ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ POST /login 200 in 86ms (next.js: 9ms, proxy.ts: 14ms, application-code: 63ms)
+  └─ ƒ invalidateCacheAction() in 10ms node_modules/@clerk/nextjs/dist/esm/app-router/server-actions.js
+ GET / 200 in 160ms (next.js: 73ms, proxy.ts: 30ms, application-code: 57ms)
+ GET /login 200 in 165ms (next.js: 27ms, proxy.ts: 16ms, application-code: 122ms)
+ GET /employee/dashboard 200 in 167ms (next.js: 11ms, proxy.ts: 11ms, application-code: 145ms)
+ GET /employee/dashboard 200 in 105ms (next.js: 14ms, proxy.ts: 24ms, application-code: 68ms)
+ GET /login 200 in 99ms (next.js: 10ms, proxy.ts: 26ms, application-code: 63ms)
+ GET /login 200 in 67ms (next.js: 12ms, proxy.ts: 13ms, application-code: 42ms)
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /login 200 in 181ms (next.js: 10ms, proxy.ts: 25ms, application-code: 146ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ POST /login 200 in 92ms (next.js: 10ms, proxy.ts: 24ms, application-code: 58ms)
+  └─ ƒ invalidateCacheAction() in 4ms node_modules/@clerk/nextjs/dist/esm/app-router/server-actions.js
+ GET / 200 in 171ms (next.js: 85ms, proxy.ts: 19ms, application-code: 67ms)
+ GET /login 200 in 175ms (next.js: 16ms, proxy.ts: 19ms, application-code: 140ms)
+ GET /employee/dashboard 200 in 110ms (next.js: 10ms, proxy.ts: 13ms, application-code: 87ms)
+ GET /employee/dashboard 200 in 101ms (next.js: 14ms, proxy.ts: 20ms, application-code: 66ms)
+ GET /login 200 in 96ms (next.js: 12ms, proxy.ts: 18ms, application-code: 66ms)
+ GET /login 200 in 68ms (next.js: 11ms, proxy.ts: 17ms, application-code: 40ms)
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /login 200 in 198ms (next.js: 11ms, proxy.ts: 11ms, application-code: 176ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ POST /login 200 in 106ms (next.js: 12ms, proxy.ts: 11ms, application-code: 83ms)
+  └─ ƒ invalidateCacheAction() in 2ms node_modules/@clerk/nextjs/dist/esm/app-router/server-actions.js
+ GET / 200 in 193ms (next.js: 105ms, proxy.ts: 25ms, application-code: 63ms)
+ GET /login 200 in 200ms (next.js: 18ms, proxy.ts: 26ms, application-code: 157ms)
+ GET /employee/dashboard 200 in 209ms (next.js: 20ms, proxy.ts: 24ms, application-code: 166ms)
+ GET /employee/dashboard 200 in 117ms (next.js: 15ms, proxy.ts: 29ms, application-code: 73ms)
+ GET /login 200 in 111ms (next.js: 12ms, proxy.ts: 30ms, application-code: 69ms)
+ GET /login 200 in 88ms (next.js: 14ms, proxy.ts: 16ms, application-code: 59ms)
+✓ Compiled in 680ms
+ GET /login 200 in 1165ms (next.js: 186ms, proxy.ts: 724ms, application-code: 254ms)
+ GET /login 200 in 554ms (next.js: 12ms, proxy.ts: 18ms, application-code: 525ms)
+ GET /login 200 in 423ms (next.js: 46ms, proxy.ts: 55ms, application-code: 322ms)
+ GET /login 200 in 428ms (next.js: 99ms, proxy.ts: 67ms, application-code: 262ms)
+ GET /login 200 in 426ms (next.js: 152ms, proxy.ts: 67ms, application-code: 207ms)
+ GET /login 200 in 487ms (next.js: 211ms, proxy.ts: 67ms, application-code: 210ms)
+ GET /login 200 in 487ms (next.js: 260ms, proxy.ts: 63ms, application-code: 164ms)
+ GET /login 200 in 546ms (next.js: 21ms, proxy.ts: 22ms, application-code: 503ms)
+ GET /login 200 in 469ms (next.js: 35ms, proxy.ts: 51ms, application-code: 382ms)
+ GET /login 200 in 464ms (next.js: 99ms, proxy.ts: 57ms, application-code: 309ms)
+ GET /login 200 in 469ms (next.js: 177ms, proxy.ts: 56ms, application-code: 235ms)
+ GET /login 200 in 520ms (next.js: 260ms, proxy.ts: 58ms, application-code: 202ms)
+ GET /login 200 in 509ms (next.js: 250ms, proxy.ts: 116ms, application-code: 143ms)
+ GET /login 200 in 479ms (next.js: 18ms, proxy.ts: 17ms, application-code: 443ms)
+ GET /login 200 in 470ms (next.js: 33ms, proxy.ts: 94ms, application-code: 343ms)
+ GET /login 200 in 418ms (next.js: 81ms, proxy.ts: 47ms, application-code: 290ms)
+ GET /login 200 in 424ms (next.js: 134ms, proxy.ts: 43ms, application-code: 247ms)
+ GET /login 200 in 426ms (next.js: 214ms, proxy.ts: 43ms, application-code: 169ms)
+ GET /login 200 in 425ms (next.js: 223ms, proxy.ts: 91ms, application-code: 111ms)
+ GET /login 200 in 486ms (next.js: 41ms, proxy.ts: 30ms, application-code: 416ms)
+ GET /login 200 in 456ms (next.js: 42ms, proxy.ts: 118ms, application-code: 296ms)
+ GET /login 200 in 454ms (next.js: 110ms, proxy.ts: 125ms, application-code: 219ms)
+ GET /login 200 in 438ms (next.js: 173ms, proxy.ts: 123ms, application-code: 142ms)
+ GET /login 200 in 359ms (next.js: 156ms, proxy.ts: 128ms, application-code: 75ms)
+✓ Compiled in 176ms
+ GET /login 200 in 633ms (next.js: 179ms, proxy.ts: 300ms, application-code: 154ms)
+ GET /login 200 in 97ms (next.js: 11ms, proxy.ts: 19ms, application-code: 66ms)
+ GET /login 200 in 112ms (next.js: 11ms, proxy.ts: 16ms, application-code: 85ms)
+ GET /login 200 in 91ms (next.js: 14ms, proxy.ts: 20ms, application-code: 57ms)
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /login 200 in 881ms (next.js: 17ms, proxy.ts: 28ms, application-code: 837ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ POST /login 200 in 152ms (next.js: 21ms, proxy.ts: 21ms, application-code: 109ms)
+  └─ ƒ invalidateCacheAction() in 2ms node_modules/@clerk/nextjs/dist/esm/app-router/server-actions.js
+ GET /login 200 in 521ms (next.js: 21ms, proxy.ts: 31ms, application-code: 470ms)
+ GET / 200 in 2.1s (next.js: 383ms, proxy.ts: 32ms, application-code: 1724ms)
+ GET /admin/dashboard 200 in 891ms (next.js: 253ms, proxy.ts: 30ms, application-code: 608ms)
+ GET /admin/dashboard 200 in 1258ms (next.js: 13ms, proxy.ts: 27ms, application-code: 1217ms)
+ GET /avatars/admin.png 404 in 460ms (next.js: 104ms, application-code: 356ms)
+ GET /login 200 in 189ms (next.js: 26ms, proxy.ts: 30ms, application-code: 133ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /login 200 in 127ms (next.js: 10ms, proxy.ts: 9ms, application-code: 108ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://open-haddock-43.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:6133)
+ POST /login 200 in 110ms (next.js: 11ms, proxy.ts: 19ms, application-code: 80ms)
+  └─ ƒ invalidateCacheAction() in 2ms node_modules/@clerk/nextjs/dist/esm/app-router/server-actions.js
+ GET /login 200 in 168ms (next.js: 14ms, proxy.ts: 17ms, application-code: 137ms)
+ GET / 200 in 1098ms (next.js: 88ms, proxy.ts: 19ms, application-code: 991ms)
+ GET /employee/dashboard 200 in 631ms (next.js: 235ms, proxy.ts: 20ms, application-code: 377ms)
+ GET /employee/dashboard 200 in 608ms (next.js: 11ms, proxy.ts: 20ms, application-code: 577ms)

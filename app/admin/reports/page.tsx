@@ -104,9 +104,11 @@ export default function ReportsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-2xl font-medium">Reports</h1>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger render={<AnimateButton variant="accent" />}>
-            <PlusIcon />
-            Generate Custom Report
+          <DialogTrigger asChild>
+            <AnimateButton variant="accent">
+              <PlusIcon />
+              Generate Custom Report
+            </AnimateButton>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>

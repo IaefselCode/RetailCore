@@ -13,6 +13,7 @@ import {
   FileText,
   Settings,
   User,
+  ScrollText,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -36,6 +37,7 @@ const navItems = [
   { label: "Sales", href: "/admin/sales", icon: CreditCard },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { label: "Reports", href: "/admin/reports", icon: FileText },
+  { label: "Audit Log", href: "/admin/audit", icon: ScrollText },
 ]
 
 interface AdminSidebarProps {

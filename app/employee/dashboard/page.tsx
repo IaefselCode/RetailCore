@@ -114,7 +114,7 @@ export default function EmployeeDashboardPage() {
           const Icon = kpi.icon
           return (
             <motion.div key={kpi.title} variants={itemVariants}>
-              <Card size="sm">
+              <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardDescription>{kpi.title}</CardDescription>

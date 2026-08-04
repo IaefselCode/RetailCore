@@ -119,7 +119,8 @@ export default function EmployeeProductsPage() {
           {filtered.map((product) => (
             <motion.div key={product.id} variants={itemVariants}>
               <Dialog>
-                <DialogTrigger nativeButton={false} render={<Card className="cursor-pointer transition-shadow hover:shadow-md" />}>
+                <DialogTrigger asChild>
+                  <Card className="cursor-pointer transition-shadow hover:shadow-md">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div>
@@ -138,6 +139,7 @@ export default function EmployeeProductsPage() {
                       Click to view details
                     </div>
                   </CardContent>
+                </Card>
                 </DialogTrigger>
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
@@ -183,18 +185,18 @@ export default function EmployeeProductsPage() {
             {filtered.map((product) => (
               <motion.div key={product.id} variants={itemVariants}>
                 <Dialog>
-                  <DialogTrigger nativeButton={false} render={
-                    <div className="flex cursor-pointer items-center justify-between px-4 py-3 transition-colors hover:bg-muted/50" />
-                  }>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{product.name}</p>
-                      <p className="text-xs text-muted-foreground">{product.sku}</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <Badge variant={product.stock === 0 ? "outline" : product.stock < 10 ? "secondary" : "default"}>
-                        {product.stock} left
-                      </Badge>
-                      <span className="text-sm font-semibold">${product.price.toFixed(2)}</span>
+                  <DialogTrigger asChild>
+                    <div className="flex cursor-pointer items-center justify-between px-4 py-3 transition-colors hover:bg-muted/50">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{product.name}</p>
+                        <p className="text-xs text-muted-foreground">{product.sku}</p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <Badge variant={product.stock === 0 ? "outline" : product.stock < 10 ? "secondary" : "default"}>
+                          {product.stock} left
+                        </Badge>
+                        <span className="text-sm font-semibold">${product.price.toFixed(2)}</span>
+                      </div>
                     </div>
                   </DialogTrigger>
                   <motion.div

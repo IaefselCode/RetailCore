@@ -27,7 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Progress, ProgressIndicator } from "@/components/ui/progress"
+import { Progress, ProgressIndicator, ProgressTrack } from "@/components/ui/progress"
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -158,7 +158,9 @@ export default function AnalyticsPage() {
                   <span className="text-muted-foreground">${product.revenue.toLocaleString()}</span>
                 </div>
                 <Progress value={product.percentage}>
-                  <ProgressIndicator />
+                  <ProgressTrack>
+                    <ProgressIndicator />
+                  </ProgressTrack>
                 </Progress>
               </motion.div>
             ))}

@@ -1,15 +1,18 @@
 "use client"
 
-import { Progress as ProgressPrimitive } from "@base-ui/react/progress"
+import * as React from "react"
+import { Progress as ProgressPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+
+const ProgressValueContext = React.createContext<number | null>(null)
 
 function Progress({
   className,
   children,
   value,
   ...props
-}: ProgressPrimitive.Root.Props) {
+}: React.ComponentProps<typeof ProgressPrimitive.Root>) {
   return (
     <ProgressPrimitive.Root
       value={value}
@@ -17,22 +20,21 @@ function Progress({
       className={cn("flex flex-wrap gap-3", className)}
       {...props}
     >
-      {children}
-      <ProgressTrack>
-        <ProgressIndicator />
-      </ProgressTrack>
+      <ProgressValueContext.Provider value={value ?? null}>
+        {children}
+      </ProgressValueContext.Provider>
     </ProgressPrimitive.Root>
   )
 }
 
-function ProgressTrack({ className, ...props }: ProgressPrimitive.Track.Props) {
+function ProgressTrack({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <ProgressPrimitive.Track
+    <div
+      data-slot="progress-track"
       className={cn(
         "relative flex h-1 w-full items-center overflow-x-hidden rounded-full bg-muted",
         className
       )}
-      data-slot="progress-track"
       {...props}
     />
   )
@@ -41,36 +43,49 @@ function ProgressTrack({ className, ...props }: ProgressPrimitive.Track.Props) {
 function ProgressIndicator({
   className,
   ...props
-}: ProgressPrimitive.Indicator.Props) {
+}: React.ComponentProps<typeof ProgressPrimitive.Indicator>) {
+  const value = React.useContext(ProgressValueContext)
   return (
     <ProgressPrimitive.Indicator
       data-slot="progress-indicator"
       className={cn("h-full bg-primary transition-all", className)}
+      style={{ width: `${value ?? 0}%`, ...props.style }}
       {...props}
     />
   )
 }
 
-function ProgressLabel({ className, ...props }: ProgressPrimitive.Label.Props) {
+function ProgressLabel({ className, ...props }: React.ComponentProps<"span">) {
   return (
-    <ProgressPrimitive.Label
-      className={cn("text-sm font-medium", className)}
+    <span
       data-slot="progress-label"
+      className={cn("text-sm font-medium", className)}
       {...props}
     />
   )
 }
 
-function ProgressValue({ className, ...props }: ProgressPrimitive.Value.Props) {
+function ProgressValue({
+  className,
+  children,
+  ...props
+}: Omit<React.ComponentProps<"span">, "children"> & {
+  children?:
+    | React.ReactNode
+    | ((value: number | null) => React.ReactNode)
+}) {
+  const value = React.useContext(ProgressValueContext)
   return (
-    <ProgressPrimitive.Value
+    <span
+      data-slot="progress-value"
       className={cn(
         "ml-auto text-sm text-muted-foreground tabular-nums",
         className
       )}
-      data-slot="progress-value"
       {...props}
-    />
+    >
+      {typeof children === "function" ? children(value) : children}
+    </span>
   )
 }
 

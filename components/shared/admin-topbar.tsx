@@ -2,7 +2,7 @@
 
 import { Search, Bell, Menu, User, LogOut, Settings } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useUser, useClerk } from "@clerk/nextjs"
+import { signOut, useSession } from "next-auth/react"
 import { motion } from "motion/react"
 
 import { Button as AnimateButton } from "@/components/ui/animate-button"
@@ -24,15 +24,14 @@ interface AdminTopbarProps {
 
 export function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
   const router = useRouter()
-  const { user } = useUser()
-  const { signOut } = useClerk()
+  const { data: session } = useSession()
+  const user = session?.user ?? null
 
   const initials = (() => {
     if (!user) return "AU"
-    const a = user.firstName?.charAt(0) ?? ""
-    const b = user.lastName?.charAt(0) ?? ""
-    if (a || b) return (a + b).toUpperCase()
-    return user.emailAddresses?.[0]?.emailAddress?.charAt(0)?.toUpperCase() ?? "A"
+    const parts = (user.name ?? "").split(" ").filter(Boolean)
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+    return (user.name?.[0] ?? user.email?.[0] ?? "A").toUpperCase()
   })()
 
   return (
@@ -70,15 +69,15 @@ export function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
         <DropdownMenu>
           <DropdownMenuTrigger className="rounded-full">
             <Avatar className="size-8">
-              <AvatarImage src={user?.imageUrl} alt={user?.fullName ?? "Admin"} />
+              <AvatarImage src={user?.image ?? undefined} alt={user?.name ?? "Admin"} />
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuLabel>
-              <div className="truncate">{user?.fullName ?? "Admin User"}</div>
+              <div className="truncate">{user?.name ?? "Admin User"}</div>
               <div className="text-xs font-normal text-muted-foreground truncate">
-                {user?.emailAddresses?.[0]?.emailAddress ?? ""}
+                {user?.email ?? ""}
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -91,7 +90,7 @@ export function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut({ redirectUrl: "/login" })}>
+            <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
               <LogOut className="size-4" />
               Sign out
             </DropdownMenuItem>

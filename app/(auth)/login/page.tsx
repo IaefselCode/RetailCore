@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
-import { useSignIn } from "@clerk/nextjs/legacy"
+import { signIn } from "next-auth/react"
 import {
   CardHeader,
   CardTitle,
@@ -18,15 +18,12 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Separator } from "@/components/ui/separator"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { toast } from "sonner"
 
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email address"),
   password: z.string().min(1, "Password is required"),
-  remember: z.boolean().optional(),
 })
 
 type LoginForm = z.infer<typeof loginSchema>
@@ -34,39 +31,38 @@ type LoginForm = z.infer<typeof loginSchema>
 export default function LoginPage() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
-  const { isLoaded, signIn, setActive } = useSignIn()
 
   const {
-    register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "", remember: false },
+    defaultValues: { email: "", password: "" },
   })
 
-  async function onSubmit(data: LoginForm) {
-    if (!isLoaded || !signIn) return
+  const emailValue = watch("email") ?? ""
+  const passwordValue = watch("password") ?? ""
 
+  async function onSubmit(data: LoginForm) {
     try {
-      const result = await signIn.create({
-        identifier: data.email,
+      const result = await signIn("credentials", {
+        email: data.email,
         password: data.password,
+        redirect: false,
       })
 
-      if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId })
-        toast.success("Signed in successfully")
-        router.push("/admin/dashboard")
-      } else {
-        toast.error("Something went wrong. Please try again.")
+      if (result?.error) {
+        toast.error("Invalid email or password. Please try again.")
+        return
       }
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Invalid email or password. Please try again."
-      toast.error(message)
+
+      toast.success("Signed in successfully")
+      router.push("/")
+      router.refresh()
+    } catch {
+      toast.error("Invalid email or password. Please try again.")
     }
   }
 
@@ -86,9 +82,11 @@ export default function LoginPage() {
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
+              name="email"
               type="email"
               placeholder="name@example.com"
-              {...register("email")}
+              value={emailValue}
+              onChange={(e) => setValue("email", e.target.value)}
               aria-invalid={!!errors.email}
             />
             {errors.email && (
@@ -115,9 +113,11 @@ export default function LoginPage() {
             <div className="relative">
               <Input
                 id="password"
+                name="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
-                {...register("password")}
+                value={passwordValue}
+                onChange={(e) => setValue("password", e.target.value)}
                 aria-invalid={!!errors.password}
                 className="pr-10"
               />
@@ -141,40 +141,22 @@ export default function LoginPage() {
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <Checkbox id="remember" {...register("remember")} />
-            <Label htmlFor="remember" className="text-sm font-normal">
-              Remember me
-            </Label>
-          </div>
-
           <AnimateButton
             type="submit"
             className="w-full"
             variant="accent"
-            disabled={isSubmitting || !isLoaded}
+            disabled={isSubmitting}
           >
-            {isSubmitting || !isLoaded ? (
+            {isSubmitting ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="size-4 animate-spin" />
-                {!isLoaded ? "Loading..." : "Signing in..."}
+                Signing in...
               </span>
             ) : (
               "Sign in"
             )}
           </AnimateButton>
         </form>
-
-        <div className="relative my-4">
-          <Separator />
-          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-            or
-          </span>
-        </div>
-
-        <AnimateButton variant="outline" className="w-full" type="button">
-          Sign in with SSO
-        </AnimateButton>
       </CardContent>
       <CardFooter className="flex-col gap-3">
         <div className="flex gap-4 text-xs text-muted-foreground">

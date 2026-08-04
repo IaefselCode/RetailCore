@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Menu, Search, Bell, User, Settings, LogOut } from "lucide-react"
-import { useUser, useClerk } from "@clerk/nextjs"
+import { signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { motion } from "motion/react"
 
@@ -28,21 +28,24 @@ import { EmployeeSidebar } from "@/components/shared/employee-sidebar"
 export function EmployeeTopbar() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
-  const { user } = useUser()
-  const { signOut } = useClerk()
+  const { data: session } = useSession()
+  const user = session?.user ?? null
 
   const initials = (() => {
     if (!user) return "EM"
-    const a = user.firstName?.charAt(0) ?? ""
-    const b = user.lastName?.charAt(0) ?? ""
-    if (a || b) return (a + b).toUpperCase()
-    return user.emailAddresses?.[0]?.emailAddress?.charAt(0)?.toUpperCase() ?? "E"
+    const parts = (user.name ?? "").split(" ").filter(Boolean)
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+    return (user.name?.[0] ?? user.email?.[0] ?? "E").toUpperCase()
   })()
 
   return (
     <header className="flex h-14 items-center gap-2 border-b bg-background px-3 sm:px-6">
       <Sheet>
-        <SheetTrigger render={<AnimateButton variant="ghost" size="icon-sm" className="md:hidden shrink-0"><Menu className="size-5" /></AnimateButton>} />
+        <SheetTrigger asChild>
+          <AnimateButton variant="ghost" size="icon-sm" className="md:hidden shrink-0">
+            <Menu className="size-5" />
+          </AnimateButton>
+        </SheetTrigger>
         <SheetContent side="left" className="w-64 p-0">
           <EmployeeSidebar />
         </SheetContent>
@@ -79,11 +82,19 @@ export function EmployeeTopbar() {
         </motion.div>
 
         <DropdownMenu>
-          <DropdownMenuTrigger render={<AnimateButton variant="ghost" size="icon-sm" className="rounded-full"><Avatar className="size-7"><AvatarFallback className="bg-primary/10 text-primary text-[11px] font-medium">{initials}</AvatarFallback></Avatar></AnimateButton>} />
+          <DropdownMenuTrigger asChild>
+            <AnimateButton variant="ghost" size="icon-sm" className="rounded-full">
+              <Avatar className="size-7">
+                <AvatarFallback className="bg-primary/10 text-primary text-[11px] font-medium">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+            </AnimateButton>
+          </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <div className="px-2 py-1.5">
-              <p className="text-sm font-medium">{user?.fullName ?? "Employee"}</p>
-              <p className="text-xs text-muted-foreground">{user?.emailAddresses?.[0]?.emailAddress ?? ""}</p>
+              <p className="text-sm font-medium">{user?.name ?? "Employee"}</p>
+              <p className="text-xs text-muted-foreground">{user?.email ?? ""}</p>
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => router.push("/employee/profile")}>
@@ -95,7 +106,7 @@ export function EmployeeTopbar() {
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive" onClick={() => signOut({ redirectUrl: "/login" })}>
+            <DropdownMenuItem className="text-destructive" onClick={() => signOut({ callbackUrl: "/login" })}>
               <LogOut className="size-4" />
               Sign Out
             </DropdownMenuItem>
