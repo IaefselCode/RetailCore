@@ -125,13 +125,8 @@ type AccordionItemPrimitiveProps = React.ComponentProps<typeof AccordionPrime.It
 
 function AccordionItemPrimitive(props: AccordionItemPrimitiveProps) {
   const { value } = useAccordion();
-  const [isOpen, setIsOpen] = React.useState(
-    value?.includes(props?.value) ?? false,
-  );
-
-  React.useEffect(() => {
-    setIsOpen(value?.includes(props?.value) ?? false);
-  }, [value, props?.value]);
+  const isOpen = value?.includes(props?.value) ?? false;
+  const setIsOpen = React.useCallback((_open: boolean) => {}, []);
 
   return (
     <AccordionItemProvider value={{ isOpen, setIsOpen, value: props.value }}>
@@ -259,21 +254,20 @@ export function useControlledState<T, Rest extends any[] = []>(
   },
 ): readonly [T, (next: T, ...args: Rest) => void] {
   const { value, defaultValue, onChange } = props;
+  const isControlled = value !== undefined;
 
-  const [state, setInternalState] = React.useState<T>(
+  const [internalState, setInternalState] = React.useState<T>(
     value !== undefined ? value : (defaultValue as T),
   );
 
-  React.useEffect(() => {
-    if (value !== undefined) setInternalState(value);
-  }, [value]);
+  const state = isControlled ? (value as T) : internalState;
 
   const setState = React.useCallback(
     (next: T, ...args: Rest) => {
-      setInternalState(next);
+      if (!isControlled) setInternalState(next);
       onChange?.(next, ...args);
     },
-    [onChange],
+    [onChange, isControlled],
   );
 
   return [state, setState] as const;

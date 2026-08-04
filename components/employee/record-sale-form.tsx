@@ -46,28 +46,23 @@ interface CartItem {
 const TAX_RATE = 0.18
 const initialState: ActionResult | null = null
 
-export function RecordSaleForm({ products, shopName }: { products: PosProduct[]; shopName: string }) {
-  const [state, formAction, pending] = useActionState(recordSale, initialState)
+function RecordSaleFormBody({
+  products,
+  shopName,
+  formAction,
+  pending,
+  successMessage,
+}: {
+  products: PosProduct[]
+  shopName: string
+  formAction: (payload: FormData) => void
+  pending: boolean
+  successMessage: string | null
+}) {
   const [search, setSearch] = useState("")
   const [cart, setCart] = useState<CartItem[]>([])
   const [paymentMethod, setPaymentMethod] = useState("CASH")
   const [customerName, setCustomerName] = useState("")
-  const lastToastRef = useRef<string | null>(null)
-
-  useEffect(() => {
-    if (!state?.message) return
-    const key = `${state.success}-${state.message}`
-    if (lastToastRef.current === key) return
-    lastToastRef.current = key
-    if (state.success) {
-      setCart([])
-      setCustomerName("")
-      setPaymentMethod("CASH")
-      toast.success(state.message)
-    } else {
-      toast.error(state.message)
-    }
-  }, [state])
 
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
@@ -100,11 +95,13 @@ export function RecordSaleForm({ products, shopName }: { products: PosProduct[];
 
   const updateQuantity = useCallback((id: string, quantity: number) => {
     setCart((prev) =>
-      prev.map((item) => {
-        if (item.id !== id) return item
-        if (quantity <= 0) return item
-        return { ...item, quantity: Math.min(quantity, item.maxStock) }
-      }).filter((item) => item.id !== id || quantity > 0)
+      prev
+        .map((item) => {
+          if (item.id !== id) return item
+          if (quantity <= 0) return item
+          return { ...item, quantity: Math.min(quantity, item.maxStock) }
+        })
+        .filter((item) => item.id !== id || quantity > 0)
     )
   }, [])
 
@@ -126,10 +123,10 @@ export function RecordSaleForm({ products, shopName }: { products: PosProduct[];
         <p className="text-sm text-muted-foreground">{shopName} · Add items and complete the transaction</p>
       </div>
 
-      {state?.success && (
+      {successMessage && (
         <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-200">
           <CheckCircle2 className="size-4 shrink-0" />
-          {state.message}
+          {successMessage}
         </div>
       )}
 
@@ -276,5 +273,31 @@ export function RecordSaleForm({ products, shopName }: { products: PosProduct[];
         </div>
       </form>
     </div>
+  )
+}
+
+export function RecordSaleForm({ products, shopName }: { products: PosProduct[]; shopName: string }) {
+  const [state, formAction, pending] = useActionState(recordSale, initialState)
+  const lastToastRef = useRef<string | null>(null)
+  const resetKey = state?.success ? state.message : "idle"
+
+  useEffect(() => {
+    if (!state?.message) return
+    const key = `${state.success}-${state.message}`
+    if (lastToastRef.current === key) return
+    lastToastRef.current = key
+    if (state.success) toast.success(state.message)
+    else toast.error(state.message)
+  }, [state])
+
+  return (
+    <RecordSaleFormBody
+      key={resetKey}
+      products={products}
+      shopName={shopName}
+      formAction={formAction}
+      pending={pending}
+      successMessage={state?.success ? state.message : null}
+    />
   )
 }

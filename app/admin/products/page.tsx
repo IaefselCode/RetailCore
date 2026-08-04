@@ -6,7 +6,6 @@ import { CirclePlus, Package } from "lucide-react"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ProductsTable } from "@/components/admin/products-table"
-import { formatMoney } from "@/lib/money"
 
 export const metadata = { title: "Products | RetailCore" }
 

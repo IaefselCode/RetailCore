@@ -80,7 +80,7 @@ export function EmployeeFormDialog({
         return
       }
 
-      if (!employee && "temporaryPassword" in result && result.temporaryPassword) {
+      if (!employee && "temporaryPassword" in result && typeof result.temporaryPassword === "string") {
         setTempPassword(result.temporaryPassword)
         setNewName(name)
       } else {
