@@ -6,7 +6,13 @@ import { EmployeeSidebar } from "@/components/shared/employee-sidebar"
 import { EmployeeTopbar } from "@/components/shared/employee-topbar"
 import { Loader2 } from "lucide-react"
 
-export function EmployeeShell({ children }: { children: React.ReactNode }) {
+export function EmployeeShell({
+  children,
+  unreadCount = 0,
+}: {
+  children: React.ReactNode
+  unreadCount?: number
+}) {
   const { status } = useSession()
   const router = useRouter()
 
@@ -29,7 +35,7 @@ export function EmployeeShell({ children }: { children: React.ReactNode }) {
         <EmployeeSidebar />
       </aside>
       <div className="flex flex-1 flex-col overflow-hidden">
-        <EmployeeTopbar />
+        <EmployeeTopbar unreadCount={unreadCount} />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           {children}
         </main>

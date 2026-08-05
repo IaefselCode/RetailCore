@@ -5,6 +5,7 @@ export type AuditEvent =
   | "shop_updated"
   | "shop_deactivated"
   | "shop_activated"
+  | "shop_deleted"
   | "employee_created"
   | "employee_updated"
   | "employee_deactivated"

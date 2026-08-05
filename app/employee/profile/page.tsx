@@ -4,8 +4,7 @@ import { motion } from "motion/react"
 import { Mail, Phone, Store, DollarSign, Star, Calendar, Edit3 } from "lucide-react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { AnimateButton } from "@/components/ui/animate-button"
 
 const sectionVariants = {

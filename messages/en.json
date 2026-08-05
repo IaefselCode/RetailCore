@@ -133,31 +133,6 @@
     "inStock": "{count} in stock",
     "reorderAt": "Reorder at {amount}"
   },
-  "employeeDashboard": {
-    "today": "Today",
-    "lowStockAlerts": "Low Stock Alerts",
-    "lastTransactions": "Your last 5 transactions",
-    "recentActivity": "Recent Activity"
-  },
-  "status": {
-    "completed": "Completed",
-    "pending": "Pending",
-    "cancelled": "Cancelled"
-  },
-  "kpi": {
-    "salesTitle": "Today's Sales",
-    "ordersTitle": "Orders Today",
-    "lowStockTitle": "Low Stock Items",
-    "shiftTitle": "Current Shift",
-    "salesDescription": "+12% from yesterday",
-    "ordersDescription": "4 pending",
-    "lowStockDescription": "Below reorder level",
-    "shiftDescription": "4h 32m remaining"
-  },
-  "lowStock": {
-    "inStock": "{count} in stock",
-    "reorderAt": "Reorder at {amount}"
-  },
   "shops": {
     "title": "Shop Management",
     "subtitle": "Manage all retail locations",
@@ -191,7 +166,10 @@
     "deactivated": "Shop deactivated.",
     "activated": "Shop activated.",
     "genericError": "Something went wrong. Please try again.",
-    "noResults": "No shops match your search."
+    "noResults": "No shops match your search.",
+    "deleteConfirmTitle": "Delete Shop?",
+    "deleteConfirmDescription": "This will permanently delete this shop and all of its employees, sales, inventory, and stock history. This action cannot be undone.",
+    "deleteConfirmButton": "Delete Shop"
   },
   "employees": {
     "title": "Employee Management",

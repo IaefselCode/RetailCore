@@ -137,7 +137,10 @@
     "deactivated": "Duka limesimamishwa.",
     "activated": "Duka limewashwa.",
     "genericError": "Hitilafu imetokea. Jaribu tena.",
-    "noResults": "Hakuna duka linalofanana na utafutaji wako."
+    "noResults": "Hakuna duka linalofanana na utafutaji wako.",
+    "deleteConfirmTitle": "Delete Shop?",
+    "deleteConfirmDescription": "This will permanently delete this shop and all of its employees, sales, inventory, and stock history. This action cannot be undone.",
+    "deleteConfirmButton": "Delete Shop"
   },
   "employees": {
     "title": "Usimamizi wa Wafanyakazi",
@@ -185,31 +188,31 @@
     "copied": "Imenakiliwa",
     "loginHint": "Barua pepe ya kuingia"
   },
-    "imageUpload": {
-      "upload": "Pakia picha",
-      "replace": "Badilisha picha",
-      "remove": "Ondoa",
-      "tooLarge": "Picha lazima iwe 10MB au ndogo zaidi.",
-      "failed": "Upakiaji umeshindikana. Jaribu tena.",
-      "saved": "Umeokoa {percent}% ya uhifadhi"
-    },
-    "status": {
-      "completed": "Imekamilika",
-      "pending": "Inakusudiwa",
-      "cancelled": "Imefutwa"
-    },
-    "kpi": {
-      "salesTitle": "Mauzo ya Leo",
-      "ordersTitle": "Maagizo Leo",
-      "lowStockTitle": "Vipengele vya Hisa Kidogo",
-      "shiftTitle": "Muafaka wa Kazi",
-      "salesDescription": "+12% kutoka jana",
-      "ordersDescription": "4 inakusudiwa",
-      "lowStockDescription": "Chini ya kiwango cha kuongeza",
-      "shiftDescription": "4h 32m bado"
-    },
-    "lowStock": {
-      "inStock": "{count} zipo",
-      "reorderAt": "Kusanya tena katika {amount}"
-    }
+  "imageUpload": {
+    "upload": "Pakia picha",
+    "replace": "Badilisha picha",
+    "remove": "Ondoa",
+    "tooLarge": "Picha lazima iwe 10MB au ndogo zaidi.",
+    "failed": "Upakiaji umeshindikana. Jaribu tena.",
+    "saved": "Umeokoa {percent}% ya uhifadhi"
+  },
+  "status": {
+    "completed": "Imekamilika",
+    "pending": "Inakusudiwa",
+    "cancelled": "Imefutwa"
+  },
+  "kpi": {
+    "salesTitle": "Mauzo ya Leo",
+    "ordersTitle": "Maagizo Leo",
+    "lowStockTitle": "Vipengele vya Hisa Kidogo",
+    "shiftTitle": "Muafaka wa Kazi",
+    "salesDescription": "+12% kutoka jana",
+    "ordersDescription": "4 inakusudiwa",
+    "lowStockDescription": "Chini ya kiwango cha kuongeza",
+    "shiftDescription": "4h 32m bado"
+  },
+  "lowStock": {
+    "inStock": "{count} zipo",
+    "reorderAt": "Kusanya tena katika {amount}"
   }
+}

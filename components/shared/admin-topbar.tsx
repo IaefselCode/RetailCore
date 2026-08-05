@@ -21,9 +21,10 @@ import {
 
 interface AdminTopbarProps {
   onMenuClick?: () => void
+  unreadCount?: number
 }
 
-export function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
+export function AdminTopbar({ onMenuClick, unreadCount = 0 }: AdminTopbarProps) {
   const router = useRouter()
   const { data: session } = useSession()
   const user = session?.user ?? null
@@ -53,21 +54,19 @@ export function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
       <div className="flex items-center gap-1 shrink-0">
         <LanguageSwitcher />
         <ThemeToggle />
-        <motion.div
-          animate={{ y: [0, -3, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          whileHover={{ scale: 1.15 }}
+        <AnimateButton
+          variant="ghost"
+          size="icon"
+          className="relative"
+          onClick={() => router.push("/admin/notifications")}
         >
-          <AnimateButton
-            variant="ghost"
-            size="icon"
-            className="relative"
-            onClick={() => router.push("/admin/notifications")}
-          >
-            <Bell className="size-5" />
-            <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-destructive" />
-          </AnimateButton>
-        </motion.div>
+          <Bell className="size-5" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] leading-none font-semibold text-white">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </AnimateButton>
         <DropdownMenu>
           <DropdownMenuTrigger className="rounded-full">
             <Avatar className="size-8">

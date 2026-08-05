@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
-import { completePasswordReset, resetPasswordFromForm } from "@/lib/reset-actions"
+import { resetPasswordFromForm } from "@/lib/reset-actions"
 
 const initialState = { success: false, message: "" }
 

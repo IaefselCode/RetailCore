@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/sheet"
 import { EmployeeSidebar } from "@/components/shared/employee-sidebar"
 
-export function EmployeeTopbar() {
+export function EmployeeTopbar({ unreadCount = 0 }: { unreadCount?: number }) {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const { data: session } = useSession()
@@ -72,16 +72,16 @@ export function EmployeeTopbar() {
       <div className="flex items-center gap-1 sm:gap-2 shrink-0">
         <LanguageSwitcher />
         <ThemeToggle />
-        <motion.div
-          animate={{ y: [0, -3, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <Link href="/employee/notifications">
-            <AnimateButton variant="ghost" size="icon-sm">
-              <Bell className="size-5" />
-            </AnimateButton>
-          </Link>
-        </motion.div>
+        <Link href="/employee/notifications">
+          <AnimateButton variant="ghost" size="icon-sm" className="relative">
+            <Bell className="size-5" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] leading-none font-semibold text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </AnimateButton>
+        </Link>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

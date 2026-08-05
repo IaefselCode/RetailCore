@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { MapPin, Plus, Search } from "lucide-react"
+import { MapPin, Plus, Search, Trash2, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -18,7 +18,18 @@ import {
   TableCell,
 } from "@/components/ui/table"
 import { Switch } from "@/components/ui/switch"
-import { setShopActive } from "@/lib/organization-actions"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { setShopActive, deleteShop } from "@/lib/organization-actions"
 import { ShopFormDialog, type ShopRow } from "@/components/admin/shop-form-dialog"
 
 export function ShopsTable({ shops }: { shops: ShopRow[] }) {
@@ -27,6 +38,7 @@ export function ShopsTable({ shops }: { shops: ShopRow[] }) {
   const router = useRouter()
   const [search, setSearch] = useState("")
   const [editing, setEditing] = useState<ShopRow | null | undefined>(undefined)
+  const [deleteTarget, setDeleteTarget] = useState<ShopRow | null>(null)
   const [pending, startTransition] = useTransition()
 
   const q = search.toLowerCase()
@@ -45,6 +57,22 @@ export function ShopsTable({ shops }: { shops: ShopRow[] }) {
       const result = await setShopActive(fd)
       if (result.success) {
         toast.success(result.message)
+        router.refresh()
+      } else {
+        toast.error(result.message)
+      }
+    })
+  }
+
+  function confirmDelete() {
+    if (!deleteTarget) return
+    const fd = new FormData()
+    fd.append("id", deleteTarget.id)
+    startTransition(async () => {
+      const result = await deleteShop(fd)
+      if (result.success) {
+        toast.success(result.message)
+        setDeleteTarget(null)
         router.refresh()
       } else {
         toast.error(result.message)
@@ -112,6 +140,16 @@ export function ShopsTable({ shops }: { shops: ShopRow[] }) {
                         >
                           {tc("edit")}
                         </AnimateButton>
+                        <AnimateButton
+                          size="icon-sm"
+                          variant="ghost"
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => setDeleteTarget(shop)}
+                          disabled={pending}
+                          aria-label={t("deleteConfirmTitle")}
+                        >
+                          <Trash2 className="size-4" />
+                        </AnimateButton>
                         <Switch
                           checked={shop.isActive}
                           onCheckedChange={() => toggle(shop)}
@@ -142,6 +180,28 @@ export function ShopsTable({ shops }: { shops: ShopRow[] }) {
           if (!open) setEditing(undefined)
         }}
       />
+
+      <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogMedia>
+              <AlertTriangle className="size-8 text-destructive" />
+            </AlertDialogMedia>
+            <AlertDialogTitle>{t("deleteConfirmTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("deleteConfirmDescription")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteTarget(null)}>{tc("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={pending}
+              onClick={confirmDelete}
+            >
+              {t("deleteConfirmButton")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

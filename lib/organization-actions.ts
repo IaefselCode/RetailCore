@@ -139,6 +139,51 @@ export async function setShopActive(formData: FormData): Promise<ActionResult> {
   }
 }
 
+export async function deleteShop(formData: FormData): Promise<ActionResult> {
+  const actorId = await requireAdmin()
+  if (!actorId) return fail("You do not have permission to do that.")
+
+  try {
+    const id = str(formData.get("id"))
+    if (!id) return fail("Missing shop id.")
+
+    const shop = await prisma.shop.findUnique({
+      where: { id },
+      select: { id: true, name: true },
+    })
+    if (!shop) return fail("Shop not found.")
+
+    await prisma.$transaction(async (tx) => {
+      const employees = await tx.employee.findMany({
+        where: { shopId: id },
+        select: { userId: true },
+      })
+      await tx.sale.deleteMany({ where: { shopId: id } })
+      await tx.employee.deleteMany({ where: { shopId: id } })
+      if (employees.length > 0) {
+        await tx.user.deleteMany({
+          where: { id: { in: employees.map((e) => e.userId) } },
+        })
+      }
+      await tx.shop.delete({ where: { id } })
+    })
+
+    const meta = await getRequestMeta()
+    await logAuditEvent("shop_deleted", {
+      actorId,
+      entityType: "Shop",
+      entityId: shop.id,
+      detail: shop.name,
+      ip: meta.ip,
+    })
+    revalidatePath("/admin/shops")
+    return { success: true, message: "Shop deleted." }
+  } catch (err) {
+    console.error("deleteShop failed:", err)
+    return fail("Something went wrong. Please try again.")
+  }
+}
+
 export async function createEmployee(formData: FormData): Promise<EmployeeActionResult> {
   const actorId = await requireAdmin()
   if (!actorId) return fail("You do not have permission to do that.")
