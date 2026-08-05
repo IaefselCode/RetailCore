@@ -1,15 +1,13 @@
 "use client"
 
+import type { ReactNode } from "react"
 import { motion } from "motion/react"
 import { useTranslations } from "next-intl"
 import { DollarSign, ShoppingCart, AlertTriangle, TrendingUp, Package, ArrowRight } from "lucide-react"
 import Link from "next/link"
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ActivitiesCard, type ActivityItemType } from "@/components/ui/activities-card"
 import { AnimateButton } from "@/components/ui/animate-button"
-import { formatMoney } from "@/lib/money"
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -30,52 +28,26 @@ function getGreeting(hour: number) {
   return "Good evening"
 }
 
-function timeAgo(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime()
-  const minutes = Math.floor(diff / 60000)
-  if (minutes < 1) return "Just now"
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  return `${days}d ago`
-}
-
-export interface EmployeeRecentSale {
-  invoiceNo: string
-  total: number
-  createdAt: string
-}
-
-export interface EmployeeLowStockItem {
-  name: string
-  sku: string
-  quantity: number
-  minStock: number
-}
-
 interface EmployeeDashboardProps {
   firstName: string
   shopName: string
-  todaySales: number
-  ordersToday: number
-  lowStockCount: number
-  monthSales: number
-  stockUnits: number
-  recentSales: EmployeeRecentSale[]
-  lowStock: EmployeeLowStockItem[]
+  values: {
+    todaySales: ReactNode
+    ordersToday: ReactNode
+    lowStockCount: ReactNode
+    monthSales: ReactNode
+    stockUnits: ReactNode
+  }
+  recentSalesSection: ReactNode
+  lowStockSection: ReactNode
 }
 
 export function EmployeeDashboard({
   firstName,
   shopName,
-  todaySales,
-  ordersToday,
-  lowStockCount,
-  monthSales,
-  stockUnits,
-  recentSales,
-  lowStock,
+  values,
+  recentSalesSection,
+  lowStockSection,
 }: EmployeeDashboardProps) {
   const t = useTranslations("dashboard")
   const tEmployee = useTranslations("employeeDashboard")
@@ -83,36 +55,29 @@ export function EmployeeDashboard({
   const kpis = [
     {
       title: "Today's Sales",
-      value: formatMoney(todaySales),
+      value: values.todaySales,
       icon: DollarSign,
-      description: `${shopName}`,
+      description: shopName,
     },
     {
       title: "Orders Today",
-      value: String(ordersToday),
+      value: values.ordersToday,
       icon: ShoppingCart,
       description: "Completed today",
     },
     {
       title: tEmployee("lowStockAlerts"),
-      value: String(lowStockCount),
+      value: values.lowStockCount,
       icon: AlertTriangle,
       description: "Below reorder level",
     },
     {
       title: "My Month",
-      value: formatMoney(monthSales),
+      value: values.monthSales,
       icon: TrendingUp,
-      description: `${stockUnits} units in stock`,
+      description: <>{values.stockUnits} units in stock</>,
     },
   ]
-
-  const activities: ActivityItemType[] = recentSales.map((sale) => ({
-    icon: <ShoppingCart className="size-5" />,
-    title: sale.invoiceNo,
-    desc: `Processed by you - ${formatMoney(sale.total)}`,
-    time: timeAgo(sale.createdAt),
-  }))
 
   return (
     <div className="space-y-6">
@@ -161,12 +126,7 @@ export function EmployeeDashboard({
       </motion.div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <ActivitiesCard
-          headerIcon={<ShoppingCart className="size-6 text-gray-500" />}
-          title={tEmployee("recentActivity")}
-          subtitle={tEmployee("lastTransactions")}
-          activities={activities}
-        />
+        {recentSalesSection}
 
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -181,32 +141,7 @@ export function EmployeeDashboard({
               <CardDescription>{t("productsBelowReorderLevel")}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {lowStock.length === 0 && (
-                  <p className="py-4 text-center text-sm text-muted-foreground">
-                    All stock levels are healthy
-                  </p>
-                )}
-                {lowStock.map((item) => (
-                  <div
-                    key={item.sku}
-                    className="flex items-center justify-between rounded-lg border p-3"
-                  >
-                    <div>
-                      <p className="text-sm font-medium">{item.name}</p>
-                      <p className="text-xs text-muted-foreground">{item.sku}</p>
-                    </div>
-                    <div className="text-right">
-                      <Badge variant={item.quantity <= 0 ? "destructive" : "secondary"}>
-                        {item.quantity} in stock
-                      </Badge>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">
-                        Reorder at {item.minStock}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <div className="space-y-3">{lowStockSection}</div>
             </CardContent>
           </Card>
         </motion.div>

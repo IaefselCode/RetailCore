@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
+import { Skeleton } from "@/components/ui/skeleton"
 import { SkeletonTable } from "@/components/shared/skeletons"
 import { SalesHistoryTable } from "@/components/admin/sales-history-table"
 
@@ -26,21 +27,35 @@ export default async function SalesHistoryPage({
   const params = await searchParams
   const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1)
 
+  return (
+    <Suspense fallback={<SalesHistorySkeleton />}>
+      <SalesHistoryContent searchParams={params} page={page} />
+    </Suspense>
+  )
+}
+
+async function SalesHistoryContent({
+  searchParams,
+  page,
+}: {
+  searchParams: SearchParams
+  page: number
+}) {
   const where: Record<string, unknown> = {}
-  if (params.dateFrom || params.dateTo) {
+  if (searchParams.dateFrom || searchParams.dateTo) {
     where.createdAt = {
-      ...(params.dateFrom ? { gte: new Date(params.dateFrom) } : {}),
-      ...(params.dateTo ? { lte: new Date(`${params.dateTo}T23:59:59`) } : {}),
+      ...(searchParams.dateFrom ? { gte: new Date(searchParams.dateFrom) } : {}),
+      ...(searchParams.dateTo ? { lte: new Date(`${searchParams.dateTo}T23:59:59`) } : {}),
     }
   }
-  if (params.paymentMethod && params.paymentMethod !== "all") {
-    where.paymentMethod = params.paymentMethod
+  if (searchParams.paymentMethod && searchParams.paymentMethod !== "all") {
+    where.paymentMethod = searchParams.paymentMethod
   }
-  if (params.status && params.status !== "all") {
-    where.status = params.status.toUpperCase()
+  if (searchParams.status && searchParams.status !== "all") {
+    where.status = searchParams.status.toUpperCase()
   }
-  if (params.shopId && params.shopId !== "all") {
-    where.shopId = params.shopId
+  if (searchParams.shopId && searchParams.shopId !== "all") {
+    where.shopId = searchParams.shopId
   }
 
   const [sales, total, shops] = await Promise.all([
@@ -63,30 +78,56 @@ export default async function SalesHistoryPage({
   ])
 
   return (
-    <Suspense fallback={<SkeletonTable rows={8} cols={8} />}>
-      <SalesHistoryTable
-        sales={sales.map((s) => ({
-          id: s.id,
-          invoiceNo: s.invoiceNo,
-          customerName: s.customerName,
-          shopName: s.shop.name,
-          itemCount: s.items.reduce((sum, i) => sum + i.quantity, 0),
-          total: Number(s.total),
-          paymentMethod: s.paymentMethod,
-          createdAt: s.createdAt.toISOString(),
-          status: s.status,
-        }))}
-        shops={shops}
-        total={total}
-        initialFilters={{
-          dateFrom: params.dateFrom ?? "",
-          dateTo: params.dateTo ?? "",
-          paymentMethod: params.paymentMethod ?? "all",
-          status: params.status ?? "all",
-          shopId: params.shopId ?? "all",
-          page,
-        }}
-      />
-    </Suspense>
+    <SalesHistoryTable
+      sales={sales.map((s) => ({
+        id: s.id,
+        invoiceNo: s.invoiceNo,
+        customerName: s.customerName,
+        shopName: s.shop.name,
+        itemCount: s.items.reduce((sum, i) => sum + i.quantity, 0),
+        total: Number(s.total),
+        paymentMethod: s.paymentMethod,
+        createdAt: s.createdAt.toISOString(),
+        status: s.status,
+      }))}
+      shops={shops}
+      total={total}
+      initialFilters={{
+        dateFrom: searchParams.dateFrom ?? "",
+        dateTo: searchParams.dateTo ?? "",
+        paymentMethod: searchParams.paymentMethod ?? "all",
+        status: searchParams.status ?? "all",
+        shopId: searchParams.shopId ?? "all",
+        page,
+      }}
+    />
   )
 }
+
+function SalesHistorySkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-48" />
+        <Skeleton className="h-7 w-48" />
+      </div>
+
+      <div className="flex flex-wrap gap-3 p-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-9 w-40" />
+        ))}
+      </div>
+
+      <SkeletonTable rows={8} cols={8} />
+
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-4 w-40" />
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-24" />
+          <Skeleton className="h-9 w-24" />
+        </div>
+      </div>
+    </div>
+  )
+}
+

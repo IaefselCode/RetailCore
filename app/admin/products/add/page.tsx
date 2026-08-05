@@ -1,18 +1,15 @@
+import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import { AddProductWizard } from "@/components/admin/add-product-wizard"
+import { SkeletonWizard } from "@/components/shared/skeletons"
 
 export const metadata = { title: "Add Product | RetailCore" }
 
 export default async function AddProductPage() {
   await requireRole("ADMIN")
-
-  const categories = await prisma.category.findMany({
-    orderBy: { name: "asc" },
-    select: { id: true, name: true },
-  })
 
   return (
     <div className="space-y-6">
@@ -28,7 +25,19 @@ export default async function AddProductPage() {
         <p className="text-sm text-muted-foreground">Fill in the product details across all steps</p>
       </div>
 
-      <AddProductWizard categories={categories} />
+      <Suspense fallback={<SkeletonWizard steps={3} />}>
+        <AddProductContent />
+      </Suspense>
     </div>
   )
 }
+
+async function AddProductContent() {
+  const categories = await prisma.category.findMany({
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  })
+
+  return <AddProductWizard categories={categories} />
+}
+

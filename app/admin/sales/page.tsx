@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
@@ -5,14 +6,9 @@ import { DollarSign, TrendingUp, CalendarDays, ShoppingCart } from "lucide-react
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonStat } from "@/components/shared/skeletons"
 import { formatMoney } from "@/lib/money"
 
 export const metadata = { title: "Sales | RetailCore" }
@@ -40,37 +36,118 @@ function startOfMonth(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), 1)
 }
 
+async function TodaySalesValue() {
+  const agg = await prisma.sale.aggregate({
+    where: { status: "COMPLETED", createdAt: { gte: startOfDay(new Date()) } },
+    _sum: { total: true },
+  })
+  return <>{formatMoney(agg._sum.total ?? 0)}</>
+}
+
+async function WeekSalesValue() {
+  const agg = await prisma.sale.aggregate({
+    where: { status: "COMPLETED", createdAt: { gte: startOfWeek(new Date()) } },
+    _sum: { total: true },
+  })
+  return <>{formatMoney(agg._sum.total ?? 0)}</>
+}
+
+async function MonthSalesValue() {
+  const agg = await prisma.sale.aggregate({
+    where: { status: "COMPLETED", createdAt: { gte: startOfMonth(new Date()) } },
+    _sum: { total: true },
+  })
+  return <>{formatMoney(agg._sum.total ?? 0)}</>
+}
+
+async function TransactionsTodayValue() {
+  const count = await prisma.sale.count({
+    where: { status: "COMPLETED", createdAt: { gte: startOfDay(new Date()) } },
+  })
+  return <>{count}</>
+}
+
+async function RecentTransactionsSection() {
+  const recentSales = await prisma.sale.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 10,
+    include: {
+      shop: { select: { name: true } },
+      items: { select: { quantity: true } },
+    },
+  })
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>Recent Transactions</CardTitle></CardHeader>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Invoice</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Shop</TableHead>
+              <TableHead>Items</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Payment</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {recentSales.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
+                  No sales yet
+                </TableCell>
+              </TableRow>
+            )}
+            {recentSales.map((sale) => {
+              const itemCount = sale.items.reduce((sum, i) => sum + i.quantity, 0)
+              return (
+                <TableRow key={sale.id} className="transition-colors hover:bg-muted/50">
+                  <TableCell className="font-mono text-xs">{sale.invoiceNo}</TableCell>
+                  <TableCell>{sale.customerName ?? "—"}</TableCell>
+                  <TableCell>{sale.shop.name}</TableCell>
+                  <TableCell>{itemCount}</TableCell>
+                  <TableCell className="font-medium">{formatMoney(sale.total)}</TableCell>
+                  <TableCell>{sale.paymentMethod ?? "—"}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {new Date(sale.createdAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={statusBadge[sale.status] ?? "default"}>{sale.status}</Badge>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    </Card>
+  )
+}
+
+function RecentTransactionsSkeleton() {
+  return (
+    <Card>
+      <CardHeader>
+        <Skeleton className="h-5 w-40" />
+      </CardHeader>
+      <div className="space-y-3 p-4">
+        {Array.from({ length: 6 }).map((_, r) => (
+          <div key={r} className="grid grid-cols-8 gap-4">
+            {Array.from({ length: 8 }).map((_, c) => (
+              <Skeleton key={c} className="h-4" />
+            ))}
+          </div>
+        ))}
+      </div>
+    </Card>
+  )
+}
 export default async function SalesPage() {
   await requireRole("ADMIN")
-
-  const now = new Date()
-  const todayStart = startOfDay(now)
-  const weekStart = startOfWeek(now)
-  const monthStart = startOfMonth(now)
-
-  const [todayAgg, weekAgg, monthAgg, recentSales] = await Promise.all([
-    prisma.sale.aggregate({
-      where: { status: "COMPLETED", createdAt: { gte: todayStart } },
-      _sum: { total: true },
-      _count: true,
-    }),
-    prisma.sale.aggregate({
-      where: { status: "COMPLETED", createdAt: { gte: weekStart } },
-      _sum: { total: true },
-    }),
-    prisma.sale.aggregate({
-      where: { status: "COMPLETED", createdAt: { gte: monthStart } },
-      _sum: { total: true },
-    }),
-    prisma.sale.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      include: {
-        shop: { select: { name: true } },
-        items: { select: { quantity: true } },
-      },
-    }),
-  ])
 
   return (
     <div className="space-y-6">
@@ -98,76 +175,43 @@ export default async function SalesPage() {
           <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Today&apos;s Sales</CardTitle></CardHeader>
           <CardContent className="flex items-center gap-2 text-2xl font-bold">
             <DollarSign className="size-5 text-green-500" />
-            {formatMoney(todayAgg._sum.total)}
+            <Suspense fallback={<SkeletonStat />}>
+              <TodaySalesValue />
+            </Suspense>
           </CardContent>
         </Card>
         <Card>
           <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">This Week</CardTitle></CardHeader>
           <CardContent className="flex items-center gap-2 text-2xl font-bold">
             <TrendingUp className="size-5 text-blue-500" />
-            {formatMoney(weekAgg._sum.total)}
+            <Suspense fallback={<SkeletonStat />}>
+              <WeekSalesValue />
+            </Suspense>
           </CardContent>
         </Card>
         <Card>
           <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">This Month</CardTitle></CardHeader>
           <CardContent className="flex items-center gap-2 text-2xl font-bold">
             <CalendarDays className="size-5 text-purple-500" />
-            {formatMoney(monthAgg._sum.total)}
+            <Suspense fallback={<SkeletonStat />}>
+              <MonthSalesValue />
+            </Suspense>
           </CardContent>
         </Card>
         <Card>
           <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Transactions Today</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-bold">{todayAgg._count}</CardContent>
+          <CardContent className="text-2xl font-bold">
+            <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
+              <TransactionsTodayValue />
+            </Suspense>
+          </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader><CardTitle>Recent Transactions</CardTitle></CardHeader>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Invoice</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Shop</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentSales.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
-                    No sales yet
-                  </TableCell>
-                </TableRow>
-              )}
-              {recentSales.map((sale) => {
-                const itemCount = sale.items.reduce((sum, i) => sum + i.quantity, 0)
-                return (
-                  <TableRow key={sale.id} className="transition-colors hover:bg-muted/50">
-                    <TableCell className="font-mono text-xs">{sale.invoiceNo}</TableCell>
-                    <TableCell>{sale.customerName ?? "—"}</TableCell>
-                    <TableCell>{sale.shop.name}</TableCell>
-                    <TableCell>{itemCount}</TableCell>
-                    <TableCell className="font-medium">{formatMoney(sale.total)}</TableCell>
-                    <TableCell>{sale.paymentMethod ?? "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(sale.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={statusBadge[sale.status] ?? "default"}>{sale.status}</Badge>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      </Card>
+      <Suspense fallback={<RecentTransactionsSkeleton />}>
+        <RecentTransactionsSection />
+      </Suspense>
     </div>
   )
 }
+

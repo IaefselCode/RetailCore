@@ -1,16 +1,32 @@
+import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
 import { Users, Home, ChevronRight, Plus } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonStat } from "@/components/shared/skeletons"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import Link from "next/link"
 import { EmployeesTable } from "@/components/admin/employees-table"
 
 export const metadata = { title: "Employee Management | RetailCore" }
 
-export default async function EmployeesPage() {
-  await requireRole("ADMIN")
+async function TotalEmployeesValue() {
+  const count = await prisma.employee.count()
+  return <>{count}</>
+}
 
+async function ActiveEmployeesValue() {
+  const count = await prisma.employee.count({ where: { isActive: true } })
+  return <>{count}</>
+}
+
+async function InactiveEmployeesValue() {
+  const count = await prisma.employee.count({ where: { isActive: false } })
+  return <>{count}</>
+}
+
+async function EmployeesTableSection() {
   const [employees, shops] = await Promise.all([
     prisma.employee.findMany({
       orderBy: { createdAt: "asc" },
@@ -26,9 +42,6 @@ export default async function EmployeesPage() {
     }),
   ])
 
-  const activeCount = employees.filter((e) => e.isActive).length
-  const inactiveCount = employees.filter((e) => !e.isActive).length
-
   const employeeRows = employees.map((e) => ({
     id: e.id,
     userId: e.userId,
@@ -42,6 +55,29 @@ export default async function EmployeesPage() {
     salary: Number(e.salary ?? 0),
     isActive: e.isActive,
   }))
+
+  return <EmployeesTable employees={employeeRows} shops={shops} />
+}
+
+function EmployeesTableSkeleton() {
+  return (
+    <div className="space-y-3 p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <Skeleton className="h-9 w-full sm:max-w-xs" />
+        <Skeleton className="h-9 w-36" />
+      </div>
+      {Array.from({ length: 6 }).map((_, r) => (
+        <div key={r} className="grid grid-cols-6 gap-4">
+          {Array.from({ length: 6 }).map((_, c) => (
+            <Skeleton key={c} className="h-4" />
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+export default async function EmployeesPage() {
+  await requireRole("ADMIN")
 
   return (
     <div className="space-y-6">
@@ -71,7 +107,11 @@ export default async function EmployeesPage() {
             <Users className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{employees.length}</div>
+            <div className="text-2xl font-bold">
+              <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
+                <TotalEmployeesValue />
+              </Suspense>
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -80,7 +120,11 @@ export default async function EmployeesPage() {
             <Users className="size-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{activeCount}</div>
+            <div className="text-2xl font-bold text-green-600">
+              <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
+                <ActiveEmployeesValue />
+              </Suspense>
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -89,12 +133,18 @@ export default async function EmployeesPage() {
             <Users className="size-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{inactiveCount}</div>
+            <div className="text-2xl font-bold text-red-600">
+              <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
+                <InactiveEmployeesValue />
+              </Suspense>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      <EmployeesTable employees={employeeRows} shops={shops} />
+      <Suspense fallback={<EmployeesTableSkeleton />}>
+        <EmployeesTableSection />
+      </Suspense>
     </div>
   )
 }

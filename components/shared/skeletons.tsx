@@ -219,3 +219,157 @@ export function SkeletonSwitchRows({ rows = 3 }: { rows?: number }) {
     </div>
   )
 }
+
+export function SkeletonDetail({
+  avatar = false,
+  icon = false,
+  backButton = true,
+  tabs = 0,
+  kpis = 0,
+  children,
+}: {
+  avatar?: boolean
+  icon?: boolean
+  backButton?: boolean
+  tabs?: number
+  kpis?: number
+  children?: React.ReactNode
+}) {
+  return (
+    <div className="space-y-6">
+      <Skeleton className="h-4 w-40" />
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-center gap-4">
+          {avatar && <SkeletonAvatar className="size-14" />}
+          {icon && <Skeleton className="size-12 rounded-lg" />}
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+        </div>
+        {backButton && <Skeleton className="h-9 w-36" />}
+      </div>
+
+      {tabs > 0 && <SkeletonTabs count={tabs} />}
+
+      {kpis > 0 && <SkeletonKpiGrid count={kpis} />}
+
+      {children}
+    </div>
+  )
+}
+
+export function SkeletonPos() {
+  return (
+    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-full" />
+        <div className="space-y-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3 rounded-lg p-4">
+        <Skeleton className="h-5 w-40" />
+        <Skeleton className="h-9 w-full" />
+        <div className="space-y-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-5 w-full" />
+          ))}
+        </div>
+        <Skeleton className="h-9 w-full" />
+        <Skeleton className="h-11 w-full" />
+      </div>
+    </div>
+  )
+}
+
+
+export function SkeletonDashboard() {
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-56" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-32" />
+          <Skeleton className="h-9 w-32" />
+        </div>
+      </div>
+
+      <SkeletonKpiGrid count={4} />
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="space-y-3 lg:col-span-2">
+          <Skeleton className="h-5 w-36" />
+          <SkeletonTable rows={5} cols={6} />
+        </div>
+        <div className="space-y-3">
+          <Skeleton className="h-5 w-40" />
+          <div className="space-y-4 p-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between gap-3">
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <Skeleton className="h-5 w-14" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function SkeletonEmployeeDashboard() {
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-64" />
+          <Skeleton className="h-4 w-56" />
+        </div>
+        <Skeleton className="h-9 w-44" />
+      </div>
+
+      <SkeletonKpiGrid count={4} />
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-3 rounded-lg p-4">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-4 w-44" />
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <Skeleton className="size-9 rounded-lg" />
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-48" />
+                </div>
+                <Skeleton className="h-3 w-16" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-3 rounded-lg p-4">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-4 w-52" />
+          <SkeletonTable rows={5} cols={4} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+export function SkeletonStat({ className }: { className?: string }) {
+  return <Skeleton className={cn("h-7 w-24", className)} />
+}
+

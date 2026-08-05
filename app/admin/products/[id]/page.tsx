@@ -1,7 +1,9 @@
+import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
 import { notFound } from "next/navigation"
 import { ProductDetailActions } from "@/components/admin/product-detail-actions"
+import { SkeletonDetail } from "@/components/shared/skeletons"
 
 export const metadata = { title: "Product Details | RetailCore" }
 
@@ -13,6 +15,14 @@ export default async function ProductDetailPage({
   await requireRole("ADMIN")
   const { id } = await params
 
+  return (
+    <Suspense fallback={<SkeletonDetail icon />}>
+      <ProductDetailContent id={id} />
+    </Suspense>
+  )
+}
+
+async function ProductDetailContent({ id }: { id: string }) {
   const product = await prisma.product.findUnique({
     where: { id },
     include: {
@@ -46,3 +56,4 @@ export default async function ProductDetailPage({
 
   return <ProductDetailActions product={data} />
 }
+

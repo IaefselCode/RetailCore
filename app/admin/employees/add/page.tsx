@@ -1,19 +1,15 @@
+import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
 import { Home, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { AddEmployeeForm } from "@/components/admin/add-employee-form"
+import { SkeletonForm } from "@/components/shared/skeletons"
 
 export const metadata = { title: "Add Employee | RetailCore" }
 
 export default async function AddEmployeePage() {
   await requireRole("ADMIN")
-
-  const shops = await prisma.shop.findMany({
-    where: { isActive: true },
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
-  })
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -31,7 +27,20 @@ export default async function AddEmployeePage() {
         <p className="text-sm text-muted-foreground">Create a staff account and assign them to a shop</p>
       </div>
 
-      <AddEmployeeForm shops={shops} />
+      <Suspense fallback={<SkeletonForm fields={4} />}>
+        <AddEmployeeContent />
+      </Suspense>
     </div>
   )
 }
+
+async function AddEmployeeContent() {
+  const shops = await prisma.shop.findMany({
+    where: { isActive: true },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  })
+
+  return <AddEmployeeForm shops={shops} />
+}
+

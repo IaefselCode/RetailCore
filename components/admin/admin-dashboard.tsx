@@ -1,5 +1,6 @@
 "use client"
 
+import type { ReactNode } from "react"
 import { motion } from "motion/react"
 import {
   DollarSign,
@@ -15,45 +16,7 @@ import {
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { AnimateButton } from "@/components/ui/animate-button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { formatMoney } from "@/lib/money"
-
-export interface RecentSale {
-  invoiceNo: string
-  customerName: string | null
-  shopName: string
-  itemCount: number
-  total: number
-  status: string
-  createdAt: string
-}
-
-export interface LowStockItem {
-  name: string
-  sku: string
-  shopName: string
-  quantity: number
-  minStock: number
-}
-
-interface AdminDashboardProps {
-  firstName: string | null
-  todaySales: number
-  ordersToday: number
-  monthRevenue: number
-  productCount: number
-  recentSales: RecentSale[]
-  lowStock: LowStockItem[]
-}
-
-const statusBadge: Record<string, "default" | "secondary" | "destructive"> = {
-  COMPLETED: "default",
-  PENDING: "secondary",
-  REFUNDED: "destructive",
-  CANCELLED: "destructive",
-}
 
 function getGreetingKey(hour: number) {
   if (hour < 12) return "greetingMorning"
@@ -61,14 +24,23 @@ function getGreetingKey(hour: number) {
   return "greetingEvening"
 }
 
+interface AdminDashboardProps {
+  firstName: string | null
+  values: {
+    todaySales: ReactNode
+    ordersToday: ReactNode
+    monthRevenue: ReactNode
+    productCount: ReactNode
+  }
+  recentSalesSection: ReactNode
+  lowStockSection: ReactNode
+}
+
 export function AdminDashboard({
   firstName,
-  todaySales,
-  ordersToday,
-  monthRevenue,
-  productCount,
-  recentSales,
-  lowStock,
+  values,
+  recentSalesSection,
+  lowStockSection,
 }: AdminDashboardProps) {
   const t = useTranslations("dashboard")
   const greeting = t(getGreetingKey(new Date().getHours()))
@@ -76,25 +48,25 @@ export function AdminDashboard({
   const kpis = [
     {
       label: "Today's Sales",
-      value: formatMoney(todaySales),
+      value: values.todaySales,
       icon: DollarSign,
       hint: "Completed sales today",
     },
     {
       label: "Orders Today",
-      value: String(ordersToday),
+      value: values.ordersToday,
       icon: ShoppingCart,
       hint: "Invoices issued today",
     },
     {
       label: "This Month Revenue",
-      value: formatMoney(monthRevenue),
+      value: values.monthRevenue,
       icon: TrendingUp,
       hint: "Completed sales this month",
     },
     {
       label: "Active Products",
-      value: String(productCount),
+      value: values.productCount,
       icon: Package,
       hint: "Products in catalog",
     },
@@ -136,9 +108,7 @@ export function AdminDashboard({
           >
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {kpi.label}
-                </CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.label}</CardTitle>
                 <kpi.icon className="size-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -165,43 +135,7 @@ export function AdminDashboard({
               </Link>
             </AnimateButton>
           </CardHeader>
-          <CardContent className="px-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Invoice</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Shop</TableHead>
-                    <TableHead>Items</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentSales.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-                        No sales yet
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {recentSales.map((sale) => (
-                    <TableRow key={sale.invoiceNo}>
-                      <TableCell className="font-mono text-xs">{sale.invoiceNo}</TableCell>
-                      <TableCell>{sale.customerName ?? "—"}</TableCell>
-                      <TableCell>{sale.shopName}</TableCell>
-                      <TableCell>{sale.itemCount}</TableCell>
-                      <TableCell className="font-medium">{formatMoney(sale.total)}</TableCell>
-                      <TableCell>
-                        <Badge variant={statusBadge[sale.status] ?? "default"}>{sale.status}</Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
+          {recentSalesSection}
         </Card>
 
         <Card>
@@ -212,25 +146,7 @@ export function AdminDashboard({
             <CardDescription>{t("productsBelowReorderLevel")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {lowStock.length === 0 && (
-              <p className="py-6 text-center text-sm text-muted-foreground">All stock levels are healthy</p>
-            )}
-            {lowStock.map((item) => (
-              <div key={`${item.sku}-${item.shopName}`} className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{item.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {item.shopName} · {item.sku}
-                  </p>
-                </div>
-                <Badge
-                  variant={item.quantity <= 0 ? "destructive" : "secondary"}
-                  className="shrink-0"
-                >
-                  {item.quantity} / {item.minStock}
-                </Badge>
-              </div>
-            ))}
+            {lowStockSection}
             <div className="pt-2">
               <AnimateButton asChild variant="outline" size="sm" className="w-full">
                 <Link href="/admin/inventory">

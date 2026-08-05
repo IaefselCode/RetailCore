@@ -5,7 +5,7 @@ import Link from "next/link"
 import { CirclePlus, Package } from "lucide-react"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { SkeletonTable } from "@/components/shared/skeletons"
+import { SkeletonKpiGrid, SkeletonTable } from "@/components/shared/skeletons"
 import { ProductsTable } from "@/components/admin/products-table"
 
 export const metadata = { title: "Products | RetailCore" }
@@ -24,21 +24,45 @@ export default async function ProductsPage({
   await requireRole("ADMIN")
   const params = await searchParams
 
+  return (
+    <div className="space-y-6">
+      <nav className="text-sm text-muted-foreground">
+        Home <span className="mx-1">/</span> <span className="text-foreground">Products</span>
+      </nav>
+
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-2xl font-semibold">Product Catalog</h1>
+        <Link href="/admin/products/add">
+          <AnimateButton variant="accent">
+            <CirclePlus className="size-4" />
+            Add Product
+          </AnimateButton>
+        </Link>
+      </div>
+
+      <Suspense fallback={<ProductsSkeleton />}>
+        <ProductsContent searchParams={params} />
+      </Suspense>
+    </div>
+  )
+}
+
+async function ProductsContent({ searchParams }: { searchParams: SearchParams }) {
   const where = {
-    ...(params.search
+    ...(searchParams.search
       ? {
           OR: [
-            { name: { contains: params.search, mode: "insensitive" as const } },
-            { sku: { contains: params.search, mode: "insensitive" as const } },
+            { name: { contains: searchParams.search, mode: "insensitive" as const } },
+            { sku: { contains: searchParams.search, mode: "insensitive" as const } },
           ],
         }
       : {}),
-    ...(params.category && params.category !== "all"
-      ? { categoryId: params.category }
+    ...(searchParams.category && searchParams.category !== "all"
+      ? { categoryId: searchParams.category }
       : {}),
-    ...(params.status === "active"
+    ...(searchParams.status === "active"
       ? { isActive: true }
-      : params.status === "inactive"
+      : searchParams.status === "inactive"
       ? { isActive: false }
       : {}),
   }
@@ -73,21 +97,7 @@ export default async function ProductsPage({
   }))
 
   return (
-    <div className="space-y-6">
-      <nav className="text-sm text-muted-foreground">
-        Home <span className="mx-1">/</span> <span className="text-foreground">Products</span>
-      </nav>
-
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Product Catalog</h1>
-        <Link href="/admin/products/add">
-          <AnimateButton variant="accent">
-            <CirclePlus className="size-4" />
-            Add Product
-          </AnimateButton>
-        </Link>
-      </div>
-
+    <>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
           <CardHeader>
@@ -117,15 +127,23 @@ export default async function ProductsPage({
         </Card>
       </div>
 
-      <Suspense fallback={<SkeletonTable rows={6} cols={7} toolbar />}>
-        <ProductsTable
-          products={productRows}
-          categories={categories}
-          initialSearch={params.search ?? ""}
-          initialCategory={params.category ?? "all"}
-          initialStatus={params.status ?? "all"}
-        />
-      </Suspense>
-    </div>
+      <ProductsTable
+        products={productRows}
+        categories={categories}
+        initialSearch={searchParams.search ?? ""}
+        initialCategory={searchParams.category ?? "all"}
+        initialStatus={searchParams.status ?? "all"}
+      />
+    </>
   )
 }
+
+function ProductsSkeleton() {
+  return (
+    <>
+      <SkeletonKpiGrid count={3} />
+      <SkeletonTable rows={6} cols={7} toolbar />
+    </>
+  )
+}
+

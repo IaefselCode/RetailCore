@@ -1,23 +1,34 @@
+import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
 import { Store, Home, ChevronRight } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonStat } from "@/components/shared/skeletons"
 import { ShopsTable } from "@/components/admin/shops-table"
 
 export const metadata = { title: "Shop Management | RetailCore" }
 
-export default async function ShopsPage() {
-  await requireRole("ADMIN")
+async function TotalShopsValue() {
+  const count = await prisma.shop.count()
+  return <>{count}</>
+}
 
+async function ActiveShopsValue() {
+  const count = await prisma.shop.count({ where: { isActive: true } })
+  return <>{count}</>
+}
+
+async function InactiveShopsValue() {
+  const count = await prisma.shop.count({ where: { isActive: false } })
+  return <>{count}</>
+}
+
+async function ShopsTableSection() {
   const shops = await prisma.shop.findMany({
     orderBy: { createdAt: "asc" },
-    include: {
-      _count: { select: { employees: true } },
-    },
+    include: { _count: { select: { employees: true } } },
   })
-
-  const activeCount = shops.filter((s) => s.isActive).length
-  const inactiveCount = shops.filter((s) => !s.isActive).length
 
   const shopRows = shops.map((s) => ({
     id: s.id,
@@ -30,6 +41,25 @@ export default async function ShopsPage() {
     isActive: s.isActive,
     employeeCount: s._count.employees,
   }))
+
+  return <ShopsTable shops={shopRows} />
+}
+
+function ShopsTableSkeleton() {
+  return (
+    <div className="space-y-3 p-4">
+      {Array.from({ length: 6 }).map((_, r) => (
+        <div key={r} className="grid grid-cols-6 gap-4">
+          {Array.from({ length: 6 }).map((_, c) => (
+            <Skeleton key={c} className="h-4" />
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+export default async function ShopsPage() {
+  await requireRole("ADMIN")
 
   return (
     <div className="space-y-6">
@@ -52,7 +82,11 @@ export default async function ShopsPage() {
             <Store className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{shops.length}</div>
+            <div className="text-2xl font-bold">
+              <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
+                <TotalShopsValue />
+              </Suspense>
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -61,7 +95,11 @@ export default async function ShopsPage() {
             <Store className="size-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{activeCount}</div>
+            <div className="text-2xl font-bold text-green-600">
+              <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
+                <ActiveShopsValue />
+              </Suspense>
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -70,12 +108,18 @@ export default async function ShopsPage() {
             <Store className="size-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{inactiveCount}</div>
+            <div className="text-2xl font-bold text-red-600">
+              <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
+                <InactiveShopsValue />
+              </Suspense>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      <ShopsTable shops={shopRows} />
+      <Suspense fallback={<ShopsTableSkeleton />}>
+        <ShopsTableSection />
+      </Suspense>
     </div>
   )
 }
