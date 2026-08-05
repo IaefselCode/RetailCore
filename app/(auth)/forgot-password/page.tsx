@@ -4,6 +4,7 @@ import { useActionState } from "react"
 import { motion } from "motion/react"
 import { Loader2, Mail } from "lucide-react"
 import {
+  Card,
   CardHeader,
   CardTitle,
   CardDescription,
@@ -28,14 +29,15 @@ export default function ForgotPasswordPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <CardHeader>
-        <CardTitle className="text-xl">Forgot password?</CardTitle>
-        <CardDescription>
-          Enter your account email and we&apos;ll send you a reset link.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form action={formAction} className="space-y-4" noValidate>
+      <Card className="shadow-none">
+        <CardHeader>
+          <CardTitle className="text-xl">Forgot password?</CardTitle>
+          <CardDescription>
+            Enter your account email and we&apos;ll send you a reset link.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form action={formAction} className="space-y-4" noValidate>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <div className="relative">
@@ -64,7 +66,6 @@ export default function ForgotPasswordPage() {
           <AnimateButton
             type="submit"
             className="w-full"
-            variant="accent"
             disabled={pending}
           >
             {pending ? (
@@ -77,7 +78,8 @@ export default function ForgotPasswordPage() {
             )}
           </AnimateButton>
         </form>
-      </CardContent>
+        </CardContent>
+      </Card>
     </motion.div>
   )
 }

@@ -1,16 +1,23 @@
-import { prisma } from "@/lib/prisma"
+import { Suspense } from "react"
 import { requireRole } from "@/lib/auth-utils"
-import { auth } from "@/lib/auth"
 import { AdminShell } from "@/components/shared/admin-shell"
+import {
+  NotificationBadge,
+  NotificationBellSkeleton,
+} from "@/components/shared/notification-badge"
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   await requireRole("ADMIN")
 
-  const session = await auth()
-  const userId = session?.user?.id
-  const unreadCount = userId
-    ? await prisma.notification.count({ where: { userId, isRead: false } })
-    : 0
-
-  return <AdminShell unreadCount={unreadCount}>{children}</AdminShell>
+  return (
+    <AdminShell
+      notificationSlot={
+        <Suspense fallback={<NotificationBellSkeleton href="/admin/notifications" />}>
+          <NotificationBadge href="/admin/notifications" />
+        </Suspense>
+      }
+    >
+      {children}
+    </AdminShell>
+  )
 }

@@ -5,6 +5,7 @@ import Link from "next/link"
 import { motion } from "motion/react"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 import {
+  Card,
   CardHeader,
   CardTitle,
   CardDescription,
@@ -26,15 +27,17 @@ export function ResetPasswordForm({ token }: { token: string }) {
 
   if (state.success) {
     return (
-      <CardContent className="space-y-4">
-        <p className="text-sm text-emerald-600">{state.message}</p>
-        <Link
-          href="/login"
-          className="inline-block w-full text-center text-xs text-primary underline-offset-4 hover:underline"
-        >
-          Go to sign in
-        </Link>
-      </CardContent>
+      <Card className="shadow-none">
+        <CardContent className="space-y-4">
+          <p className="text-sm text-emerald-600">{state.message}</p>
+          <Link
+            href="/login"
+            className="inline-block w-full text-center text-xs text-primary underline-offset-4 hover:underline"
+          >
+            Go to sign in
+          </Link>
+        </CardContent>
+      </Card>
     )
   }
 
@@ -44,13 +47,14 @@ export function ResetPasswordForm({ token }: { token: string }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <CardHeader>
-        <CardTitle className="text-xl">Set a new password</CardTitle>
-        <CardDescription>
-          Choose a strong password for your account.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+      <Card className="shadow-none">
+        <CardHeader>
+          <CardTitle className="text-xl">Set a new password</CardTitle>
+          <CardDescription>
+            Choose a strong password for your account.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
         <form action={formAction} className="space-y-4" noValidate>
           <input type="hidden" name="token" value={token} />
           <div className="space-y-2">
@@ -104,7 +108,8 @@ export function ResetPasswordForm({ token }: { token: string }) {
             )}
           </AnimateButton>
         </form>
-      </CardContent>
+        </CardContent>
+      </Card>
     </motion.div>
   )
 }

@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
+import { SkeletonTable } from "@/components/shared/skeletons"
 import { SalesHistoryTable } from "@/components/admin/sales-history-table"
 
 export const metadata = { title: "Sales History | RetailCore" }
@@ -62,7 +63,7 @@ export default async function SalesHistoryPage({
   ])
 
   return (
-    <Suspense fallback={<div className="text-sm text-muted-foreground p-6">Loading sales history...</div>}>
+    <Suspense fallback={<SkeletonTable rows={8} cols={8} />}>
       <SalesHistoryTable
         sales={sales.map((s) => ({
           id: s.id,

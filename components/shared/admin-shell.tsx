@@ -6,26 +6,17 @@ import { useSession } from "next-auth/react"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { AdminSidebar } from "@/components/shared/admin-sidebar"
 import { AdminTopbar } from "@/components/shared/admin-topbar"
-import { Loader2 } from "lucide-react"
 
 export function AdminShell({
   children,
-  unreadCount = 0,
+  notificationSlot,
 }: {
   children: React.ReactNode
-  unreadCount?: number
+  notificationSlot?: React.ReactNode
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { status } = useSession()
   const router = useRouter()
-
-  if (status === "loading") {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
 
   if (status === "unauthenticated") {
     router.push("/login")
@@ -45,7 +36,7 @@ export function AdminShell({
       </Sheet>
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <AdminTopbar onMenuClick={() => setSidebarOpen(true)} unreadCount={unreadCount} />
+        <AdminTopbar onMenuClick={() => setSidebarOpen(true)} notificationSlot={notificationSlot} />
         <main className="flex-1 overflow-auto p-4 sm:p-6">
           {children}
         </main>

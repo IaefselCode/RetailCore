@@ -1,8 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
-import { Menu, Search, Bell, User, Settings, LogOut } from "lucide-react"
+import { Menu, Search, User, Settings, LogOut } from "lucide-react"
 import { signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { motion } from "motion/react"
@@ -25,8 +24,9 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { EmployeeSidebar } from "@/components/shared/employee-sidebar"
+import { NotificationBell } from "@/components/shared/notification-bell"
 
-export function EmployeeTopbar({ unreadCount = 0 }: { unreadCount?: number }) {
+export function EmployeeTopbar({ notificationSlot }: { notificationSlot?: React.ReactNode }) {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const { data: session } = useSession()
@@ -72,16 +72,7 @@ export function EmployeeTopbar({ unreadCount = 0 }: { unreadCount?: number }) {
       <div className="flex items-center gap-1 sm:gap-2 shrink-0">
         <LanguageSwitcher />
         <ThemeToggle />
-        <Link href="/employee/notifications">
-          <AnimateButton variant="ghost" size="icon-sm" className="relative">
-            <Bell className="size-5" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] leading-none font-semibold text-white">
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </span>
-            )}
-          </AnimateButton>
-        </Link>
+        {notificationSlot ?? <NotificationBell href="/employee/notifications" size="icon-sm" />}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

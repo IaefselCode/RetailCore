@@ -1,16 +1,23 @@
-import { prisma } from "@/lib/prisma"
+import { Suspense } from "react"
 import { requireRole } from "@/lib/auth-utils"
-import { auth } from "@/lib/auth"
 import { EmployeeShell } from "@/components/shared/employee-shell"
+import {
+  NotificationBadge,
+  NotificationBellSkeleton,
+} from "@/components/shared/notification-badge"
 
 export default async function EmployeeLayout({ children }: { children: React.ReactNode }) {
   await requireRole("EMPLOYEE")
 
-  const session = await auth()
-  const userId = session?.user?.id
-  const unreadCount = userId
-    ? await prisma.notification.count({ where: { userId, isRead: false } })
-    : 0
-
-  return <EmployeeShell unreadCount={unreadCount}>{children}</EmployeeShell>
+  return (
+    <EmployeeShell
+      notificationSlot={
+        <Suspense fallback={<NotificationBellSkeleton href="/employee/notifications" />}>
+          <NotificationBadge href="/employee/notifications" />
+        </Suspense>
+      }
+    >
+      {children}
+    </EmployeeShell>
+  )
 }

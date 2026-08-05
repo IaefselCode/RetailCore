@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Bell, Menu, User, LogOut, Settings } from "lucide-react"
+import { Search, Menu, User, LogOut, Settings } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { signOut, useSession } from "next-auth/react"
 import { motion } from "motion/react"
@@ -10,21 +10,15 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
 import { LanguageSwitcher } from "@/components/shared/language-switcher"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { NotificationBell } from "@/components/shared/notification-bell"
 
 interface AdminTopbarProps {
   onMenuClick?: () => void
-  unreadCount?: number
+  notificationSlot?: React.ReactNode
 }
 
-export function AdminTopbar({ onMenuClick, unreadCount = 0 }: AdminTopbarProps) {
+export function AdminTopbar({ onMenuClick, notificationSlot }: AdminTopbarProps) {
   const router = useRouter()
   const { data: session } = useSession()
   const user = session?.user ?? null
@@ -54,19 +48,7 @@ export function AdminTopbar({ onMenuClick, unreadCount = 0 }: AdminTopbarProps) 
       <div className="flex items-center gap-1 shrink-0">
         <LanguageSwitcher />
         <ThemeToggle />
-        <AnimateButton
-          variant="ghost"
-          size="icon"
-          className="relative"
-          onClick={() => router.push("/admin/notifications")}
-        >
-          <Bell className="size-5" />
-          {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] leading-none font-semibold text-white">
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
-          )}
-        </AnimateButton>
+        {notificationSlot ?? <NotificationBell href="/admin/notifications" />}
         <DropdownMenu>
           <DropdownMenuTrigger className="rounded-full">
             <Avatar className="size-8">

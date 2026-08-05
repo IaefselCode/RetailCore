@@ -5,6 +5,7 @@ import Link from "next/link"
 import { CirclePlus, Package } from "lucide-react"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { SkeletonTable } from "@/components/shared/skeletons"
 import { ProductsTable } from "@/components/admin/products-table"
 
 export const metadata = { title: "Products | RetailCore" }
@@ -116,7 +117,7 @@ export default async function ProductsPage({
         </Card>
       </div>
 
-      <Suspense fallback={<div className="text-sm text-muted-foreground">Loading products...</div>}>
+      <Suspense fallback={<SkeletonTable rows={6} cols={7} toolbar />}>
         <ProductsTable
           products={productRows}
           categories={categories}
