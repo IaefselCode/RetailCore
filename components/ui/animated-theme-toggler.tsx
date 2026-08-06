@@ -29,14 +29,15 @@ interface AnimatedThemeTogglerProps extends React.ComponentPropsWithoutRef<"butt
   onThemeChange?: (theme: "light" | "dark") => void
 }
 
-function polygonCollapsed(cx: number, cy: number, vertexCount: number): string {
-  const pairs = Array.from(
-    { length: vertexCount },
-    () => `${cx}px ${cy}px`
-  ).join(", ")
+function polygonCollapsed(point: string, vertexCount: number): string {
+  const pairs = Array.from({ length: vertexCount }, () => point).join(", ")
   return `polygon(${pairs})`
 }
 
+// All coordinates are percentages of the snapshot reference box: Chrome 150
+// renders absolute px clip-path coordinates on ::view-transition-new(root)
+// unscaled on fractional display scales (e.g. Windows 150%) for the first
+// transition after load, so px values land at the wrong position (#989).
 function getThemeTransitionClipPaths(
   variant: TransitionVariant,
   cx: number,
@@ -45,64 +46,74 @@ function getThemeTransitionClipPaths(
   viewportWidth: number,
   viewportHeight: number
 ): [string, string] {
+  const toX = (x: number) => `${(x / viewportWidth) * 100}%`
+  const toY = (y: number) => `${(y / viewportHeight) * 100}%`
+  const point = (x: number, y: number) => `${toX(x)} ${toY(y)}`
+  // circle() percentage radii resolve against hypot(w, h) / sqrt(2) of the reference box.
+  const toRadius = (r: number) =>
+    `${(r / (Math.hypot(viewportWidth, viewportHeight) / Math.SQRT2)) * 100}%`
+
   switch (variant) {
     case "circle":
       return [
-        `circle(0px at ${cx}px ${cy}px)`,
-        `circle(${maxRadius}px at ${cx}px ${cy}px)`,
+        `circle(0% at ${point(cx, cy)})`,
+        `circle(${toRadius(maxRadius)} at ${point(cx, cy)})`,
       ]
     case "square": {
       const halfW = Math.max(cx, viewportWidth - cx)
       const halfH = Math.max(cy, viewportHeight - cy)
       const halfSide = Math.max(halfW, halfH) * 1.05
       const end = [
-        `${cx - halfSide}px ${cy - halfSide}px`,
-        `${cx + halfSide}px ${cy - halfSide}px`,
-        `${cx + halfSide}px ${cy + halfSide}px`,
-        `${cx - halfSide}px ${cy + halfSide}px`,
+        point(cx - halfSide, cy - halfSide),
+        point(cx + halfSide, cy - halfSide),
+        point(cx + halfSide, cy + halfSide),
+        point(cx - halfSide, cy + halfSide),
       ].join(", ")
-      return [polygonCollapsed(cx, cy, 4), `polygon(${end})`]
+      return [polygonCollapsed(point(cx, cy), 4), `polygon(${end})`]
     }
     case "triangle": {
       const scale = maxRadius * 2.2
       const dx = (Math.sqrt(3) / 2) * scale
       const verts = [
-        `${cx}px ${cy - scale}px`,
-        `${cx + dx}px ${cy + 0.5 * scale}px`,
-        `${cx - dx}px ${cy + 0.5 * scale}px`,
+        point(cx, cy - scale),
+        point(cx + dx, cy + 0.5 * scale),
+        point(cx - dx, cy + 0.5 * scale),
       ].join(", ")
-      return [polygonCollapsed(cx, cy, 3), `polygon(${verts})`]
+      return [polygonCollapsed(point(cx, cy), 3), `polygon(${verts})`]
     }
     case "diamond": {
       // Slightly larger than the view-transition circle radius so axis-aligned coverage matches the circle reveal.
       const R = maxRadius * Math.SQRT2
       const end = [
-        `${cx}px ${cy - R}px`,
-        `${cx + R}px ${cy}px`,
-        `${cx}px ${cy + R}px`,
-        `${cx - R}px ${cy}px`,
+        point(cx, cy - R),
+        point(cx + R, cy),
+        point(cx, cy + R),
+        point(cx - R, cy),
       ].join(", ")
-      return [polygonCollapsed(cx, cy, 4), `polygon(${end})`]
+      return [polygonCollapsed(point(cx, cy), 4), `polygon(${end})`]
     }
     case "hexagon": {
       const R = maxRadius * Math.SQRT2
       const verts: string[] = []
       for (let i = 0; i < 6; i++) {
         const a = -Math.PI / 2 + (i * Math.PI) / 3
-        verts.push(`${cx + R * Math.cos(a)}px ${cy + R * Math.sin(a)}px`)
+        verts.push(point(cx + R * Math.cos(a), cy + R * Math.sin(a)))
       }
-      return [polygonCollapsed(cx, cy, 6), `polygon(${verts.join(", ")})`]
+      return [
+        polygonCollapsed(point(cx, cy), 6),
+        `polygon(${verts.join(", ")})`,
+      ]
     }
     case "rectangle": {
       const halfW = Math.max(cx, viewportWidth - cx)
       const halfH = Math.max(cy, viewportHeight - cy)
       const end = [
-        `${cx - halfW}px ${cy - halfH}px`,
-        `${cx + halfW}px ${cy - halfH}px`,
-        `${cx + halfW}px ${cy + halfH}px`,
-        `${cx - halfW}px ${cy + halfH}px`,
+        point(cx - halfW, cy - halfH),
+        point(cx + halfW, cy - halfH),
+        point(cx + halfW, cy + halfH),
+        point(cx - halfW, cy + halfH),
       ].join(", ")
-      return [polygonCollapsed(cx, cy, 4), `polygon(${end})`]
+      return [polygonCollapsed(point(cx, cy), 4), `polygon(${end})`]
     }
     case "star": {
       // Small overscan so the last frames never leave a 1px seam before the transition group ends.
@@ -113,11 +124,17 @@ function getThemeTransitionClipPaths(
         for (let i = 0; i < 5; i++) {
           const outerA = -Math.PI / 2 + (i * 2 * Math.PI) / 5
           verts.push(
-            `${cx + radius * Math.cos(outerA)}px ${cy + radius * Math.sin(outerA)}px`
+            point(
+              cx + radius * Math.cos(outerA),
+              cy + radius * Math.sin(outerA)
+            )
           )
           const innerA = outerA + Math.PI / 5
           verts.push(
-            `${cx + radius * innerRatio * Math.cos(innerA)}px ${cy + radius * innerRatio * Math.sin(innerA)}px`
+            point(
+              cx + radius * innerRatio * Math.cos(innerA),
+              cy + radius * innerRatio * Math.sin(innerA)
+            )
           )
         }
         return `polygon(${verts.join(", ")})`
@@ -127,8 +144,8 @@ function getThemeTransitionClipPaths(
     }
     default:
       return [
-        `circle(0px at ${cx}px ${cy}px)`,
-        `circle(${maxRadius}px at ${cx}px ${cy}px)`,
+        `circle(0% at ${point(cx, cy)})`,
+        `circle(${toRadius(maxRadius)} at ${point(cx, cy)})`,
       ]
   }
 }
@@ -147,6 +164,7 @@ export const AnimatedThemeToggler = ({
   const [internalIsDark, setInternalIsDark] = useState(false)
   const isDark = isControlled ? theme === "dark" : internalIsDark
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const isTransitioningRef = useRef(false)
 
   useEffect(() => {
     if (isControlled) return
@@ -168,10 +186,17 @@ export const AnimatedThemeToggler = ({
 
   const toggleTheme = useCallback(() => {
     const button = buttonRef.current
-    if (!button) return
+    if (
+      !button ||
+      isTransitioningRef.current ||
+      document.documentElement.dataset.magicuiThemeVt === "active"
+    )
+      return
 
-    const viewportWidth = window.visualViewport?.width ?? window.innerWidth
-    const viewportHeight = window.visualViewport?.height ?? window.innerHeight
+    // innerWidth/innerHeight (not visualViewport): percentages must resolve
+    // against the snapshot reference box, which includes classic scrollbars.
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
 
     let x: number
     let y: number
@@ -226,36 +251,83 @@ export const AnimatedThemeToggler = ({
     // theme unclipped between snapshot and the ready.then() JS animation.
     root.style.setProperty("--magicui-theme-vt-clip-from", clipPath[0])
     const cleanup = () => {
+      isTransitioningRef.current = false
       delete root.dataset.magicuiThemeVt
       root.style.removeProperty("--magicui-theme-toggle-vt-duration")
       root.style.removeProperty("--magicui-theme-vt-clip-from")
     }
 
-    const transition = document.startViewTransition(() => {
-      flushSync(applyTheme)
-    })
-    if (typeof transition?.finished?.finally === "function") {
-      transition.finished.finally(cleanup)
-    } else {
+    isTransitioningRef.current = true
+    let settled = false
+    const finish = () => {
+      if (settled) return
+      settled = true
       cleanup()
     }
+    // Safety net: some environments (sandboxed webviews) expose
+    // startViewTransition but never settle its promises, which would leave
+    // the guard stuck and ignore every later click. Release it shortly after
+    // the animation duration regardless. The theme change itself is applied
+    // synchronously inside the callback, so a hanging transition only loses
+    // the visual animation, never the toggle.
+    const safety = window.setTimeout(finish, duration + 600)
+
+    let transition: ViewTransition | undefined
+    let applied = false
+    const applyNow = () => {
+      if (applied) return
+      applied = true
+      flushSync(applyTheme)
+    }
+    try {
+      transition = document.startViewTransition(applyNow)
+    } catch {
+      // startViewTransition threw synchronously — apply the theme directly.
+      window.clearTimeout(safety)
+      applyTheme()
+      finish()
+      return
+    }
+    if (typeof transition?.finished?.finally === "function") {
+      transition.finished.finally(() => {
+        window.clearTimeout(safety)
+        finish()
+      }).catch(() => {})
+    } else {
+      window.clearTimeout(safety)
+      finish()
+    }
+    // Fallback: a healthy View Transitions implementation invokes the update
+    // callback within a frame or two. If it has not run by then, the
+    // environment's implementation is stalled (e.g. sandboxed webviews that
+    // never produce transition frames). Apply the toggle immediately and
+    // abort the stuck transition so the guard releases right away — the
+    // theme change is never allowed to depend on a hung transition.
+    window.setTimeout(() => {
+      if (!applied) {
+        applyNow()
+        transition?.skipTransition?.()
+      }
+    }, 120)
 
     const ready = transition?.ready
     if (ready && typeof ready.then === "function") {
-      ready.then(() => {
-        document.documentElement.animate(
-          {
-            clipPath,
-          },
-          {
-            duration,
-            // Star: linear avoids easing overshoot that fights polygon interpolation at t→1; VT group duration is synced above.
-            easing: shape === "star" ? "linear" : "ease-in-out",
-            fill: "forwards",
-            pseudoElement: "::view-transition-new(root)",
-          }
-        )
-      })
+      ready
+        .then(() => {
+          document.documentElement.animate(
+            {
+              clipPath,
+            },
+            {
+              duration,
+              // Star: linear avoids easing overshoot that fights polygon interpolation at t→1; VT group duration is synced above.
+              easing: shape === "star" ? "linear" : "ease-in-out",
+              fill: "forwards",
+              pseudoElement: "::view-transition-new(root)",
+            }
+          )
+        })
+        .catch(() => {})
     }
   }, [shape, fromCenter, duration, isDark, isControlled, onThemeChange])
 
@@ -267,7 +339,7 @@ export const AnimatedThemeToggler = ({
       className={cn(className)}
       {...props}
     >
-      {isDark ? <Sun className="size-5" /> : <Moon className="size-5" />}
+      {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
       <span className="sr-only">Toggle theme</span>
     </button>
   )

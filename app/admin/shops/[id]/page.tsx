@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
 import { notFound } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 import { Store, MapPin, DollarSign, ShoppingCart, Users, Package, ArrowLeft, ChevronRight, Home, Mail } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,12 +12,28 @@ import { formatMoney } from "@/lib/money"
 
 export const metadata = { title: "Shop Details | RetailCore" }
 
+const statusVariant: Record<string, "default" | "secondary" | "destructive"> = {
+  COMPLETED: "default",
+  PENDING: "secondary",
+  CANCELLED: "destructive",
+  REFUNDED: "destructive",
+}
+
+const STATUS_KEYS: Record<string, string> = {
+  COMPLETED: "completed",
+  PENDING: "pending",
+  CANCELLED: "cancelled",
+  REFUNDED: "refunded",
+}
+
 export default async function ShopDetailsPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
   await requireRole("ADMIN")
+  const t = await getTranslations("shopDetail")
+  const tc = await getTranslations("common")
   const { id } = await params
 
   const shop = await prisma.shop.findUnique({
@@ -57,20 +74,13 @@ export default async function ShopDetailsPage({
     _sum: { total: true },
   })
 
-  const statusVariant: Record<string, "default" | "secondary" | "destructive"> = {
-    COMPLETED: "default",
-    PENDING: "secondary",
-    CANCELLED: "destructive",
-    REFUNDED: "destructive",
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-1 text-sm text-muted-foreground">
         <Home className="size-3.5" />
-        <Link href="/admin" className="hover:text-foreground">Home</Link>
+        <Link href="/admin" className="hover:text-foreground">{t("home")}</Link>
         <ChevronRight className="size-3.5" />
-        <Link href="/admin/shops" className="hover:text-foreground">Shops</Link>
+        <Link href="/admin/shops" className="hover:text-foreground">{t("shops")}</Link>
         <ChevronRight className="size-3.5" />
         <span className="text-foreground">{shop.name}</span>
       </div>
@@ -90,14 +100,14 @@ export default async function ShopDetailsPage({
                 </>
               )}
               <Badge variant={shop.isActive ? "default" : "secondary"}>
-                {shop.isActive ? "Active" : "Inactive"}
+                {shop.isActive ? tc("active") : tc("inactive")}
               </Badge>
             </div>
           </div>
         </div>
         <AnimateButton variant="outline" asChild>
           <Link href="/admin/shops">
-            <ArrowLeft /> Back to Shops
+            <ArrowLeft /> {t("backToShops")}
           </Link>
         </AnimateButton>
       </div>
@@ -105,7 +115,7 @@ export default async function ShopDetailsPage({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("revenue")}</CardTitle>
             <DollarSign className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -114,7 +124,7 @@ export default async function ShopDetailsPage({
         </Card>
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Sales</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("totalSales")}</CardTitle>
             <ShoppingCart className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -123,7 +133,7 @@ export default async function ShopDetailsPage({
         </Card>
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Employees</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("employees")}</CardTitle>
             <Users className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -132,7 +142,7 @@ export default async function ShopDetailsPage({
         </Card>
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Stock Items</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("stockItems")}</CardTitle>
             <Package className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -143,24 +153,24 @@ export default async function ShopDetailsPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Employees</CardTitle>
+          <CardTitle>{t("employeesTitle")}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Position</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t("colName")}</TableHead>
+                  <TableHead>{t("colPosition")}</TableHead>
+                  <TableHead>{t("colEmail")}</TableHead>
+                  <TableHead>{t("colStatus")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {shop.employees.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={4} className="py-6 text-center text-sm text-muted-foreground">
-                      No employees assigned
+                      {t("noEmployees")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -180,7 +190,7 @@ export default async function ShopDetailsPage({
                     </TableCell>
                     <TableCell>
                       <Badge variant={emp.isActive ? "default" : "secondary"}>
-                        {emp.isActive ? "Active" : "Inactive"}
+                        {emp.isActive ? tc("active") : tc("inactive")}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -193,27 +203,27 @@ export default async function ShopDetailsPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
+          <CardTitle>{t("recentTransactions")}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Invoice</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Employee</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Payment</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t("colInvoice")}</TableHead>
+                  <TableHead>{t("colCustomer")}</TableHead>
+                  <TableHead>{t("colEmployee")}</TableHead>
+                  <TableHead>{t("colAmount")}</TableHead>
+                  <TableHead>{t("colPayment")}</TableHead>
+                  <TableHead>{t("colDate")}</TableHead>
+                  <TableHead>{t("colStatus")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {shop.sales.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} className="py-6 text-center text-sm text-muted-foreground">
-                      No sales yet
+                      {t("noSales")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -233,7 +243,7 @@ export default async function ShopDetailsPage({
                     </TableCell>
                     <TableCell>
                       <Badge variant={statusVariant[sale.status] ?? "default"}>
-                        {sale.status}
+                        {t(STATUS_KEYS[sale.status] ?? sale.status)}
                       </Badge>
                     </TableCell>
                   </TableRow>

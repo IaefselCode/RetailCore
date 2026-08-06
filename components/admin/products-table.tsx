@@ -3,6 +3,7 @@
 import { useTransition, useState, useEffect, useRef } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 import { Search, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
 import { Card, CardContent } from "@/components/ui/card"
@@ -62,6 +63,7 @@ export function ProductsTable({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const t = useTranslations("products")
   const [pending, startTransition] = useTransition()
   const [search, setSearch] = useState(initialSearch)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -109,7 +111,7 @@ export function ProductsTable({
         <div className="relative flex-1 sm:max-w-sm">
           <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by name or SKU..."
+            placeholder={t("searchPlaceholder")}
             className="pl-8"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -117,10 +119,10 @@ export function ProductsTable({
         </div>
         <Select value={initialCategory} onValueChange={(v) => v && updateParams("category", v)}>
           <SelectTrigger className="w-full sm:w-40">
-            <SelectValue placeholder="Category" />
+            <SelectValue placeholder={t("colCategory")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="all">{t("allCategories")}</SelectItem>
             {categories.map((c) => (
               <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
             ))}
@@ -128,12 +130,12 @@ export function ProductsTable({
         </Select>
         <Select value={initialStatus} onValueChange={(v) => v && updateParams("status", v)}>
           <SelectTrigger className="w-full sm:w-32">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder={t("colStatus")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
+            <SelectItem value="all">{t("allStatus")}</SelectItem>
+            <SelectItem value="active">{t("active")}</SelectItem>
+            <SelectItem value="inactive">{t("inactive")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -144,20 +146,20 @@ export function ProductsTable({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t("colProduct")}</TableHead>
+                  <TableHead>{t("colSku")}</TableHead>
+                  <TableHead>{t("colCategory")}</TableHead>
+                  <TableHead>{t("colPrice")}</TableHead>
+                  <TableHead>{t("colStock")}</TableHead>
+                  <TableHead>{t("colStatus")}</TableHead>
+                  <TableHead>{t("colActions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {products.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">
-                      No products found
+                      {t("empty")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -174,14 +176,14 @@ export function ProductsTable({
                     <TableCell>{product.totalStock}</TableCell>
                     <TableCell>
                       <Badge variant={product.isActive ? "default" : "secondary"}>
-                        {product.isActive ? "Active" : "Inactive"}
+                        {product.isActive ? t("active") : t("inactive")}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <AnimateButton size="sm" variant="outline" asChild>
                           <Link href={`/admin/products/${product.id}`}>
-                            View
+                            {t("view")}
                             <ChevronRight className="size-3" />
                           </Link>
                         </AnimateButton>

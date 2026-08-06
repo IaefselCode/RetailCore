@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireEmployeeContext } from "@/lib/auth-utils"
+import { getTranslations } from "next-intl/server"
 import { RecordSaleForm } from "@/components/employee/record-sale-form"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
@@ -21,9 +22,10 @@ export const metadata = { title: "Record Sale | RetailCore" }
 
 export default async function RecordSalePage() {
   const ctx = await requireEmployeeContext()
+  const t = await getTranslations("recordSale")
 
   return (
-    <Suspense fallback={<PosSkeleton />}>
+    <Suspense fallback={<PosSkeleton t={t} />}>
       <RecordSaleContent shopId={ctx.shopId} shopName={ctx.shopName} />
     </Suspense>
   )
@@ -50,7 +52,7 @@ async function RecordSaleContent({ shopId, shopName }: { shopId: string; shopNam
   return <RecordSaleForm products={posProducts} shopName={shopName} />
 }
 
-function PosSkeleton() {
+function PosSkeleton({ t }: { t: (key: string, values?: Record<string, string | number>) => string }) {
   // Mirrors RecordSaleForm's exact arrangement: heading + Find Products card
   // + Sale Items card (left) and Order Summary card (right).
   return (
@@ -85,10 +87,10 @@ function PosSkeleton() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Product</TableHead>
-                      <TableHead>Qty</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Subtotal</TableHead>
+                      <TableHead>{t("colProduct")}</TableHead>
+                      <TableHead>{t("colQty")}</TableHead>
+                      <TableHead>{t("colPrice")}</TableHead>
+                      <TableHead>{t("colSubtotal")}</TableHead>
                       <TableHead />
                     </TableRow>
                   </TableHeader>

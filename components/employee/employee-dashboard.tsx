@@ -22,10 +22,10 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 },
 }
 
-function getGreeting(hour: number) {
-  if (hour < 12) return "Good morning"
-  if (hour < 18) return "Good afternoon"
-  return "Good evening"
+function getGreetingKey(hour: number) {
+  if (hour < 12) return "greetingMorning"
+  if (hour < 18) return "greetingAfternoon"
+  return "greetingEvening"
 }
 
 interface EmployeeDashboardProps {
@@ -51,31 +51,37 @@ export function EmployeeDashboard({
 }: EmployeeDashboardProps) {
   const t = useTranslations("dashboard")
   const tEmployee = useTranslations("employeeDashboard")
+  const greeting = t(getGreetingKey(new Date().getHours()))
 
   const kpis = [
     {
-      title: "Today's Sales",
+      title: tEmployee("todaySales"),
       value: kpiSlots.todaySales,
       icon: DollarSign,
       description: shopName,
     },
     {
-      title: "Orders Today",
+      title: tEmployee("ordersToday"),
       value: kpiSlots.ordersToday,
       icon: ShoppingCart,
-      description: "Completed today",
+      description: tEmployee("completedToday"),
     },
     {
       title: tEmployee("lowStockAlerts"),
       value: kpiSlots.lowStockCount,
       icon: AlertTriangle,
-      description: "Below reorder level",
+      description: tEmployee("belowReorder"),
     },
     {
-      title: "My Month",
+      title: tEmployee("myMonth"),
       value: kpiSlots.monthSales,
       icon: TrendingUp,
-      description: <>{kpiSlots.stockUnits} units in stock</>,
+      description: (
+        <span className="inline-flex items-center gap-1">
+          {kpiSlots.stockUnits}
+          {tEmployee("unitsInStock", { count: "" }).trim()}
+        </span>
+      ),
     },
   ]
 
@@ -84,13 +90,13 @@ export function EmployeeDashboard({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            {getGreeting(new Date().getHours())}, {firstName}!
+            {greeting}, {firstName}!
           </h1>
           <p className="text-sm text-muted-foreground">{tEmployee("today")}</p>
         </div>
         <Link href="/employee/record-sale">
           <AnimateButton variant="accent">
-            Record Quick Sale
+            {tEmployee("recordQuickSale")}
             <ArrowRight className="size-4" />
           </AnimateButton>
         </Link>

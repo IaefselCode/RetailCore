@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { useTranslations } from "next-intl"
 import { motion } from "motion/react"
 import { ChevronRightIcon, SettingsIcon, CheckCheckIcon, BellIcon, PackageIcon, AwardIcon, UserPlusIcon, AlertTriangleIcon } from "lucide-react"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
@@ -91,6 +92,8 @@ function getGroup(time: string): string {
 const groupOrder = ["Today", "Yesterday", "This Week", "Older"]
 
 export default function NotificationsPage() {
+  const t = useTranslations("notifications")
+  const tc = useTranslations("nav")
   const [notifications, setNotifications] = useState(initialNotifications)
 
   const unreadCount = notifications.filter((n) => !n.read).length
@@ -105,6 +108,9 @@ export default function NotificationsPage() {
     return map
   }, [notifications])
 
+  const groupLabel = (g: string) =>
+    g === "Today" ? t("today") : g === "Yesterday" ? t("yesterday") : g === "This Week" ? t("thisWeek") : t("older")
+
   function markAllAsRead() {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
   }
@@ -118,22 +124,22 @@ export default function NotificationsPage() {
   return (
     <div className="flex flex-col gap-6">
       <nav className="flex items-center gap-1 text-sm text-muted-foreground">
-        <span>Dashboard</span>
+        <span>{tc("dashboard")}</span>
         <ChevronRightIcon className="size-3.5" />
-        <span className="text-foreground">Notifications</span>
+        <span className="text-foreground">{t("breadcrumb")}</span>
       </nav>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-medium">Notifications</h1>
+          <h1 className="text-2xl font-medium">{t("title")}</h1>
           {unreadCount > 0 && (
-            <Badge variant="default" className="rounded-full">{unreadCount} new</Badge>
+            <Badge variant="default" className="rounded-full">{t("new", { count: unreadCount })}</Badge>
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <AnimateButton variant="outline" onClick={markAllAsRead} disabled={unreadCount === 0}>
             <CheckCheckIcon />
-            Mark All as Read
+            {t("markAllRead")}
           </AnimateButton>
           <Link href="/admin/settings">
             <AnimateButton variant="ghost" size="icon-sm">
@@ -149,7 +155,7 @@ export default function NotificationsPage() {
             {groupOrder.filter((g) => grouped[g]?.length).map((group) => (
               <AccordionItem key={group} value={group}>
                 <AccordionTrigger className="px-4 text-sm font-semibold text-muted-foreground">
-                  {group}
+                  {groupLabel(group)}
                   <Badge variant="secondary" className="ml-2">{grouped[group].length}</Badge>
                 </AccordionTrigger>
                 <AccordionContent>

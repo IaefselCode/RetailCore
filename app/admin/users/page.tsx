@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth"
 import { requireRole } from "@/lib/auth-utils"
 import { prisma } from "@/lib/prisma"
+import { getTranslations } from "next-intl/server"
 import bcrypt from "bcryptjs"
 import { headers } from "next/headers"
 import { revalidatePath } from "next/cache"
@@ -59,6 +60,7 @@ async function resetPassword(formData: FormData) {
 
 export default async function AdminUsersPage() {
   await requireRole("ADMIN")
+  const t = await getTranslations("users")
 
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
@@ -67,25 +69,25 @@ export default async function AdminUsersPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold">User Accounts</h1>
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
         <p className="text-sm text-muted-foreground">
-          Manage sign-in accounts and reset passwords.
+          {t("subtitle")}
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Accounts</CardTitle>
+          <CardTitle className="text-base">{t("accounts")}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[260px]">Reset Password</TableHead>
+                <TableHead>{t("colName")}</TableHead>
+                <TableHead>{t("colEmail")}</TableHead>
+                <TableHead>{t("colRole")}</TableHead>
+                <TableHead>{t("colStatus")}</TableHead>
+                <TableHead className="w-[260px]">{t("colReset")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -102,7 +104,7 @@ export default async function AdminUsersPage() {
                   </TableCell>
                   <TableCell>
                     <Badge variant={user.isActive ? "default" : "secondary"}>
-                      {user.isActive ? "Active" : "Disabled"}
+                      {user.isActive ? t("active") : t("disabled")}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -111,15 +113,15 @@ export default async function AdminUsersPage() {
                       <Input
                         name="password"
                         type="password"
-                        placeholder="New password"
+                        placeholder={t("newPassword")}
                         className="h-8"
                         required
                         minLength={8}
                         pattern={PASSWORD_PATTERN}
-                        title="8+ chars with uppercase, lowercase, a number and a symbol"
+                        title={t("passwordTitle")}
                       />
                       <AnimateButton type="submit" variant="outline" size="sm" className="h-8 shrink-0">
-                        Reset
+                        {t("reset")}
                       </AnimateButton>
                     </form>
                   </TableCell>
@@ -128,7 +130,7 @@ export default async function AdminUsersPage() {
               {users.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                    No user accounts yet.
+                    {t("empty")}
                   </TableCell>
                 </TableRow>
               )}

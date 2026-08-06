@@ -10,6 +10,7 @@ export type AuditEvent =
   | "employee_updated"
   | "employee_deactivated"
   | "employee_activated"
+  | "employee_deleted"
   | "product_created"
   | "product_updated"
   | "product_activated"

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { motion } from "motion/react"
 import { toast } from "sonner"
 import { Sun, Moon, Bell, Mail, ShoppingCart, Shield } from "lucide-react"
@@ -27,6 +28,7 @@ const sectionVariants = {
 }
 
 export default function EmployeeSettingsPage() {
+  const t = useTranslations("employeeSettings")
   const [notifyShift, setNotifyShift] = useState(true)
   const [notifyStock, setNotifyStock] = useState(true)
   const [notifySales, setNotifySales] = useState(false)
@@ -38,19 +40,19 @@ export default function EmployeeSettingsPage() {
   const [notificationVolume, setNotificationVolume] = useState(50)
 
   const saveChanges = () => {
-    toast.success("Settings saved successfully")
+    toast.success(t("saved"))
   }
 
   const changePassword = () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      toast.error("Please fill in all password fields")
+      toast.error(t("fillPasswordFields"))
       return
     }
     if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match")
+      toast.error(t("passwordMismatch"))
       return
     }
-    toast.success("Password changed successfully")
+    toast.success(t("passwordChanged"))
     setCurrentPassword("")
     setNewPassword("")
     setConfirmPassword("")
@@ -62,8 +64,8 @@ export default function EmployeeSettingsPage() {
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-sm text-muted-foreground">Manage your preferences</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </motion.div>
 
       <motion.div
@@ -74,16 +76,16 @@ export default function EmployeeSettingsPage() {
       >
         <Card>
           <CardHeader>
-            <CardTitle>Notification Preferences</CardTitle>
-            <CardDescription>Choose what notifications you receive</CardDescription>
+            <CardTitle>{t("notificationPrefs")}</CardTitle>
+            <CardDescription>{t("notificationPrefsDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Bell className="size-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm font-medium">Shift Reminders</p>
-                  <p className="text-xs text-muted-foreground">Get notified before your shift starts</p>
+                  <p className="text-sm font-medium">{t("shiftReminders")}</p>
+                  <p className="text-xs text-muted-foreground">{t("shiftRemindersDesc")}</p>
                 </div>
               </div>
               <Switch checked={notifyShift} onCheckedChange={setNotifyShift} />
@@ -93,8 +95,8 @@ export default function EmployeeSettingsPage() {
               <div className="flex items-center gap-3">
                 <ShoppingCart className="size-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm font-medium">Stock Alerts</p>
-                  <p className="text-xs text-muted-foreground">Low stock and out-of-stock notifications</p>
+                  <p className="text-sm font-medium">{t("stockAlerts")}</p>
+                  <p className="text-xs text-muted-foreground">{t("stockAlertsDesc")}</p>
                 </div>
               </div>
               <Switch checked={notifyStock} onCheckedChange={setNotifyStock} />
@@ -104,8 +106,8 @@ export default function EmployeeSettingsPage() {
               <div className="flex items-center gap-3">
                 <Mail className="size-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm font-medium">Sales Reports</p>
-                  <p className="text-xs text-muted-foreground">Weekly sales summary via email</p>
+                  <p className="text-sm font-medium">{t("salesReports")}</p>
+                  <p className="text-xs text-muted-foreground">{t("salesReportsDesc")}</p>
                 </div>
               </div>
               <Switch checked={notifySales} onCheckedChange={setNotifySales} />
@@ -122,12 +124,12 @@ export default function EmployeeSettingsPage() {
       >
         <Card>
           <CardHeader>
-            <CardTitle>Preferences</CardTitle>
-            <CardDescription>Language and appearance settings</CardDescription>
+            <CardTitle>{t("preferences")}</CardTitle>
+            <CardDescription>{t("preferencesDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Language</Label>
+              <Label>{t("language")}</Label>
               <Select value={language} onValueChange={(v) => v && setLanguage(v)}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
@@ -144,8 +146,8 @@ export default function EmployeeSettingsPage() {
               <div className="flex items-center gap-3">
                 {theme === "light" ? <Sun className="size-4 text-muted-foreground" /> : <Moon className="size-4 text-muted-foreground" />}
                 <div>
-                  <p className="text-sm font-medium">Theme</p>
-                  <p className="text-xs text-muted-foreground">Toggle between light and dark mode</p>
+                  <p className="text-sm font-medium">{t("theme")}</p>
+                  <p className="text-xs text-muted-foreground">{t("themeDesc")}</p>
                 </div>
               </div>
               <div className="flex items-center gap-1 rounded-lg border p-0.5">
@@ -168,7 +170,7 @@ export default function EmployeeSettingsPage() {
             <Separator />
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Notification Volume</Label>
+                <Label className="text-sm font-medium">{t("notificationVolume")}</Label>
                 <span className="text-sm text-muted-foreground">{notificationVolume}%</span>
               </div>
               <AdaptiveSlider
@@ -194,14 +196,14 @@ export default function EmployeeSettingsPage() {
             <div className="flex items-center gap-2">
               <Shield className="size-4 text-muted-foreground" />
               <div>
-                <CardTitle>Change Password</CardTitle>
-                <CardDescription>Update your account password</CardDescription>
+                <CardTitle>{t("changePassword")}</CardTitle>
+                <CardDescription>{t("changePasswordDesc")}</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="current-password">Current Password</Label>
+              <Label htmlFor="current-password">{t("currentPassword")}</Label>
               <Input
                 id="current-password"
                 type="password"
@@ -210,7 +212,7 @@ export default function EmployeeSettingsPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="new-password">New Password</Label>
+              <Label htmlFor="new-password">{t("newPassword")}</Label>
               <Input
                 id="new-password"
                 type="password"
@@ -219,7 +221,7 @@ export default function EmployeeSettingsPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="confirm-password">Confirm New Password</Label>
+              <Label htmlFor="confirm-password">{t("confirmNewPassword")}</Label>
               <Input
                 id="confirm-password"
                 type="password"
@@ -228,7 +230,7 @@ export default function EmployeeSettingsPage() {
               />
             </div>
             <Button variant="outline" onClick={changePassword}>
-              Update Password
+              {t("updatePassword")}
             </Button>
           </CardContent>
         </Card>
@@ -236,7 +238,7 @@ export default function EmployeeSettingsPage() {
 
       <div className="flex justify-end">
         <AnimateButton variant="accent" onClick={saveChanges}>
-          Save Changes
+          {t("saveChanges")}
         </AnimateButton>
       </div>
     </div>

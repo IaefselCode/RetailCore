@@ -16,7 +16,6 @@ import {
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody } from "@/components/ui/table"
 import { AnimateButton } from "@/components/ui/animate-button"
 
 function getGreetingKey(hour: number) {
@@ -33,16 +32,14 @@ interface AdminDashboardProps {
     monthRevenue: ReactNode
     productCount: ReactNode
   }
-  recentSalesHeader: ReactNode
-  recentSalesRows: ReactNode
+  recentSalesContent: ReactNode
   lowStockItems: ReactNode
 }
 
 export function AdminDashboard({
   firstName,
   kpiSlots,
-  recentSalesHeader,
-  recentSalesRows,
+  recentSalesContent,
   lowStockItems,
 }: AdminDashboardProps) {
   const t = useTranslations("dashboard")
@@ -50,28 +47,28 @@ export function AdminDashboard({
 
   const kpis = [
     {
-      label: "Today's Sales",
+      label: t("todaySales"),
       value: kpiSlots.todaySales,
       icon: DollarSign,
-      hint: "Completed sales today",
+      hint: t("todaySalesHint"),
     },
     {
-      label: "Orders Today",
+      label: t("ordersToday"),
       value: kpiSlots.ordersToday,
       icon: ShoppingCart,
-      hint: "Invoices issued today",
+      hint: t("ordersTodayHint"),
     },
     {
-      label: "This Month Revenue",
+      label: t("monthRevenue"),
       value: kpiSlots.monthRevenue,
       icon: TrendingUp,
-      hint: "Completed sales this month",
+      hint: t("monthRevenueHint"),
     },
     {
-      label: "Active Products",
+      label: t("activeProducts"),
       value: kpiSlots.productCount,
       icon: Package,
-      hint: "Products in catalog",
+      hint: t("activeProductsHint"),
     },
   ]
 
@@ -83,19 +80,17 @@ export function AdminDashboard({
             {greeting}
             {firstName ? `, ${firstName}` : ""}
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Here is what is happening across your stores today.
-          </p>
+          <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
         <div className="flex gap-2">
           <AnimateButton asChild variant="outline">
             <Link href="/admin/shops/create">
-              <Plus className="size-4" /> Create Shop
+              <Plus className="size-4" /> {t("createShop")}
             </Link>
           </AnimateButton>
           <AnimateButton asChild>
             <Link href="/admin/products/add">
-              <Plus className="size-4" /> Add Product
+              <Plus className="size-4" /> {t("addProduct")}
             </Link>
           </AnimateButton>
         </div>
@@ -128,23 +123,18 @@ export function AdminDashboard({
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <ShoppingBag className="size-4" /> Recent Sales
+                <ShoppingBag className="size-4" /> {t("recentSales")}
               </CardTitle>
-              <CardDescription>Latest 5 transactions</CardDescription>
+              <CardDescription>{t("latestTransactions")}</CardDescription>
             </div>
             <AnimateButton asChild variant="ghost" size="sm">
               <Link href="/admin/sales/history">
-                View all <ArrowRight className="size-4" />
+                {t("viewAll")} <ArrowRight className="size-4" />
               </Link>
             </AnimateButton>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                {recentSalesHeader}
-                <TableBody>{recentSalesRows}</TableBody>
-              </Table>
-            </div>
+            {recentSalesContent}
           </CardContent>
         </Card>
 
@@ -160,7 +150,7 @@ export function AdminDashboard({
             <div className="pt-2">
               <AnimateButton asChild variant="outline" size="sm" className="w-full">
                 <Link href="/admin/inventory">
-                  <Store className="size-4" /> Manage Inventory
+                  <Store className="size-4" /> {t("manageInventory")}
                 </Link>
               </AnimateButton>
             </div>

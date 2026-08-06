@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { requireRole } from "@/lib/auth-utils"
 import { prisma } from "@/lib/prisma"
+import { getTranslations } from "next-intl/server"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -13,24 +14,23 @@ import {
 } from "@/components/ui/table"
 import { TableRowsSkeleton } from "@/components/shared/skeleton-primitives"
 
-const EVENT_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" }> = {
-  login_success: { label: "Login", variant: "default" },
-  login_failure: { label: "Failed login", variant: "destructive" },
-  password_reset_request: { label: "Reset requested", variant: "secondary" },
-  password_reset_complete: { label: "Password changed", variant: "secondary" },
-  admin_password_reset: { label: "Admin reset", variant: "secondary" },
+const EVENT_KEYS: Record<string, string> = {
+  login_success: "login",
+  login_failure: "failedLogin",
+  password_reset_request: "resetRequested",
+  password_reset_complete: "passwordChanged",
+  admin_password_reset: "adminReset",
 }
 
 export default async function AdminAuditPage() {
   await requireRole("ADMIN")
+  const t = await getTranslations("audit")
 
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold">Audit Log</h1>
-        <p className="text-sm text-muted-foreground">
-          Sign-in and password-reset activity (last 200 events).
-        </p>
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       <AuditTableSection />
@@ -38,42 +38,46 @@ export default async function AdminAuditPage() {
   )
 }
 
-function AuditTableSection() {
+async function AuditTableSection() {
+  const t = await getTranslations("audit")
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Authentication Events</CardTitle>
+        <CardTitle className="text-base">{t("authEvents")}</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>When</TableHead>
-              <TableHead>Event</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>IP</TableHead>
-              <TableHead>User Agent</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <Suspense
-              fallback={
-                <TableRowsSkeleton
-                  rows={10}
-                  columns={["w-36", "w-20", "w-32", "w-24", "w-48"]}
-                />
-              }
-            >
-              <AuditBodyRows />
-            </Suspense>
-          </TableBody>
-        </Table>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("colWhen")}</TableHead>
+                <TableHead>{t("colEvent")}</TableHead>
+                <TableHead>{t("colEmail")}</TableHead>
+                <TableHead>{t("colIp")}</TableHead>
+                <TableHead>{t("colUserAgent")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <Suspense
+                fallback={
+                  <TableRowsSkeleton
+                    rows={10}
+                    columns={["w-36", "w-20", "w-32", "w-24", "w-48"]}
+                  />
+                }
+              >
+                <AuditBodyRows />
+              </Suspense>
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   )
 }
 
 async function AuditBodyRows() {
+  const t = await getTranslations("audit")
   const logs = await prisma.authLog.findMany({
     orderBy: { createdAt: "desc" },
     take: 200,
@@ -84,22 +88,26 @@ async function AuditBodyRows() {
       {logs.length === 0 && (
         <TableRow>
           <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-            No authentication events recorded yet.
+            {t("empty")}
           </TableCell>
         </TableRow>
       )}
       {logs.map((log) => {
-        const meta = EVENT_LABELS[log.event] ?? {
-          label: log.event,
-          variant: "secondary" as const,
-        }
+        const key = EVENT_KEYS[log.event]
+        const variant: "default" | "secondary" | "destructive" = key
+          ? key === "failedLogin"
+            ? "destructive"
+            : key === "login"
+            ? "default"
+            : "secondary"
+          : "secondary"
         return (
           <TableRow key={log.id}>
             <TableCell className="whitespace-nowrap text-xs">
               {log.createdAt.toLocaleString()}
             </TableCell>
             <TableCell>
-              <Badge variant={meta.variant}>{meta.label}</Badge>
+              <Badge variant={variant}>{key ? t(key) : log.event}</Badge>
             </TableCell>
             <TableCell>{log.email}</TableCell>
             <TableCell className="text-xs">{log.ip ?? "—"}</TableCell>

@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
+import { getTranslations } from "next-intl/server"
 import { Users, Home, ChevronRight, Plus } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
@@ -77,24 +78,27 @@ function EmployeesTableSkeleton() {
 
 export default async function EmployeesPage() {
   await requireRole("ADMIN")
+  const t = await getTranslations("employees")
+  const tn = await getTranslations("nav")
+  const tc = await getTranslations("common")
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-1 text-sm text-muted-foreground">
         <Home className="size-3.5" />
-        <span>Home</span>
+        <span>{tc("home")}</span>
         <ChevronRight className="size-3.5" />
-        <span className="text-foreground">Employees</span>
+        <span className="text-foreground">{tn("employees")}</span>
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Employee Management</h1>
-          <p className="text-sm text-muted-foreground">Manage all staff members</p>
+          <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
         <AnimateButton variant="accent" asChild>
           <Link href="/admin/employees/add">
-            <Plus /> Add Employee
+            <Plus /> {t("addEmployee")}
           </Link>
         </AnimateButton>
       </div>
@@ -102,7 +106,7 @@ export default async function EmployeesPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Employees</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("total")}</CardTitle>
             <Users className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -115,7 +119,7 @@ export default async function EmployeesPage() {
         </Card>
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("active")}</CardTitle>
             <Users className="size-4 text-green-500" />
           </CardHeader>
           <CardContent>
@@ -128,7 +132,7 @@ export default async function EmployeesPage() {
         </Card>
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Inactive</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("inactive")}</CardTitle>
             <Users className="size-4 text-red-500" />
           </CardHeader>
           <CardContent>

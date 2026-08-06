@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
+import { getTranslations } from "next-intl/server"
 import { DollarSign, TrendingUp, CalendarDays, ShoppingCart } from "lucide-react"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { Badge } from "@/components/ui/badge"
@@ -66,45 +67,28 @@ async function TransactionsTodayValue() {
   return <>{count}</>
 }
 
-function RecentTransactionsSection() {
+async function RecentTransactionsSection() {
+  const t = await getTranslations("sales")
   return (
     <Card>
-      <CardHeader><CardTitle>Recent Transactions</CardTitle></CardHeader>
+      <CardHeader><CardTitle>{t("recentTransactions")}</CardTitle></CardHeader>
       <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Invoice</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Shop</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <Suspense
-                fallback={
-                  <TableRowsSkeleton
-                    rows={8}
-                    columns={["w-24", "w-20", "w-24", "w-8", "w-16", "w-16", "w-24", "w-20"]}
-                  />
-                }
-              >
-                <RecentTransactionsRows />
-              </Suspense>
-            </TableBody>
-          </Table>
-        </div>
+        <Suspense
+          fallback={
+            <TableRowsSkeleton
+              rows={8}
+              columns={["w-24", "w-20", "w-24", "w-8", "w-16", "w-16", "w-24", "w-20"]}
+            />
+          }
+        >
+          <RecentTransactionsTable t={t} />
+        </Suspense>
       </CardContent>
     </Card>
   )
 }
 
-async function RecentTransactionsRows() {
+async function RecentTransactionsTable({ t }: { t: (key: string) => string }) {
   const recentSales = await prisma.sale.findMany({
     orderBy: { createdAt: "desc" },
     take: 10,
@@ -116,55 +100,100 @@ async function RecentTransactionsRows() {
 
   return (
     <>
-      {recentSales.length === 0 && (
-        <TableRow>
-          <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
-            No sales yet
-          </TableCell>
-        </TableRow>
-      )}
-      {recentSales.map((sale) => {
-        const itemCount = sale.items.reduce((sum, i) => sum + i.quantity, 0)
-        return (
-          <TableRow key={sale.id} className="transition-colors hover:bg-muted/50">
-            <TableCell className="font-mono text-xs">{sale.invoiceNo}</TableCell>
-            <TableCell>{sale.customerName ?? "—"}</TableCell>
-            <TableCell>{sale.shop.name}</TableCell>
-            <TableCell>{itemCount}</TableCell>
-            <TableCell className="font-medium">{formatMoney(sale.total)}</TableCell>
-            <TableCell>{sale.paymentMethod ?? "—"}</TableCell>
-            <TableCell className="text-muted-foreground">
-              {new Date(sale.createdAt).toLocaleDateString()}
-            </TableCell>
-            <TableCell>
-              <Badge variant={statusBadge[sale.status] ?? "default"}>{sale.status}</Badge>
-            </TableCell>
-          </TableRow>
-        )
-      })}
+      {/* Desktop: table */}
+      <div className="hidden overflow-x-auto md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("colInvoice")}</TableHead>
+              <TableHead>{t("colCustomer")}</TableHead>
+              <TableHead>{t("colShop")}</TableHead>
+              <TableHead>{t("colItems")}</TableHead>
+              <TableHead>{t("colAmount")}</TableHead>
+              <TableHead>{t("colPayment")}</TableHead>
+              <TableHead>{t("colDate")}</TableHead>
+              <TableHead>{t("colStatus")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {recentSales.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
+                  {t("empty")}
+                </TableCell>
+              </TableRow>
+            )}
+            {recentSales.map((sale) => {
+              const itemCount = sale.items.reduce((sum, i) => sum + i.quantity, 0)
+              return (
+                <TableRow key={sale.id} className="transition-colors hover:bg-muted/50">
+                  <TableCell className="font-mono text-xs">{sale.invoiceNo}</TableCell>
+                  <TableCell>{sale.customerName ?? "—"}</TableCell>
+                  <TableCell>{sale.shop.name}</TableCell>
+                  <TableCell>{itemCount}</TableCell>
+                  <TableCell className="font-medium">{formatMoney(sale.total)}</TableCell>
+                  <TableCell>{sale.paymentMethod ?? "—"}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {new Date(sale.createdAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={statusBadge[sale.status] ?? "default"}>{sale.status}</Badge>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Mobile: stacked cards */}
+      <div className="divide-y md:hidden">
+        {recentSales.length === 0 && (
+          <p className="py-8 text-center text-sm text-muted-foreground">{t("empty")}</p>
+        )}
+        {recentSales.map((sale) => {
+          const itemCount = sale.items.reduce((sum, i) => sum + i.quantity, 0)
+          return (
+            <div key={sale.id} className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="min-w-0">
+                <p className="truncate font-mono text-xs">{sale.invoiceNo}</p>
+                <p className="truncate text-sm text-muted-foreground">
+                  {sale.customerName ?? "—"} · {sale.shop.name} · {itemCount} {t("colItems").toLowerCase()}
+                </p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="text-sm font-semibold">{formatMoney(sale.total)}</p>
+                <Badge variant={statusBadge[sale.status] ?? "default"}>{sale.status}</Badge>
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </>
   )
 }
 
 export default async function SalesPage() {
   await requireRole("ADMIN")
+  const t = await getTranslations("sales")
+  const tc = await getTranslations("common")
 
   return (
     <div className="space-y-6">
       <nav className="text-sm text-muted-foreground">
-        Dashboard <span className="mx-1">/</span> <span className="text-foreground">Sales</span>
+        {tc("home")} <span className="mx-1">/</span> <span className="text-foreground">{t("breadcrumb")}</span>
       </nav>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold">Sales Management</h1>
-        <div className="flex gap-2">
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
+        <div className="flex flex-wrap gap-2">
           <Link href="/admin/sales/history">
-            <AnimateButton variant="outline">View History</AnimateButton>
+            <AnimateButton variant="outline">{t("viewHistory")}</AnimateButton>
           </Link>
           <Link href="/employee/record-sale">
             <AnimateButton variant="accent">
               <ShoppingCart className="size-4" />
-              Record New Sale
+              {t("recordNewSale")}
             </AnimateButton>
           </Link>
         </div>
@@ -172,7 +201,7 @@ export default async function SalesPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Today&apos;s Sales</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">{t("todaySales")}</CardTitle></CardHeader>
           <CardContent className="flex items-center gap-2 text-2xl font-bold">
             <DollarSign className="size-5 text-green-500" />
             <Suspense fallback={<SkeletonStat />}>
@@ -181,7 +210,7 @@ export default async function SalesPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">This Week</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">{t("thisWeek")}</CardTitle></CardHeader>
           <CardContent className="flex items-center gap-2 text-2xl font-bold">
             <TrendingUp className="size-5 text-blue-500" />
             <Suspense fallback={<SkeletonStat />}>
@@ -190,7 +219,7 @@ export default async function SalesPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">This Month</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">{t("thisMonth")}</CardTitle></CardHeader>
           <CardContent className="flex items-center gap-2 text-2xl font-bold">
             <CalendarDays className="size-5 text-purple-500" />
             <Suspense fallback={<SkeletonStat />}>
@@ -199,7 +228,7 @@ export default async function SalesPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Transactions Today</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">{t("transactionsToday")}</CardTitle></CardHeader>
           <CardContent className="text-2xl font-bold">
             <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
               <TransactionsTodayValue />

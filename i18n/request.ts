@@ -1,10 +1,8 @@
 import { getRequestConfig } from "next-intl/server"
-import { cookies } from "next/headers"
-import { normalizeLocale } from "@/lib/i18n"
+import { getUserLocale } from "@/lib/i18n-server"
 
 export default getRequestConfig(async () => {
-  const cookieLocale = (await cookies()).get("locale")?.value
-  const locale = normalizeLocale(cookieLocale)
+  const locale = await getUserLocale()
 
   return {
     locale,

@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useCallback, useState, useEffect, useRef } from "react"
+import { useTranslations } from "next-intl"
 import { Search, Plus, Trash2, ShoppingCart, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -59,6 +60,7 @@ function RecordSaleFormBody({
   pending: boolean
   successMessage: string | null
 }) {
+  const t = useTranslations("recordSale")
   const [search, setSearch] = useState("")
   const [cart, setCart] = useState<CartItem[]>([])
   const [paymentMethod, setPaymentMethod] = useState("CASH")
@@ -70,14 +72,14 @@ function RecordSaleFormBody({
 
   const addToCart = useCallback((product: PosProduct) => {
     if (product.stock <= 0) {
-      toast.error("Product out of stock")
+      toast.error(t("productOutOfStock"))
       return
     }
     setCart((prev) => {
       const existing = prev.find((item) => item.id === product.id)
       if (existing) {
         if (existing.quantity >= existing.maxStock) {
-          toast.error("Maximum stock reached")
+          toast.error(t("maxStockReached"))
           return prev
         }
         return prev.map((item) =>
@@ -87,7 +89,7 @@ function RecordSaleFormBody({
       return [...prev, { ...product, quantity: 1, maxStock: product.stock }]
     })
     setSearch("")
-  }, [])
+  }, [t])
 
   const removeFromCart = useCallback((id: string) => {
     setCart((prev) => prev.filter((item) => item.id !== id))
@@ -112,15 +114,15 @@ function RecordSaleFormBody({
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     if (cart.length === 0) {
       e.preventDefault()
-      toast.error("Cart is empty")
+      toast.error(t("cartIsEmpty"))
     }
   }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Record New Sale</h1>
-        <p className="text-sm text-muted-foreground">{shopName} · Add items and complete the transaction</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("subtitle", { shop: shopName })}</p>
       </div>
 
       {successMessage && (
@@ -140,13 +142,13 @@ function RecordSaleFormBody({
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Find Products</CardTitle>
-                <CardDescription>Search and add products to the sale</CardDescription>
+                <CardTitle>{t("findProducts")}</CardTitle>
+                <CardDescription>{t("findProductsDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8" />
+                  <Input placeholder={t("searchPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8" />
                 </div>
                 <div className="max-h-64 space-y-1 overflow-y-auto">
                   {filteredProducts.map((product) => {
@@ -160,11 +162,11 @@ function RecordSaleFormBody({
                         <div>
                           <p className="text-sm font-medium">{product.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {formatMoney(product.price)} · {product.stock} in stock
+                            {formatMoney(product.price)} · {t("inStock", { count: product.stock })}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
-                          {inCart && <Badge variant="secondary">{inCart.quantity} in cart</Badge>}
+                          {inCart && <Badge variant="secondary">{t("inCart", { count: inCart.quantity })}</Badge>}
                           <Button variant="ghost" size="icon-sm" type="button">
                             <Plus className="size-4" />
                           </Button>
@@ -173,7 +175,7 @@ function RecordSaleFormBody({
                     )
                   })}
                   {filteredProducts.length === 0 && (
-                    <p className="py-4 text-center text-sm text-muted-foreground">No products found</p>
+                    <p className="py-4 text-center text-sm text-muted-foreground">{t("noProductsFound")}</p>
                   )}
                 </div>
               </CardContent>
@@ -181,24 +183,24 @@ function RecordSaleFormBody({
 
             <Card>
               <CardHeader>
-                <CardTitle>Sale Items</CardTitle>
-                <CardDescription>{cart.length} item{cart.length !== 1 ? "s" : ""} in cart</CardDescription>
+                <CardTitle>{t("saleItems")}</CardTitle>
+                <CardDescription>{t("itemsInCart", { count: cart.length })}</CardDescription>
               </CardHeader>
               <CardContent>
                 {cart.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 text-center">
                     <ShoppingCart className="mb-2 size-8 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Cart is empty</p>
+                    <p className="text-sm text-muted-foreground">{t("cartIsEmpty")}</p>
                   </div>
                 ) : (
                   <div className="rounded-lg border overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Product</TableHead>
-                          <TableHead>Qty</TableHead>
-                          <TableHead>Price</TableHead>
-                          <TableHead>Subtotal</TableHead>
+                          <TableHead>{t("colProduct")}</TableHead>
+                          <TableHead>{t("colQty")}</TableHead>
+                          <TableHead>{t("colPrice")}</TableHead>
+                          <TableHead>{t("colSubtotal")}</TableHead>
                           <TableHead></TableHead>
                         </TableRow>
                       </TableHeader>
@@ -232,40 +234,40 @@ function RecordSaleFormBody({
 
           <div className="space-y-4">
             <Card>
-              <CardHeader><CardTitle>Order Summary</CardTitle></CardHeader>
+              <CardHeader><CardTitle>{t("orderSummary")}</CardTitle></CardHeader>
               <CardContent className="space-y-3">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Customer Name (optional)</label>
-                  <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Walk-in customer" />
+                  <label className="text-xs font-medium text-muted-foreground">{t("customerName")}</label>
+                  <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder={t("walkInCustomer")} />
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Subtotal</span>
+                  <span className="text-sm text-muted-foreground">{t("subtotal")}</span>
                   <span className="text-sm font-medium">{formatMoney(subtotal)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Tax (18%)</span>
+                  <span className="text-sm text-muted-foreground">{t("tax")}</span>
                   <span className="text-sm font-medium">{formatMoney(tax)}</span>
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
-                  <span className="text-base font-semibold">Total</span>
+                  <span className="text-base font-semibold">{t("total")}</span>
                   <span className="text-xl font-bold">{formatMoney(total)}</span>
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col gap-3">
                 <div className="w-full space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Payment Method</label>
+                  <label className="text-xs font-medium text-muted-foreground">{t("paymentMethod")}</label>
                   <Select value={paymentMethod} onValueChange={(v) => v && setPaymentMethod(v)}>
                     <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="CASH">Cash</SelectItem>
-                      <SelectItem value="CARD">Credit Card</SelectItem>
-                      <SelectItem value="MOBILE">Mobile Payment</SelectItem>
+                      <SelectItem value="CASH">{t("cash")}</SelectItem>
+                      <SelectItem value="CARD">{t("creditCard")}</SelectItem>
+                      <SelectItem value="MOBILE">{t("mobilePayment")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <AnimateButton type="submit" className="w-full" size="lg" variant="accent" disabled={pending || cart.length === 0}>
-                  {pending ? "Processing..." : "Complete Sale"}
+                  {pending ? t("processing") : t("completeSale")}
                 </AnimateButton>
               </CardFooter>
             </Card>

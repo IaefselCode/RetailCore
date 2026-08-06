@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { motion, AnimatePresence } from "motion/react"
 import { ChevronLeft, ChevronRight, Save, Loader2 } from "lucide-react"
 import { toast } from "sonner"
@@ -26,8 +27,6 @@ interface Category {
   name: string
 }
 
-const steps = ["General Info", "Pricing & SKU", "Image & Status"]
-
 const stepVariants = {
   enter: { opacity: 0, x: 20 },
   center: { opacity: 1, x: 0 },
@@ -36,6 +35,8 @@ const stepVariants = {
 
 export function AddProductWizard({ categories }: { categories: Category[] }) {
   const router = useRouter()
+  const t = useTranslations("addProduct")
+  const steps = [t("step1"), t("step2"), t("step3")]
   const [step, setStep] = useState(0)
   const [pending, startTransition] = useTransition()
   const [form, setForm] = useState({
@@ -118,29 +119,29 @@ export function AddProductWizard({ categories }: { categories: Category[] }) {
               {step === 0 && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="name">Product Name <span className="text-destructive">*</span></Label>
+                    <Label htmlFor="name">{t("productName")} <span className="text-destructive">*</span></Label>
                     <Input
                       id="name"
-                      placeholder="e.g. Bluetooth Speaker X1"
+                      placeholder={t("namePlaceholder")}
                       value={form.name}
                       onChange={(e) => update("name", e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description">{t("description")}</Label>
                     <Textarea
                       id="description"
-                      placeholder="Product description..."
+                      placeholder={t("descriptionPlaceholder")}
                       rows={4}
                       value={form.description}
                       onChange={(e) => update("description", e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Category</Label>
+                    <Label>{t("category")}</Label>
                     <Select value={form.categoryId} onValueChange={(v) => update("categoryId", v)}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
+                        <SelectValue placeholder={t("selectCategory")} />
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((cat) => (
@@ -150,15 +151,15 @@ export function AddProductWizard({ categories }: { categories: Category[] }) {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="newCategory">Or create new category</Label>
+                    <Label htmlFor="newCategory">{t("newCategory")}</Label>
                     <Input
                       id="newCategory"
-                      placeholder="New category name"
+                      placeholder={t("newCategoryPlaceholder")}
                       value={form.newCategory}
                       onChange={(e) => update("newCategory", e.target.value)}
                     />
                     <p className="text-xs text-muted-foreground">
-                      If filled, this overrides the category selection above.
+                      {t("newCategoryHint")}
                     </p>
                   </div>
                 </>
@@ -168,7 +169,7 @@ export function AddProductWizard({ categories }: { categories: Category[] }) {
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="price">Selling Price <span className="text-destructive">*</span></Label>
+                      <Label htmlFor="price">{t("sellingPrice")} <span className="text-destructive">*</span></Label>
                       <Input
                         id="price"
                         type="number"
@@ -180,7 +181,7 @@ export function AddProductWizard({ categories }: { categories: Category[] }) {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="cost">Cost Price</Label>
+                      <Label htmlFor="cost">{t("costPrice")}</Label>
                       <Input
                         id="cost"
                         type="number"
@@ -193,14 +194,14 @@ export function AddProductWizard({ categories }: { categories: Category[] }) {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="sku">SKU <span className="text-destructive">*</span></Label>
+                    <Label htmlFor="sku">{t("sku")} <span className="text-destructive">*</span></Label>
                     <Input
                       id="sku"
-                      placeholder="e.g. RC-ELC-001"
+                      placeholder={t("skuPlaceholder")}
                       value={form.sku}
                       onChange={(e) => update("sku", e.target.value)}
                     />
-                    <p className="text-xs text-muted-foreground">Must be unique across all products.</p>
+                    <p className="text-xs text-muted-foreground">{t("skuHint")}</p>
                   </div>
                 </>
               )}
@@ -208,7 +209,7 @@ export function AddProductWizard({ categories }: { categories: Category[] }) {
               {step === 2 && (
                 <>
                   <div className="space-y-2">
-                    <Label>Product Image</Label>
+                    <Label>{t("productImage")}</Label>
                     <ImageUpload
                       value={form.imageUrl}
                       onChange={(url) => update("imageUrl", url)}
@@ -217,19 +218,19 @@ export function AddProductWizard({ categories }: { categories: Category[] }) {
                       quality={0.72}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Compressed to WebP automatically (~30–90KB).
+                      {t("imageHint")}
                     </p>
                   </div>
                   <div className="rounded-lg border p-4 space-y-2 bg-muted/30">
-                    <p className="text-sm font-medium">Review</p>
+                    <p className="text-sm font-medium">{t("review")}</p>
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      <span className="text-muted-foreground">Name:</span>
+                      <span className="text-muted-foreground">{t("name")}:</span>
                       <span>{form.name || "—"}</span>
                       <span className="text-muted-foreground">SKU:</span>
                       <span>{form.sku || "—"}</span>
-                      <span className="text-muted-foreground">Price:</span>
+                      <span className="text-muted-foreground">{t("price")}:</span>
                       <span>{form.price ? `${form.price}` : "—"}</span>
-                      <span className="text-muted-foreground">Cost:</span>
+                      <span className="text-muted-foreground">{t("cost")}:</span>
                       <span>{form.cost || "—"}</span>
                     </div>
                   </div>
@@ -243,20 +244,20 @@ export function AddProductWizard({ categories }: { categories: Category[] }) {
       <div className="flex justify-between">
         <AnimateButton variant="outline" onClick={prevStep} disabled={step === 0}>
           <ChevronLeft className="size-4" />
-          Previous
+          {t("previous")}
         </AnimateButton>
         {step < steps.length - 1 ? (
           <AnimateButton
             onClick={nextStep}
             disabled={step === 0 ? !canNext0 : step === 1 ? !canNext1 : false}
           >
-            Next
+            {t("next")}
             <ChevronRight className="size-4" />
           </AnimateButton>
         ) : (
           <AnimateButton variant="accent" onClick={handleSave} disabled={pending}>
             {pending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-            Save Product
+            {t("saveProduct")}
           </AnimateButton>
         )}
       </div>

@@ -3,6 +3,7 @@
 import { useTransition } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 import { Download, ChevronLeft, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
@@ -74,6 +75,8 @@ export function SalesHistoryTable({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const t = useTranslations("salesHistory")
+  const tc = useTranslations("common")
   const [pending, startTransition] = useTransition()
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -111,7 +114,7 @@ export function SalesHistoryTable({
       shopId: initialFilters.shopId,
     })
     if (!csv) {
-      toast.error("Export failed")
+      toast.error(t("exportFailed"))
       return
     }
     const blob = new Blob([csv], { type: "text/csv" })
@@ -121,23 +124,23 @@ export function SalesHistoryTable({
     a.download = `sales-export-${new Date().toISOString().slice(0, 10)}.csv`
     a.click()
     URL.revokeObjectURL(url)
-    toast.success("CSV exported")
+    toast.success(t("csvExported"))
   }
 
   return (
     <div className="space-y-6">
       <nav className="text-sm text-muted-foreground">
-        Home <span className="mx-1">/</span>
-        <Link href="/admin/sales" className="hover:text-foreground">Sales</Link>
+        {tc("home")} <span className="mx-1">/</span>
+        <Link href="/admin/sales" className="hover:text-foreground">{t("breadcrumb")}</Link>
         <span className="mx-1">/</span>
-        <span className="text-foreground">History</span>
+        <span className="text-foreground">{t("history")}</span>
       </nav>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold">Sales History</h1>
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
         <AnimateButton variant="outline" onClick={exportCsv}>
           <Download className="size-4" />
-          Export CSV
+          {t("exportCsv")}
         </AnimateButton>
       </div>
 
@@ -159,34 +162,34 @@ export function SalesHistoryTable({
             defaultValue={initialFilters.paymentMethod}
             onValueChange={(v) => v && updateParams({ paymentMethod: v, page: "1" })}
           >
-            <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Payment" /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder={t("payment")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Payments</SelectItem>
-              <SelectItem value="CASH">Cash</SelectItem>
-              <SelectItem value="CARD">Card</SelectItem>
-              <SelectItem value="MOBILE">Mobile</SelectItem>
+              <SelectItem value="all">{t("allPayments")}</SelectItem>
+              <SelectItem value="CASH">{t("cash")}</SelectItem>
+              <SelectItem value="CARD">{t("card")}</SelectItem>
+              <SelectItem value="MOBILE">{t("mobile")}</SelectItem>
             </SelectContent>
           </Select>
           <Select
             defaultValue={initialFilters.status}
             onValueChange={(v) => v && updateParams({ status: v, page: "1" })}
           >
-            <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder={t("status")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="COMPLETED">Completed</SelectItem>
-              <SelectItem value="REFUNDED">Refunded</SelectItem>
-              <SelectItem value="PENDING">Pending</SelectItem>
-              <SelectItem value="CANCELLED">Cancelled</SelectItem>
+              <SelectItem value="all">{t("allStatus")}</SelectItem>
+              <SelectItem value="COMPLETED">{t("completed")}</SelectItem>
+              <SelectItem value="REFUNDED">{t("refunded")}</SelectItem>
+              <SelectItem value="PENDING">{t("pending")}</SelectItem>
+              <SelectItem value="CANCELLED">{t("cancelled")}</SelectItem>
             </SelectContent>
           </Select>
           <Select
             defaultValue={initialFilters.shopId}
             onValueChange={(v) => v && updateParams({ shopId: v, page: "1" })}
           >
-            <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="Shop" /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder={t("shop")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Shops</SelectItem>
+              <SelectItem value="all">{t("allShops")}</SelectItem>
               {shops.map((s) => (
                 <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
               ))}
@@ -197,28 +200,27 @@ export function SalesHistoryTable({
 
       <Card>
         <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Invoice</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Shop</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sales.length === 0 && (
+          <Table>              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={9} className="py-8 text-center text-sm text-muted-foreground">
-                    No sales found
-                  </TableCell>
+                  <TableHead>{t("colInvoice")}</TableHead>
+                  <TableHead>{t("colCustomer")}</TableHead>
+                  <TableHead>{t("colShop")}</TableHead>
+                  <TableHead>{t("colItems")}</TableHead>
+                  <TableHead>{t("colAmount")}</TableHead>
+                  <TableHead>{t("colPayment")}</TableHead>
+                  <TableHead>{t("colDate")}</TableHead>
+                  <TableHead>{t("colStatus")}</TableHead>
+                  <TableHead>{t("colActions")}</TableHead>
                 </TableRow>
-              )}
+              </TableHeader>
+              <TableBody>
+                {sales.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={9} className="py-8 text-center text-sm text-muted-foreground">
+                      {t("empty")}
+                    </TableCell>
+                  </TableRow>
+                )}
               {sales.map((sale) => (
                 <TableRow key={sale.id} className="transition-colors hover:bg-muted/50">
                   <TableCell className="font-mono text-xs">{sale.invoiceNo}</TableCell>
@@ -236,7 +238,7 @@ export function SalesHistoryTable({
                   <TableCell>
                     {sale.status === "COMPLETED" && (
                       <AnimateButton size="sm" variant="outline" disabled={pending} onClick={() => refund(sale.id)}>
-                        Refund
+                        {t("refund")}
                       </AnimateButton>
                     )}
                   </TableCell>
@@ -249,7 +251,7 @@ export function SalesHistoryTable({
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Page {initialFilters.page} of {totalPages} ({total} total)
+          {t("pageInfo", { page: initialFilters.page, pages: totalPages, total })}
         </p>
         <div className="flex gap-2">
           <AnimateButton
@@ -258,7 +260,7 @@ export function SalesHistoryTable({
             disabled={initialFilters.page <= 1}
             onClick={() => updateParams({ page: String(initialFilters.page - 1) })}
           >
-            <ChevronLeft className="size-4" /> Prev
+            <ChevronLeft className="size-4" /> {t("prev")}
           </AnimateButton>
           <AnimateButton
             variant="outline"
@@ -266,7 +268,7 @@ export function SalesHistoryTable({
             disabled={initialFilters.page >= totalPages}
             onClick={() => updateParams({ page: String(initialFilters.page + 1) })}
           >
-            Next <ChevronRight className="size-4" />
+            {t("next")} <ChevronRight className="size-4" />
           </AnimateButton>
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "motion/react"
+import { useTranslations } from "next-intl"
 import { Mail, Phone, Store, DollarSign, Star, Calendar, Edit3 } from "lucide-react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -13,6 +14,7 @@ const sectionVariants = {
 }
 
 export default function EmployeeProfilePage() {
+  const t = useTranslations("employeeProfile")
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <motion.div
@@ -29,10 +31,10 @@ export default function EmployeeProfilePage() {
                 </AvatarFallback>
               </Avatar>
               <h1 className="mt-4 text-xl font-semibold">Alex Rivera</h1>
-              <p className="text-sm text-muted-foreground">Staff Level II</p>
+              <p className="text-sm text-muted-foreground">{t("staffLevel")}</p>
               <AnimateButton className="mt-4" size="sm">
                 <Edit3 className="size-4" />
-                Edit Profile
+                {t("editProfile")}
               </AnimateButton>
             </div>
           </CardContent>
@@ -47,7 +49,7 @@ export default function EmployeeProfilePage() {
       >
         <Card>
           <CardHeader>
-            <CardTitle>Contact Information</CardTitle>
+            <CardTitle>{t("contactInformation")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-3">
@@ -55,7 +57,7 @@ export default function EmployeeProfilePage() {
                 <Mail className="size-4 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-sm font-medium">Email</p>
+                <p className="text-sm font-medium">{t("email")}</p>
                 <p className="text-sm text-muted-foreground">alex.rivera@retailcore.com</p>
               </div>
             </div>
@@ -64,7 +66,7 @@ export default function EmployeeProfilePage() {
                 <Phone className="size-4 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-sm font-medium">Phone</p>
+                <p className="text-sm font-medium">{t("phone")}</p>
                 <p className="text-sm text-muted-foreground">+1 (555) 234-5678</p>
               </div>
             </div>
@@ -73,7 +75,7 @@ export default function EmployeeProfilePage() {
                 <Store className="size-4 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-sm font-medium">Shop Assignment</p>
+                <p className="text-sm font-medium">{t("shopAssignment")}</p>
                 <p className="text-sm text-muted-foreground">Downtown Flagship Store</p>
               </div>
             </div>
@@ -89,7 +91,7 @@ export default function EmployeeProfilePage() {
       >
         <Card>
           <CardHeader>
-            <CardTitle>Activity Stats</CardTitle>
+            <CardTitle>{t("activityStats")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between rounded-lg border p-3">
@@ -98,7 +100,7 @@ export default function EmployeeProfilePage() {
                   <DollarSign className="size-4" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium">Total Sales This Month</p>
+                  <p className="text-sm font-medium">{t("totalSalesThisMonth")}</p>
                 </div>
               </div>
               <span className="text-lg font-bold">$12,450</span>
@@ -109,7 +111,7 @@ export default function EmployeeProfilePage() {
                   <Star className="size-4" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium">Rating</p>
+                  <p className="text-sm font-medium">{t("rating")}</p>
                 </div>
               </div>
               <span className="text-lg font-bold">4.8/5</span>
@@ -120,7 +122,7 @@ export default function EmployeeProfilePage() {
                   <Calendar className="size-4" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium">Years of Service</p>
+                  <p className="text-sm font-medium">{t("yearsOfService")}</p>
                 </div>
               </div>
               <span className="text-lg font-bold">2</span>

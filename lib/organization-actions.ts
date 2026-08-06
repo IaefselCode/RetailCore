@@ -355,3 +355,47 @@ export async function setEmployeeActive(formData: FormData): Promise<ActionResul
     return fail("Something went wrong. Please try again.")
   }
 }
+
+export async function deleteEmployee(formData: FormData): Promise<ActionResult> {
+  const actorId = await requireAdmin()
+  if (!actorId) return fail("You do not have permission to do that.")
+
+  try {
+    const id = str(formData.get("id"))
+    if (!id) return fail("Missing employee id.")
+
+    const employee = await prisma.employee.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        userId: true,
+        user: { select: { firstName: true, lastName: true, email: true } },
+      },
+    })
+    if (!employee) return fail("Employee not found.")
+
+    await prisma.$transaction(async (tx) => {
+      // Keep past sales, just unlink them from the deleted employee.
+      await tx.sale.updateMany({
+        where: { employeeId: id },
+        data: { employeeId: null },
+      })
+      // Deleting the user cascades to the employee row.
+      await tx.user.delete({ where: { id: employee.userId } })
+    })
+
+    const meta = await getRequestMeta()
+    await logAuditEvent("employee_deleted", {
+      actorId,
+      entityType: "Employee",
+      entityId: employee.id,
+      detail: `${employee.user.firstName} ${employee.user.lastName} <${employee.user.email}>`,
+      ip: meta.ip,
+    })
+    revalidatePath("/admin/employees")
+    return { success: true, message: "Employee deleted." }
+  } catch (err) {
+    console.error("deleteEmployee failed:", err)
+    return fail("Something went wrong. Please try again.")
+  }
+}

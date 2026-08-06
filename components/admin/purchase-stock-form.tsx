@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { Plus, Trash2, Save } from "lucide-react"
 import { toast } from "sonner"
@@ -49,6 +50,9 @@ export function PurchaseStockForm({
   products: ProductOption[]
 }) {
   const router = useRouter()
+  const t = useTranslations("purchaseStock")
+  const tc = useTranslations("common")
+  const tn = useTranslations("nav")
   const [pending, startTransition] = useTransition()
   const [shopId, setShopId] = useState("")
   const [reference, setReference] = useState("")
@@ -87,11 +91,11 @@ export function PurchaseStockForm({
 
   function submit() {
     if (!shopId) {
-      toast.error("Select a shop")
+      toast.error(t("selectShop"))
       return
     }
     if (lineItems.length === 0) {
-      toast.error("Add at least one product")
+      toast.error(t("addAtLeastOne"))
       return
     }
 
@@ -125,21 +129,21 @@ export function PurchaseStockForm({
   return (
     <div className="space-y-6">
       <nav className="text-sm text-muted-foreground">
-        Home <span className="mx-1">/</span>
-        <Link href="/admin/inventory" className="hover:text-foreground">Inventory</Link>
+        {tc("home")} <span className="mx-1">/</span>
+        <Link href="/admin/inventory" className="hover:text-foreground">{tn("inventory")}</Link>
         <span className="mx-1">/</span>
-        <span className="text-foreground">Purchase Stock</span>
+        <span className="text-foreground">{t("title")}</span>
       </nav>
 
-      <h1 className="text-2xl font-semibold">Purchase Stock</h1>
+      <h1 className="text-2xl font-semibold">{t("title")}</h1>
 
       <Card>
-        <CardHeader><CardTitle>Order Details</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t("orderDetails")}</CardTitle></CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label>Destination Shop *</Label>
+            <Label>{t("destinationShop")} *</Label>
             <Select value={shopId} onValueChange={(v) => v && setShopId(v)}>
-              <SelectTrigger><SelectValue placeholder="Select shop" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("selectShop")} /></SelectTrigger>
               <SelectContent>
                 {shops.map((s) => (
                   <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
@@ -148,32 +152,32 @@ export function PurchaseStockForm({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="reference">Reference / PO Number</Label>
+            <Label htmlFor="reference">{t("reference")}</Label>
             <Input id="reference" value={reference} onChange={(e) => setReference(e.target.value)} />
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">{t("notes")}</Label>
             <Input id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Line Items</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t("lineItems")}</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
             <Select value={newProductId} onValueChange={(v) => v && setNewProductId(v)}>
-              <SelectTrigger className="w-full sm:w-64"><SelectValue placeholder="Product" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-64"><SelectValue placeholder={t("product")} /></SelectTrigger>
               <SelectContent>
                 {products.map((p) => (
                   <SelectItem key={p.id} value={p.id}>{p.name} ({p.sku})</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Input placeholder="Qty" type="number" min="1" className="w-24" value={newQty} onChange={(e) => setNewQty(e.target.value)} />
-            <Input placeholder="Unit cost" type="number" min="0" step="0.01" className="w-32" value={newCost} onChange={(e) => setNewCost(e.target.value)} />
+            <Input placeholder={t("qty")} type="number" min="1" className="w-24" value={newQty} onChange={(e) => setNewQty(e.target.value)} />
+            <Input placeholder={t("unitCost")} type="number" min="0" step="0.01" className="w-32" value={newCost} onChange={(e) => setNewCost(e.target.value)} />
             <AnimateButton type="button" variant="outline" onClick={addLineItem}>
-              <Plus className="size-4" /> Add
+              <Plus className="size-4" /> {tc("add")}
             </AnimateButton>
           </div>
 
@@ -182,10 +186,10 @@ export function PurchaseStockForm({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Qty</TableHead>
-                    <TableHead>Unit Cost</TableHead>
-                    <TableHead>Line Total</TableHead>
+                    <TableHead>{t("product")}</TableHead>
+                    <TableHead>{t("qty")}</TableHead>
+                    <TableHead>{t("unitCost")}</TableHead>
+                    <TableHead>{t("lineTotal")}</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -211,10 +215,10 @@ export function PurchaseStockForm({
           )}
 
           <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">Estimated total: <span className="font-semibold text-foreground">{formatMoney(totalCost)}</span></p>
+            <p className="text-sm text-muted-foreground">{t("estimatedTotal")}: <span className="font-semibold text-foreground">{formatMoney(totalCost)}</span></p>
             <AnimateButton variant="accent" onClick={submit} disabled={pending}>
               <Save className="size-4" />
-              Submit Purchase
+              {t("submitPurchase")}
             </AnimateButton>
           </div>
         </CardContent>

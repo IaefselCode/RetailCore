@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireEmployeeContext } from "@/lib/auth-utils"
+import { getTranslations } from "next-intl/server"
 import { Badge } from "@/components/ui/badge"
 import { formatMoney } from "@/lib/money"
 import {
@@ -23,7 +24,14 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive"> = {
   CANCELLED: "destructive",
 }
 
-function SalesTableSection({
+const STATUS_KEYS: Record<string, string> = {
+  COMPLETED: "completed",
+  REFUNDED: "refunded",
+  PENDING: "pending",
+  CANCELLED: "cancelled",
+}
+
+async function SalesTableSection({
   shopId,
   employeeId,
   initialDate,
@@ -32,6 +40,7 @@ function SalesTableSection({
   employeeId: string
   initialDate: string
 }) {
+  const t = await getTranslations("employeeSalesHistory")
   const where: Record<string, unknown> = { shopId, employeeId }
   if (initialDate) {
     where.createdAt = {
@@ -49,12 +58,12 @@ function SalesTableSection({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Invoice</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>{t("colInvoice")}</TableHead>
+                <TableHead>{t("colCustomer")}</TableHead>
+                <TableHead>{t("colItems")}</TableHead>
+                <TableHead>{t("colAmount")}</TableHead>
+                <TableHead>{t("colDate")}</TableHead>
+                <TableHead>{t("colStatus")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -77,6 +86,7 @@ function SalesTableSection({
 }
 
 async function SalesBodyRows({ where }: { where: Record<string, unknown> }) {
+  const t = await getTranslations("employeeSalesHistory")
   const sales = await prisma.sale.findMany({
     where,
     orderBy: { createdAt: "desc" },
@@ -89,7 +99,7 @@ async function SalesBodyRows({ where }: { where: Record<string, unknown> }) {
       {sales.length === 0 && (
         <TableRow>
           <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-            No sales found
+            {t("empty")}
           </TableCell>
         </TableRow>
       )}
@@ -105,7 +115,9 @@ async function SalesBodyRows({ where }: { where: Record<string, unknown> }) {
               {new Date(sale.createdAt).toLocaleDateString()}
             </TableCell>
             <TableCell>
-              <Badge variant={statusVariant[sale.status] ?? "default"}>{sale.status}</Badge>
+              <Badge variant={statusVariant[sale.status] ?? "default"}>
+                {t(STATUS_KEYS[sale.status] ?? sale.status)}
+              </Badge>
             </TableCell>
           </TableRow>
         )
@@ -121,12 +133,13 @@ export default async function EmployeeSalesHistoryPage({
 }) {
   const ctx = await requireEmployeeContext()
   const params = await searchParams
+  const t = await getTranslations("employeeSalesHistory")
 
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm text-muted-foreground">Dashboard &gt; Sales</p>
-        <h1 className="text-2xl font-semibold tracking-tight">Sales History</h1>
+        <p className="text-sm text-muted-foreground">{t("breadcrumb")}</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
       </div>
 
       <SalesTableSection

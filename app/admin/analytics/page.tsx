@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { motion } from "motion/react"
 import { ChevronRightIcon, DownloadIcon, TrendingUpIcon, ShoppingCartIcon, TargetIcon, DollarSignIcon } from "lucide-react"
 import {
@@ -40,10 +41,10 @@ const itemVariants = {
 }
 
 const kpis = [
-  { label: "Revenue", value: "$312,800", change: "+12.5%", icon: DollarSignIcon, positive: true },
-  { label: "Orders", value: "1,247", change: "+8.3%", icon: ShoppingCartIcon, positive: true },
-  { label: "Conversion Rate", value: "3.2%", change: "-0.4%", icon: TargetIcon, positive: false },
-  { label: "Avg Order Value", value: "$250", change: "+5.1%", icon: TrendingUpIcon, positive: true },
+  { labelKey: "revenue", value: "$312,800", change: "+12.5%", icon: DollarSignIcon, positive: true },
+  { labelKey: "orders", value: "1,247", change: "+8.3%", icon: ShoppingCartIcon, positive: true },
+  { labelKey: "conversionRate", value: "3.2%", change: "-0.4%", icon: TargetIcon, positive: false },
+  { labelKey: "avgOrderValue", value: "$250", change: "+5.1%", icon: TrendingUpIcon, positive: true },
 ]
 
 const topProducts = [
@@ -65,27 +66,29 @@ const shops = [
 const chartData = [35, 55, 42, 78, 61, 90, 75, 85, 68, 95, 72, 88]
 
 export default function AnalyticsPage() {
+  const t = useTranslations("analytics")
+  const tc = useTranslations("common")
   const [dateRange, setDateRange] = useState("30")
 
   return (
     <div className="flex flex-col gap-6">
       <nav className="flex items-center gap-1 text-sm text-muted-foreground">
-        <span>Home</span>
+        <span>{tc("home")}</span>
         <ChevronRightIcon className="size-3.5" />
-        <span className="text-foreground">Analytics</span>
+        <span className="text-foreground">{t("breadcrumb")}</span>
       </nav>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h1 className="text-2xl font-medium">Business Analytics</h1>
+        <h1 className="text-2xl font-medium">{t("title")}</h1>
         <Select value={dateRange} onValueChange={(v) => v && setDateRange(v)}>
           <SelectTrigger className="w-36">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="7">Last 7 days</SelectItem>
-            <SelectItem value="30">Last 30 days</SelectItem>
-            <SelectItem value="90">Last 90 days</SelectItem>
-            <SelectItem value="365">Last year</SelectItem>
+            <SelectItem value="7">{t("last7")}</SelectItem>
+            <SelectItem value="30">{t("last30")}</SelectItem>
+            <SelectItem value="90">{t("last90")}</SelectItem>
+            <SelectItem value="365">{t("lastYear")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -97,10 +100,10 @@ export default function AnalyticsPage() {
         animate="visible"
       >
         {kpis.map((kpi) => (
-          <motion.div key={kpi.label} variants={itemVariants}>
+          <motion.div key={kpi.labelKey} variants={itemVariants}>
             <Card>
               <CardHeader className="flex-row items-center justify-between gap-2">
-                <CardTitle className="text-sm font-normal text-muted-foreground">{kpi.label}</CardTitle>
+                <CardTitle className="text-sm font-normal text-muted-foreground">{t(kpi.labelKey)}</CardTitle>
                 <kpi.icon className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -117,8 +120,8 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="col-span-1 lg:col-span-2">
           <CardHeader>
-            <CardTitle>Revenue Over Time</CardTitle>
-            <CardDescription>Monthly revenue performance</CardDescription>
+            <CardTitle>{t("revenueOverTime")}</CardTitle>
+            <CardDescription>{t("monthlyPerformance")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-end gap-2 h-48">
@@ -142,8 +145,8 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Top Products</CardTitle>
-            <CardDescription>By revenue</CardDescription>
+            <CardTitle>{t("topProducts")}</CardTitle>
+            <CardDescription>{t("byRevenue")}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {topProducts.map((product, i) => (
@@ -170,18 +173,18 @@ export default function AnalyticsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Sales by Shop</CardTitle>
-          <CardDescription>Revenue breakdown across all locations</CardDescription>
+          <CardTitle>{t("salesByShop")}</CardTitle>
+          <CardDescription>{t("revenueBreakdown")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Shop</TableHead>
-                <TableHead>Revenue</TableHead>
-                <TableHead>Orders</TableHead>
-                <TableHead>Growth</TableHead>
+                <TableHead>{t("colShop")}</TableHead>
+                <TableHead>{t("colRevenue")}</TableHead>
+                <TableHead>{t("colOrders")}</TableHead>
+                <TableHead>{t("colGrowth")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -206,7 +209,7 @@ export default function AnalyticsPage() {
       <div className="flex justify-end">
         <AnimateButton variant="outline">
           <DownloadIcon />
-          Export Report
+          {t("exportReport")}
         </AnimateButton>
       </div>
     </div>

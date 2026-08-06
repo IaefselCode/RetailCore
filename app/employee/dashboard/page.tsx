@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireEmployeeContext } from "@/lib/auth-utils"
+import { getTranslations } from "next-intl/server"
 import { EmployeeDashboard } from "@/components/employee/employee-dashboard"
 import { ShoppingCart } from "lucide-react"
 import { formatMoney } from "@/lib/money"
@@ -18,15 +19,15 @@ function startOfMonth(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), 1)
 }
 
-function timeAgo(iso: string) {
+function timeAgo(iso: string, t: (key: string, values?: Record<string, string | number>) => string) {
   const diff = Date.now() - new Date(iso).getTime()
   const minutes = Math.floor(diff / 60000)
-  if (minutes < 1) return "Just now"
-  if (minutes < 60) return `${minutes}m ago`
+  if (minutes < 1) return t("justNow")
+  if (minutes < 60) return t("minutesAgo", { count: minutes })
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
+  if (hours < 24) return t("hoursAgo", { count: hours })
   const days = Math.floor(hours / 24)
-  return `${days}d ago`
+  return t("daysAgo", { count: days })
 }
 
 async function TodaySalesValue({ shopId }: { shopId: string }) {
@@ -72,6 +73,7 @@ async function StockUnitsValue({ shopId }: { shopId: string }) {
 }
 
 async function ActivityItems({ shopId, employeeId }: { shopId: string; employeeId: string }) {
+  const t = await getTranslations("employeeDashboard")
   const recentSales = await prisma.sale.findMany({
     where: { shopId, employeeId },
     orderBy: { createdAt: "desc" },
@@ -86,7 +88,7 @@ async function ActivityItems({ shopId, employeeId }: { shopId: string; employeeI
   if (recentSales.length === 0) {
     return (
       <div className="py-8 text-center text-sm text-muted-foreground">
-        No transactions yet
+        {t("noTransactions")}
       </div>
     )
   }
@@ -101,11 +103,11 @@ async function ActivityItems({ shopId, employeeId }: { shopId: string; employeeI
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium">{sale.invoiceNo}</p>
             <p className="text-sm text-muted-foreground">
-              Processed by you - {formatMoney(sale.total)}
+              {t("processedByYou", { amount: formatMoney(sale.total) })}
             </p>
           </div>
           <span className="text-xs text-muted-foreground shrink-0">
-            {timeAgo(sale.createdAt.toISOString())}
+            {timeAgo(sale.createdAt.toISOString(), t)}
           </span>
         </div>
       ))}
@@ -114,6 +116,7 @@ async function ActivityItems({ shopId, employeeId }: { shopId: string; employeeI
 }
 
 async function LowStockItems({ shopId }: { shopId: string }) {
+  const t = await getTranslations("employeeDashboard")
   const inventory = await prisma.inventory.findMany({
     where: { shopId },
     include: { product: { select: { name: true, sku: true } } },
@@ -123,7 +126,7 @@ async function LowStockItems({ shopId }: { shopId: string }) {
   const lowStock = inventory.filter((inv) => inv.quantity <= inv.minStock).slice(0, 5)
 
   if (lowStock.length === 0) {
-    return <p className="py-4 text-center text-sm text-muted-foreground">All stock levels are healthy</p>
+    return <p className="py-4 text-center text-sm text-muted-foreground">{t("healthyStock")}</p>
   }
 
   return (
@@ -139,10 +142,10 @@ async function LowStockItems({ shopId }: { shopId: string }) {
           </div>
           <div className="text-right">
             <span className="rounded-full border px-2.5 py-0.5 text-xs font-medium">
-              {item.quantity} in stock
+              {t("inStock", { count: item.quantity })}
             </span>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Reorder at {item.minStock}
+              {t("reorderAt", { amount: item.minStock })}
             </p>
           </div>
         </div>

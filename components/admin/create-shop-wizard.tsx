@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { motion, AnimatePresence } from "motion/react"
 import { ChevronLeft, ChevronRight, Home, Loader2, Save } from "lucide-react"
@@ -12,8 +13,6 @@ import { Label } from "@/components/ui/label"
 import { AnimateButton } from "@/components/ui/animate-button"
 import { createShop } from "@/lib/organization-actions"
 
-const steps = ["General Info", "Contact & Location"]
-
 const stepVariants = {
   enter: { opacity: 0, x: 20 },
   center: { opacity: 1, x: 0 },
@@ -22,6 +21,10 @@ const stepVariants = {
 
 export function CreateShopWizard() {
   const router = useRouter()
+  const t = useTranslations("createShop")
+  const tn = useTranslations("nav")
+  const tc = useTranslations("common")
+  const steps = [t("step1"), t("step2")]
   const [step, setStep] = useState(0)
   const [pending, startTransition] = useTransition()
   const [form, setForm] = useState({
@@ -63,20 +66,20 @@ export function CreateShopWizard() {
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-center gap-1 text-sm text-muted-foreground">
         <Home className="size-3.5" />
-        <Link href="/admin" className="hover:text-foreground">Dashboard</Link>
+        <Link href="/admin" className="hover:text-foreground">{tn("dashboard")}</Link>
         <ChevronRight className="size-3.5" />
-        <Link href="/admin/shops" className="hover:text-foreground">Shops</Link>
+        <Link href="/admin/shops" className="hover:text-foreground">{tn("shops")}</Link>
         <ChevronRight className="size-3.5" />
-        <span className="text-foreground">Create Shop</span>
+        <span className="text-foreground">{t("breadcrumb")}</span>
       </div>
 
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-xl">Create New Shop</CardTitle>
+              <CardTitle className="text-xl">{t("title")}</CardTitle>
               <CardDescription>
-                Step {step + 1} of {steps.length}: {steps[step]}
+                {t("stepOf", { step: step + 1, total: steps.length, name: steps[step] })}
               </CardDescription>
             </div>
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
@@ -106,38 +109,38 @@ export function CreateShopWizard() {
                 className="space-y-4"
               >
                 <div className="space-y-2">
-                  <Label htmlFor="name">Shop Name *</Label>
+                  <Label htmlFor="name">{t("shopName")} *</Label>
                   <Input
                     id="name"
-                    placeholder="Enter shop name"
+                    placeholder={t("shopNamePlaceholder")}
                     value={form.name}
                     onChange={(e) => update("name", e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
+                  <Label htmlFor="address">{t("address")}</Label>
                   <Input
                     id="address"
-                    placeholder="Street address"
+                    placeholder={t("addressPlaceholder")}
                     value={form.address}
                     onChange={(e) => update("address", e.target.value)}
                   />
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="city">City</Label>
+                    <Label htmlFor="city">{t("city")}</Label>
                     <Input
                       id="city"
-                      placeholder="City"
+                      placeholder={t("cityPlaceholder")}
                       value={form.city}
                       onChange={(e) => update("city", e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="state">State / Region</Label>
+                    <Label htmlFor="state">{t("state")}</Label>
                     <Input
                       id="state"
-                      placeholder="State or region"
+                      placeholder={t("statePlaceholder")}
                       value={form.state}
                       onChange={(e) => update("state", e.target.value)}
                     />
@@ -158,19 +161,19 @@ export function CreateShopWizard() {
               >
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="zipCode">Zip / Postal Code</Label>
+                    <Label htmlFor="zipCode">{t("zipCode")}</Label>
                     <Input
                       id="zipCode"
-                      placeholder="Postal code"
+                      placeholder={t("zipCodePlaceholder")}
                       value={form.zipCode}
                       onChange={(e) => update("zipCode", e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
+                    <Label htmlFor="phone">{t("phone")}</Label>
                     <Input
                       id="phone"
-                      placeholder="+255 ..."
+                      placeholder={t("phonePlaceholder")}
                       value={form.phone}
                       onChange={(e) => update("phone", e.target.value)}
                     />
@@ -179,7 +182,7 @@ export function CreateShopWizard() {
                 <div className="rounded-lg border bg-muted/40 p-4 text-sm">
                   <p className="font-medium">{form.name || "—"}</p>
                   <p className="text-muted-foreground">
-                    {[form.address, form.city, form.state, form.zipCode].filter(Boolean).join(", ") || "No address"}
+                    {[form.address, form.city, form.state, form.zipCode].filter(Boolean).join(", ") || t("noAddress")}
                   </p>
                   {form.phone && <p className="text-muted-foreground">{form.phone}</p>}
                 </div>
@@ -191,24 +194,24 @@ export function CreateShopWizard() {
         <CardFooter className="justify-between">
           {step === 0 ? (
             <AnimateButton variant="outline" asChild>
-              <Link href="/admin/shops">Cancel</Link>
+              <Link href="/admin/shops">{tc("cancel")}</Link>
             </AnimateButton>
           ) : (
             <AnimateButton variant="outline" onClick={() => setStep((s) => s - 1)} disabled={pending}>
               <ChevronLeft className="size-4" />
-              Back
+              {t("back")}
             </AnimateButton>
           )}
 
           {step < steps.length - 1 ? (
             <AnimateButton onClick={() => setStep((s) => s + 1)} disabled={!canNext}>
-              Next
+              {t("next")}
               <ChevronRight className="size-4" />
             </AnimateButton>
           ) : (
             <AnimateButton variant="accent" onClick={submit} disabled={pending || !canNext}>
               {pending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-              Create Shop
+              {t("createShop")}
             </AnimateButton>
           )}
         </CardFooter>

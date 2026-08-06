@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { motion } from "motion/react"
 import { ChevronRightIcon, SaveIcon, EyeIcon, EyeOffIcon } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -31,6 +32,8 @@ const itemVariants = {
 }
 
 export default function SettingsPage() {
+  const t = useTranslations("settings")
+  const tc = useTranslations("common")
   const [showPassword, setShowPassword] = useState(false)
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [smsAlerts, setSmsAlerts] = useState(false)
@@ -39,25 +42,25 @@ export default function SettingsPage() {
   const [theme, setTheme] = useState("light")
 
   function handleSave() {
-    toast.success("Settings saved successfully")
+    toast.success(t("saved"))
   }
 
   return (
     <div className="flex flex-col gap-6">
       <nav className="flex items-center gap-1 text-sm text-muted-foreground">
-        <span>Home</span>
+        <span>{tc("home")}</span>
         <ChevronRightIcon className="size-3.5" />
-        <span className="text-foreground">Settings</span>
+        <span className="text-foreground">{t("breadcrumb")}</span>
       </nav>
 
-      <h1 className="text-2xl font-medium">System Settings</h1>
+      <h1 className="text-2xl font-medium">{t("title")}</h1>
 
       <Tabs defaultValue="general">
         <TabsList>
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="preferences">Preferences</TabsTrigger>
+          <TabsTrigger value="general">{t("general")}</TabsTrigger>
+          <TabsTrigger value="notifications">{t("notifications")}</TabsTrigger>
+          <TabsTrigger value="security">{t("security")}</TabsTrigger>
+          <TabsTrigger value="preferences">{t("preferences")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="mt-6">
@@ -65,17 +68,17 @@ export default function SettingsPage() {
             <motion.div variants={itemVariants}>
               <Card>
                 <CardHeader>
-                  <CardTitle>General Settings</CardTitle>
-                  <CardDescription>Manage your shop&apos;s basic information</CardDescription>
+                  <CardTitle>{t("generalSettings")}</CardTitle>
+                  <CardDescription>{t("generalSettingsDesc")}</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="shop-name">Shop Name</Label>
+                      <Label htmlFor="shop-name">{t("shopName")}</Label>
                       <Input id="shop-name" defaultValue="RetailCore Store" />
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="timezone">Timezone</Label>
+                      <Label htmlFor="timezone">{t("timezone")}</Label>
                       <Select defaultValue="utc">
                         <SelectTrigger id="timezone">
                           <SelectValue />
@@ -91,7 +94,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="currency">Currency</Label>
+                      <Label htmlFor="currency">{t("currency")}</Label>
                       <Select defaultValue="usd">
                         <SelectTrigger id="currency">
                           <SelectValue />
@@ -105,7 +108,7 @@ export default function SettingsPage() {
                       </Select>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="date-format">Date Format</Label>
+                      <Label htmlFor="date-format">{t("dateFormat")}</Label>
                       <Select defaultValue="mdy">
                         <SelectTrigger id="date-format">
                           <SelectValue />
@@ -129,30 +132,30 @@ export default function SettingsPage() {
             <motion.div variants={itemVariants}>
               <Card>
                 <CardHeader>
-                  <CardTitle>Notification Preferences</CardTitle>
-                  <CardDescription>Control how you receive alerts and updates</CardDescription>
+                  <CardTitle>{t("notificationPrefs")}</CardTitle>
+                  <CardDescription>{t("notificationPrefsDesc")}</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label className="text-sm font-medium">Email Notifications</Label>
-                      <p className="text-sm text-muted-foreground">Receive daily summaries and alerts via email</p>
+                      <Label className="text-sm font-medium">{t("emailNotifications")}</Label>
+                      <p className="text-sm text-muted-foreground">{t("emailNotificationsDesc")}</p>
                     </div>
                     <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
                   </div>
                   <Separator />
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label className="text-sm font-medium">SMS Alerts</Label>
-                      <p className="text-sm text-muted-foreground">Get critical alerts via text message</p>
+                      <Label className="text-sm font-medium">{t("smsAlerts")}</Label>
+                      <p className="text-sm text-muted-foreground">{t("smsAlertsDesc")}</p>
                     </div>
                     <Switch checked={smsAlerts} onCheckedChange={setSmsAlerts} />
                   </div>
                   <Separator />
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label className="text-sm font-medium">Push Notifications</Label>
-                      <p className="text-sm text-muted-foreground">Receive real-time push notifications</p>
+                      <Label className="text-sm font-medium">{t("pushNotifications")}</Label>
+                      <p className="text-sm text-muted-foreground">{t("pushNotificationsDesc")}</p>
                     </div>
                     <Switch checked={pushNotifications} onCheckedChange={setPushNotifications} />
                   </div>
@@ -167,12 +170,12 @@ export default function SettingsPage() {
             <motion.div variants={itemVariants}>
               <Card>
                 <CardHeader>
-                  <CardTitle>Security Settings</CardTitle>
-                  <CardDescription>Manage your account security and session preferences</CardDescription>
+                  <CardTitle>{t("securitySettings")}</CardTitle>
+                  <CardDescription>{t("securitySettingsDesc")}</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
                   <div className="flex flex-col gap-2">
-                    <Label htmlFor="current-password">Current Password</Label>
+                    <Label htmlFor="current-password">{t("currentPassword")}</Label>
                     <div className="relative">
                       <Input id="current-password" type={showPassword ? "text" : "password"} />
                       <AnimateButton
@@ -187,25 +190,25 @@ export default function SettingsPage() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="new-password">New Password</Label>
+                      <Label htmlFor="new-password">{t("newPassword")}</Label>
                       <Input id="new-password" type="password" />
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="confirm-password">Confirm Password</Label>
+                      <Label htmlFor="confirm-password">{t("confirmPassword")}</Label>
                       <Input id="confirm-password" type="password" />
                     </div>
                   </div>
                   <Separator />
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label className="text-sm font-medium">Two-Factor Authentication</Label>
-                      <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
+                      <Label className="text-sm font-medium">{t("twoFactor")}</Label>
+                      <p className="text-sm text-muted-foreground">{t("twoFactorDesc")}</p>
                     </div>
                     <Switch checked={twoFactor} onCheckedChange={setTwoFactor} />
                   </div>
                   <Separator />
                   <div className="flex flex-col gap-2">
-                    <Label htmlFor="session-timeout">Session Timeout</Label>
+                    <Label htmlFor="session-timeout">{t("sessionTimeout")}</Label>
                     <Select defaultValue="30">
                       <SelectTrigger id="session-timeout" className="w-48">
                         <SelectValue />
@@ -230,12 +233,12 @@ export default function SettingsPage() {
             <motion.div variants={itemVariants}>
               <Card>
                 <CardHeader>
-                  <CardTitle>Preferences</CardTitle>
-                  <CardDescription>Customize your experience</CardDescription>
+                  <CardTitle>{t("preferences")}</CardTitle>
+                  <CardDescription>{t("preferencesDesc")}</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
                   <div className="flex flex-col gap-2">
-                    <Label htmlFor="language">Language</Label>
+                    <Label htmlFor="language">{t("language")}</Label>
                     <Select defaultValue="en">
                       <SelectTrigger id="language" className="w-48">
                         <SelectValue />
@@ -251,8 +254,8 @@ export default function SettingsPage() {
                   <Separator />
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label className="text-sm font-medium">Dark Mode</Label>
-                      <p className="text-sm text-muted-foreground">Toggle between light and dark themes</p>
+                      <Label className="text-sm font-medium">{t("darkMode")}</Label>
+                      <p className="text-sm text-muted-foreground">{t("darkModeDesc")}</p>
                     </div>
                     <Switch
                       checked={theme === "dark"}
@@ -261,7 +264,7 @@ export default function SettingsPage() {
                   </div>
                   <Separator />
                   <div className="flex flex-col gap-2">
-                    <Label>UI Scale</Label>
+                    <Label>{t("uiScale")}</Label>
                     <AdaptiveSlider />
                   </div>
                 </CardContent>
@@ -274,7 +277,7 @@ export default function SettingsPage() {
       <div className="flex justify-end">
         <AnimateButton onClick={handleSave}>
           <SaveIcon />
-          Save Changes
+          {t("saveChanges")}
         </AnimateButton>
       </div>
     </div>

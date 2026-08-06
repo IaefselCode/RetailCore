@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Check, Copy, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
@@ -24,6 +25,9 @@ interface ShopOption {
 
 export function AddEmployeeForm({ shops }: { shops: ShopOption[] }) {
   const router = useRouter()
+  const t = useTranslations("addEmployee")
+  const te = useTranslations("employees")
+  const tc = useTranslations("common")
   const [pending, startTransition] = useTransition()
   const [shopId, setShopId] = useState("")
   const [tempPassword, setTempPassword] = useState<string | null>(null)
@@ -66,32 +70,32 @@ export function AddEmployeeForm({ shops }: { shops: ShopOption[] }) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Employee Created</CardTitle>
+          <CardTitle>{t("employeeCreated")}</CardTitle>
           <CardDescription>
-            Share this one-time password with {employeeName}. They can change it after signing in.
+            {te("tempPasswordText", { name: employeeName })}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Login email</p>
+            <p className="text-sm text-muted-foreground">{te("loginHint")}</p>
             <p className="font-medium">{employeeEmail}</p>
           </div>
           <div className="space-y-2">
-            <p className="text-sm font-medium">Temporary password</p>
+            <p className="text-sm font-medium">{te("tempPasswordTitle")}</p>
             <div className="flex items-center gap-2">
               <code className="flex-1 rounded-md border bg-muted px-3 py-2 text-sm font-mono">
                 {tempPassword}
               </code>
               <AnimateButton type="button" size="sm" variant="outline" onClick={copyPassword}>
                 {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-                {copied ? "Copied" : "Copy"}
+                {copied ? te("copied") : te("copy")}
               </AnimateButton>
             </div>
           </div>
         </CardContent>
         <CardFooter className="justify-end">
           <AnimateButton variant="accent" onClick={() => router.push("/admin/employees")}>
-            Done
+            {tc("done")}
           </AnimateButton>
         </CardFooter>
       </Card>
@@ -101,40 +105,40 @@ export function AddEmployeeForm({ shops }: { shops: ShopOption[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Employee Details</CardTitle>
-        <CardDescription>Fill in the employee information below</CardDescription>
+        <CardTitle>{t("employeeDetails")}</CardTitle>
+        <CardDescription>{t("employeeDetailsDesc")}</CardDescription>
       </CardHeader>
       <form onSubmit={submit}>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="firstName">First name</Label>
-              <Input id="firstName" name="firstName" placeholder="John" required />
+              <Label htmlFor="firstName">{te("firstName")}</Label>
+              <Input id="firstName" name="firstName" placeholder={t("firstPlaceholder")} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lastName">Last name</Label>
-              <Input id="lastName" name="lastName" placeholder="Doe" required />
+              <Label htmlFor="lastName">{te("lastName")}</Label>
+              <Input id="lastName" name="lastName" placeholder={t("lastPlaceholder")} required />
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" placeholder="john@retailcore.dev" required />
+            <Label htmlFor="email">{te("email")}</Label>
+            <Input id="email" name="email" type="email" placeholder={t("emailPlaceholder")} required />
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="position">Position</Label>
-              <Input id="position" name="position" placeholder="Cashier" />
+              <Label htmlFor="position">{te("position")}</Label>
+              <Input id="position" name="position" placeholder={t("positionPlaceholder")} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="salary">Salary</Label>
-              <Input id="salary" name="salary" type="number" min="0" step="1" placeholder="0" />
+              <Label htmlFor="salary">{te("salary")}</Label>
+              <Input id="salary" name="salary" type="number" min="0" step="1" placeholder={t("salaryPlaceholder")} />
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Shop assignment</Label>
+            <Label>{te("shopAssignment")}</Label>
             <Select value={shopId} onValueChange={setShopId}>
               <SelectTrigger>
-                <SelectValue placeholder="Select a shop" />
+                <SelectValue placeholder={te("selectShop")} />
               </SelectTrigger>
               <SelectContent>
                 {shops.map((s) => (
@@ -145,17 +149,17 @@ export function AddEmployeeForm({ shops }: { shops: ShopOption[] }) {
             <input type="hidden" name="shopId" value={shopId} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="hireDate">Hire date</Label>
+            <Label htmlFor="hireDate">{te("hireDate")}</Label>
             <Input id="hireDate" name="hireDate" type="date" />
           </div>
         </CardContent>
         <CardFooter className="justify-between">
           <AnimateButton type="button" variant="outline" onClick={() => router.push("/admin/employees")}>
-            Cancel
+            {tc("cancel")}
           </AnimateButton>
           <AnimateButton type="submit" variant="accent" disabled={pending}>
             {pending ? <Loader2 className="size-4 animate-spin" /> : null}
-            Create Employee
+            {t("createEmployee")}
           </AnimateButton>
         </CardFooter>
       </form>

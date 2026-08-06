@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
 import Link from "next/link"
+import { getTranslations } from "next-intl/server"
 import { CirclePlus, Package } from "lucide-react"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -27,20 +28,22 @@ export default async function ProductsPage({
   searchParams: Promise<SearchParams>
 }) {
   await requireRole("ADMIN")
+  const t = await getTranslations("products")
+  const tc = await getTranslations("common")
   const params = await searchParams
 
   return (
     <div className="space-y-6">
       <nav className="text-sm text-muted-foreground">
-        Home <span className="mx-1">/</span> <span className="text-foreground">Products</span>
+        {tc("home")} <span className="mx-1">/</span> <span className="text-foreground">{t("breadcrumb")}</span>
       </nav>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Product Catalog</h1>
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
         <Link href="/admin/products/add">
           <AnimateButton variant="accent">
             <CirclePlus className="size-4" />
-            Add Product
+            {t("addProduct")}
           </AnimateButton>
         </Link>
       </div>
@@ -53,6 +56,7 @@ export default async function ProductsPage({
 }
 
 async function ProductsContent({ searchParams }: { searchParams: SearchParams }) {
+  const t = await getTranslations("products")
   const where = {
     ...(searchParams.search
       ? {
@@ -106,7 +110,7 @@ async function ProductsContent({ searchParams }: { searchParams: SearchParams })
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Products</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("totalProducts")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold flex items-center gap-2">
@@ -116,7 +120,7 @@ async function ProductsContent({ searchParams }: { searchParams: SearchParams })
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("active")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{active}</div>
@@ -124,7 +128,7 @@ async function ProductsContent({ searchParams }: { searchParams: SearchParams })
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">Inactive</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("inactive")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{inactive}</div>

@@ -2,6 +2,7 @@
 
 import { useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { ArrowLeft, Edit, Trash2, Loader2 } from "lucide-react"
 import { toast } from "sonner"
@@ -38,6 +39,9 @@ export interface ProductDetailData {
 
 export function ProductDetailActions({ product }: { product: ProductDetailData }) {
   const router = useRouter()
+  const t = useTranslations("productDetail")
+  const tc = useTranslations("common")
+  const tn = useTranslations("nav")
   const [pending, startTransition] = useTransition()
 
   const margin =
@@ -63,8 +67,8 @@ export function ProductDetailActions({ product }: { product: ProductDetailData }
   return (
     <div className="space-y-6">
       <nav className="text-sm text-muted-foreground">
-        Home <span className="mx-1">/</span>
-        <Link href="/admin/products" className="hover:text-foreground">Products</Link>
+        {tc("home")} <span className="mx-1">/</span>
+        <Link href="/admin/products" className="hover:text-foreground">{tn("products")}</Link>
         <span className="mx-1">/</span>
         <span className="text-foreground">{product.name}</span>
       </nav>
@@ -85,27 +89,27 @@ export function ProductDetailActions({ product }: { product: ProductDetailData }
           <AnimateButton variant="outline" asChild>
             <Link href={`/admin/products/${product.id}/edit`}>
               <Edit className="size-4" />
-              Edit Product
+              {t("editProduct")}
             </Link>
           </AnimateButton>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <AnimateButton variant="destructive" disabled={pending}>
                 <Trash2 className="size-4" />
-                Delete
+                {t("delete")}
               </AnimateButton>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete product?</AlertDialogTitle>
+                <AlertDialogTitle>{t("deleteTitle")}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will permanently delete &quot;{product.name}&quot;. Products with sales history cannot be deleted.
+                  {t("deleteDescription", { name: product.name })}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
                 <AlertDialogAction onClick={handleDelete} disabled={pending}>
-                  {pending ? <Loader2 className="size-4 animate-spin" /> : "Delete"}
+                  {pending ? <Loader2 className="size-4 animate-spin" /> : t("delete")}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -115,19 +119,19 @@ export function ProductDetailActions({ product }: { product: ProductDetailData }
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
-          <CardHeader><CardTitle>Pricing</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{t("pricing")}</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Price</span>
+              <span className="text-muted-foreground">{t("price")}</span>
               <span className="font-semibold">{formatMoney(product.price)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Cost</span>
+              <span className="text-muted-foreground">{t("cost")}</span>
               <span>{product.cost != null ? formatMoney(product.cost) : "—"}</span>
             </div>
             {margin != null && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Margin</span>
+                <span className="text-muted-foreground">{t("margin")}</span>
                 <span className="text-green-600">{margin.toFixed(1)}%</span>
               </div>
             )}
@@ -135,27 +139,27 @@ export function ProductDetailActions({ product }: { product: ProductDetailData }
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Stock</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{t("stock")}</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Total</span>
-              <span className="font-semibold">{product.totalStock} units</span>
+              <span className="text-muted-foreground">{t("total")}</span>
+              <span className="font-semibold">{t("units", { count: product.totalStock })}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Status</span>
+              <span className="text-muted-foreground">{t("status")}</span>
               <Badge variant={product.isActive ? "default" : "secondary"}>
-                {product.isActive ? "Active" : "Inactive"}
+                {product.isActive ? tc("active") : tc("inactive")}
               </Badge>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Details</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{t("details")}</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Category</span>
-              <Badge variant="outline">{product.categoryName ?? "Uncategorized"}</Badge>
+              <span className="text-muted-foreground">{t("category")}</span>
+              <Badge variant="outline">{product.categoryName ?? t("uncategorized")}</Badge>
             </div>
           </CardContent>
         </Card>
@@ -163,7 +167,7 @@ export function ProductDetailActions({ product }: { product: ProductDetailData }
 
       {product.description && (
         <Card>
-          <CardHeader><CardTitle>Description</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{t("description")}</CardTitle></CardHeader>
           <CardContent>
             <p className="text-muted-foreground">{product.description}</p>
           </CardContent>
@@ -172,14 +176,14 @@ export function ProductDetailActions({ product }: { product: ProductDetailData }
 
       {product.shopStock.length > 0 && (
         <Card>
-          <CardHeader><CardTitle>Stock by Shop</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{t("stockByShop")}</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-2">
               {product.shopStock.map((row) => (
                 <div key={row.shopName} className="flex justify-between text-sm">
                   <span>{row.shopName}</span>
                   <span className={row.quantity <= row.minStock ? "text-yellow-600 font-medium" : ""}>
-                    {row.quantity} units (min: {row.minStock})
+                    {t("unitsMin", { count: row.quantity, min: row.minStock })}
                   </span>
                 </div>
               ))}

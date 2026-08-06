@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { motion } from "motion/react"
 import { Bell, Clock, Package, BarChart3, CheckCheck } from "lucide-react"
 
@@ -79,6 +80,7 @@ const initialNotifications: Notification[] = [
 ]
 
 export default function EmployeeNotificationsPage() {
+  const t = useTranslations("employeeNotifications")
   const [notifications, setNotifications] = useState(initialNotifications)
 
   const unreadCount = notifications.filter((n) => !n.read).length
@@ -100,24 +102,26 @@ export default function EmployeeNotificationsPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Notifications</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
           <p className="text-sm text-muted-foreground">
             {unreadCount > 0
-              ? `You have ${unreadCount} unread notification${unreadCount !== 1 ? "s" : ""}`
-              : "All caught up!"}
+              ? unreadCount === 1
+                ? t("unread", { count: unreadCount })
+                : t("unreadPlural", { count: unreadCount })
+              : t("allCaughtUp")}
           </p>
         </div>
         {unreadCount > 0 && (
           <AnimateButton variant="outline" size="sm" onClick={markAllAsRead}>
             <CheckCheck className="size-4" />
-            Mark All as Read
+            {t("markAllRead")}
           </AnimateButton>
         )}
       </div>
 
       <AnimatedAccordion type="multiple" defaultValue={["today"]}>
         <AnimatedAccordionItem value="today">
-          <AnimatedAccordionTrigger showArrow={false}>Today</AnimatedAccordionTrigger>
+          <AnimatedAccordionTrigger showArrow={false}>{t("today")}</AnimatedAccordionTrigger>
           <AnimatedAccordionContent>
             <div className="space-y-1 pt-2">
               {todayNotifications.map((notification, index) => {
@@ -162,7 +166,7 @@ export default function EmployeeNotificationsPage() {
           </AnimatedAccordionContent>
         </AnimatedAccordionItem>
         <AnimatedAccordionItem value="earlier">
-          <AnimatedAccordionTrigger showArrow={false}>Earlier</AnimatedAccordionTrigger>
+          <AnimatedAccordionTrigger showArrow={false}>{t("earlier")}</AnimatedAccordionTrigger>
           <AnimatedAccordionContent>
             <div className="space-y-1 pt-2">
               {earlierNotifications.map((notification, index) => {

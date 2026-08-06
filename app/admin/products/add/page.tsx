@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
+import { getTranslations } from "next-intl/server"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import { AddProductWizard } from "@/components/admin/add-product-wizard"
@@ -10,19 +11,22 @@ export const metadata = { title: "Add Product | RetailCore" }
 
 export default async function AddProductPage() {
   await requireRole("ADMIN")
+  const t = await getTranslations("addProduct")
+  const tn = await getTranslations("nav")
+  const tc = await getTranslations("common")
 
   return (
     <div className="space-y-6">
       <nav className="text-sm text-muted-foreground flex items-center gap-1">
-        Dashboard <ChevronRight className="size-3.5" />
-        <Link href="/admin/products" className="hover:text-foreground">Products</Link>
+        {tc("home")} <ChevronRight className="size-3.5" />
+        <Link href="/admin/products" className="hover:text-foreground">{tn("products")}</Link>
         <ChevronRight className="size-3.5" />
-        <span className="text-foreground">Add Product</span>
+        <span className="text-foreground">{t("breadcrumb")}</span>
       </nav>
 
       <div>
-        <h1 className="text-2xl font-semibold">Add Product</h1>
-        <p className="text-sm text-muted-foreground">Fill in the product details across all steps</p>
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       <Suspense fallback={<WizardSkeleton steps={3} />}>

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { Send } from "lucide-react"
 import { toast } from "sonner"
@@ -46,6 +47,9 @@ export function StockDistributionForm({
   products: ProductOption[]
 }) {
   const router = useRouter()
+  const t = useTranslations("stockDistribution")
+  const tc = useTranslations("common")
+  const tn = useTranslations("nav")
   const [pending, startTransition] = useTransition()
   const [productId, setProductId] = useState("")
   const [fromShopId, setFromShopId] = useState("")
@@ -58,7 +62,7 @@ export function StockDistributionForm({
 
   function submit() {
     if (!productId || !fromShopId) {
-      toast.error("Select a product and source shop")
+      toast.error(t("selectProductAndSource"))
       return
     }
 
@@ -67,7 +71,7 @@ export function StockDistributionForm({
       .map(([toShopId, qty]) => ({ toShopId, quantity: parseInt(qty, 10) }))
 
     if (distList.length === 0) {
-      toast.error("Enter quantities for at least one destination shop")
+      toast.error(t("enterQuantities"))
       return
     }
 
@@ -92,21 +96,21 @@ export function StockDistributionForm({
   return (
     <div className="space-y-6">
       <nav className="text-sm text-muted-foreground">
-        Home <span className="mx-1">/</span>
-        <Link href="/admin/inventory" className="hover:text-foreground">Inventory</Link>
+        {tc("home")} <span className="mx-1">/</span>
+        <Link href="/admin/inventory" className="hover:text-foreground">{tn("inventory")}</Link>
         <span className="mx-1">/</span>
-        <span className="text-foreground">Stock Distribution</span>
+        <span className="text-foreground">{t("title")}</span>
       </nav>
 
-      <h1 className="text-2xl font-semibold">Stock Distribution</h1>
+      <h1 className="text-2xl font-semibold">{t("title")}</h1>
 
       <Card>
-        <CardHeader><CardTitle>Select Product & Source</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t("selectProductSource")}</CardTitle></CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label>Product *</Label>
+            <Label>{t("product")} *</Label>
             <Select value={productId} onValueChange={(v) => { if (v) { setProductId(v); setDistributions({}) } }}>
-              <SelectTrigger><SelectValue placeholder="Select product" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("selectProduct")} /></SelectTrigger>
               <SelectContent>
                 {products.map((p) => (
                   <SelectItem key={p.id} value={p.id}>{p.name} ({p.sku})</SelectItem>
@@ -115,9 +119,9 @@ export function StockDistributionForm({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Source Shop *</Label>
+            <Label>{t("fromShop")} *</Label>
             <Select value={fromShopId} onValueChange={(v) => v && setFromShopId(v)}>
-              <SelectTrigger><SelectValue placeholder="Transfer from" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("transferFrom")} /></SelectTrigger>
               <SelectContent>
                 {shops.map((s) => (
                   <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
@@ -127,8 +131,8 @@ export function StockDistributionForm({
           </div>
           {product && fromShopId && (
             <p className="text-sm text-muted-foreground sm:col-span-2">
-              Available at source: <span className="font-semibold text-foreground">{sourceStock} units</span>
-              {totalOut > 0 && ` · Transferring: ${totalOut}`}
+              {t("availableAtSource")}: <span className="font-semibold text-foreground">{t("units", { count: sourceStock })}</span>
+              {totalOut > 0 && ` · ${t("transferring")}: ${totalOut}`}
             </p>
           )}
         </CardContent>
@@ -136,15 +140,15 @@ export function StockDistributionForm({
 
       {product && fromShopId && (
         <Card>
-          <CardHeader><CardTitle>Distribute to Shops</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{t("distributeToShops")}</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="overflow-x-auto rounded-lg border">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Shop</TableHead>
-                    <TableHead>Current Stock</TableHead>
-                    <TableHead>Transfer Qty</TableHead>
+                    <TableHead>{t("shop")}</TableHead>
+                    <TableHead>{t("currentStock")}</TableHead>
+                    <TableHead>{t("transferQty")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -172,13 +176,13 @@ export function StockDistributionForm({
               </Table>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes">{t("notes")}</Label>
               <Input id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
             </div>
             <div className="flex justify-end">
               <AnimateButton variant="accent" onClick={submit} disabled={pending}>
                 <Send className="size-4" />
-                Distribute Stock
+                {t("distribute")}
               </AnimateButton>
             </div>
           </CardContent>

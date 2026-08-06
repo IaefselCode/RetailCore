@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
 import Link from "next/link"
+import { getTranslations } from "next-intl/server"
 import { Package, AlertTriangle, XCircle, ShoppingCart, ArrowRightLeft } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -12,9 +13,9 @@ import { SkeletonStat, TableRowsSkeleton } from "@/components/shared/skeleton-pr
 export const metadata = { title: "Inventory | RetailCore" }
 
 function stockStatus(quantity: number, minStock: number) {
-  if (quantity <= 0) return { label: "Out of Stock", variant: "destructive" as const }
-  if (quantity <= minStock) return { label: "Low Stock", variant: "secondary" as const }
-  return { label: "In Stock", variant: "default" as const }
+  if (quantity <= 0) return { key: "statusOut", variant: "destructive" as const }
+  if (quantity <= minStock) return { key: "statusLow", variant: "secondary" as const }
+  return { key: "statusIn", variant: "default" as const }
 }
 
 async function TotalUnitsValue() {
@@ -41,42 +42,27 @@ async function OverstockedCountValue() {
   return <>{count}</>
 }
 
-function InventoryTableSection() {
+async function InventoryTableSection() {
+  const t = await getTranslations("inventory")
   return (
     <Card>
       <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Shop</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Min Stock</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <Suspense
-                fallback={
-                  <TableRowsSkeleton
-                    rows={8}
-                    columns={["w-32", "w-20", "w-24", "w-10", "w-8", "w-20"]}
-                  />
-                }
-              >
-                <InventoryRows />
-              </Suspense>
-            </TableBody>
-          </Table>
-        </div>
+        <Suspense
+          fallback={
+            <TableRowsSkeleton
+              rows={8}
+              columns={["w-32", "w-20", "w-24", "w-10", "w-8", "w-20"]}
+            />
+          }
+        >
+          <InventoryTable t={t} />
+        </Suspense>
       </CardContent>
     </Card>
   )
 }
 
-async function InventoryRows() {
+async function InventoryTable({ t }: { t: (key: string) => string }) {
   const rows = await prisma.inventory.findMany({
     orderBy: [{ shop: { name: "asc" } }, { product: { name: "asc" } }],
     include: {
@@ -87,54 +73,97 @@ async function InventoryRows() {
 
   return (
     <>
-      {rows.length === 0 && (
-        <TableRow>
-          <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-            No inventory records yet
-          </TableCell>
-        </TableRow>
-      )}
-      {rows.map((row) => {
-        const status = stockStatus(row.quantity, row.minStock)
-        return (
-          <TableRow key={row.id} className="transition-colors hover:bg-muted/50">
-            <TableCell className="font-medium">{row.product.name}</TableCell>
-            <TableCell className="text-muted-foreground">{row.product.sku}</TableCell>
-            <TableCell>{row.shop.name}</TableCell>
-            <TableCell className="font-semibold">{row.quantity}</TableCell>
-            <TableCell>{row.minStock}</TableCell>
-            <TableCell>
-              <Badge variant={status.variant}>{status.label}</Badge>
-            </TableCell>
-          </TableRow>
-        )
-      })}
+      {/* Desktop: table */}
+      <div className="hidden overflow-x-auto md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("colProduct")}</TableHead>
+              <TableHead>{t("colSku")}</TableHead>
+              <TableHead>{t("colShop")}</TableHead>
+              <TableHead>{t("colQuantity")}</TableHead>
+              <TableHead>{t("colMinStock")}</TableHead>
+              <TableHead>{t("colStatus")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
+                  {t("empty")}
+                </TableCell>
+              </TableRow>
+            )}
+            {rows.map((row) => {
+              const status = stockStatus(row.quantity, row.minStock)
+              return (
+                <TableRow key={row.id} className="transition-colors hover:bg-muted/50">
+                  <TableCell className="font-medium">{row.product.name}</TableCell>
+                  <TableCell className="text-muted-foreground">{row.product.sku}</TableCell>
+                  <TableCell>{row.shop.name}</TableCell>
+                  <TableCell className="font-semibold">{row.quantity}</TableCell>
+                  <TableCell>{row.minStock}</TableCell>
+                  <TableCell>
+                    <Badge variant={status.variant}>{t(status.key)}</Badge>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Mobile: stacked cards */}
+      <div className="divide-y md:hidden">
+        {rows.length === 0 && (
+          <p className="py-8 text-center text-sm text-muted-foreground">{t("empty")}</p>
+        )}
+        {rows.map((row) => {
+          const status = stockStatus(row.quantity, row.minStock)
+          return (
+            <div key={row.id} className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{row.product.name}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {row.shop.name} · {row.product.sku}
+                </p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="text-sm font-semibold">{row.quantity}</p>
+                <Badge variant={status.variant}>{t(status.key)}</Badge>
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </>
   )
 }
 
 export default async function InventoryPage() {
   await requireRole("ADMIN")
+  const t = await getTranslations("inventory")
+  const tc = await getTranslations("common")
 
   return (
     <div className="space-y-6">
       <nav className="text-sm text-muted-foreground">
-        Home <span className="mx-1">/</span> <span className="text-foreground">Inventory</span>
+        {tc("home")} <span className="mx-1">/</span> <span className="text-foreground">{t("breadcrumb")}</span>
       </nav>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold">Inventory Management</h1>
-        <div className="flex gap-2">
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
+        <div className="flex flex-wrap gap-2">
           <Link href="/admin/inventory/purchase-stock">
             <AnimateButton variant="accent">
               <ShoppingCart className="size-4" />
-              Purchase Stock
+              {t("purchaseStock")}
             </AnimateButton>
           </Link>
           <Link href="/admin/inventory/stock-distribution">
             <AnimateButton variant="outline">
               <ArrowRightLeft className="size-4" />
-              Stock Distribution
+              {t("stockDistribution")}
             </AnimateButton>
           </Link>
         </div>
@@ -142,7 +171,7 @@ export default async function InventoryPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Total Units</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">{t("totalUnits")}</CardTitle></CardHeader>
           <CardContent className="flex items-center gap-2 text-2xl font-bold">
             <Package className="size-5 text-muted-foreground" />
             <Suspense fallback={<SkeletonStat />}>
@@ -151,7 +180,7 @@ export default async function InventoryPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Low Stock</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">{t("lowStock")}</CardTitle></CardHeader>
           <CardContent className="flex items-center gap-2 text-2xl font-bold text-yellow-600">
             <AlertTriangle className="size-5" />
             <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
@@ -160,7 +189,7 @@ export default async function InventoryPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Out of Stock</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">{t("outOfStock")}</CardTitle></CardHeader>
           <CardContent className="flex items-center gap-2 text-2xl font-bold text-red-600">
             <XCircle className="size-5" />
             <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
@@ -169,7 +198,7 @@ export default async function InventoryPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Overstocked</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">{t("overstocked")}</CardTitle></CardHeader>
           <CardContent className="text-2xl font-bold text-blue-600">
             <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
               <OverstockedCountValue />

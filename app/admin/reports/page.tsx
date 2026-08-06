@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { motion } from "motion/react"
 import { ChevronRightIcon, FileTextIcon, PackageIcon, CreditCardIcon, UsersIcon, StoreIcon, PlusIcon } from "lucide-react"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
@@ -43,47 +44,49 @@ const itemVariants = {
 
 const reportCategories = [
   {
-    title: "Sales Reports",
-    description: "Revenue, orders, and sales performance metrics",
+    titleKey: "catSales",
+    descriptionKey: "catSalesDesc",
     icon: FileTextIcon,
     reports: ["Daily Sales Summary", "Monthly Revenue Report", "Sales by Product Category", "Sales by Payment Method"],
   },
   {
-    title: "Inventory Reports",
-    description: "Stock levels, movements, and forecasts",
+    titleKey: "catInventory",
+    descriptionKey: "catInventoryDesc",
     icon: PackageIcon,
     reports: ["Current Stock Levels", "Low Stock Alerts", "Inventory Movement", "Stock Valuation"],
   },
   {
-    title: "Payment Reports",
-    description: "Transaction logs and payment analytics",
+    titleKey: "catPayment",
+    descriptionKey: "catPaymentDesc",
     icon: CreditCardIcon,
     reports: ["Transaction History", "Payment Method Breakdown", "Refund Report", "Pending Transactions"],
   },
   {
-    title: "People Reports",
-    description: "Employee and team performance data",
+    titleKey: "catPeople",
+    descriptionKey: "catPeopleDesc",
     icon: UsersIcon,
     reports: ["Employee Sales Performance", "Hours Logged", "Commission Report", "Staff Activity"],
   },
   {
-    title: "Store Reports",
-    description: "Per-location analysis and comparisons",
+    titleKey: "catStore",
+    descriptionKey: "catStoreDesc",
     icon: StoreIcon,
     reports: ["Store Comparison", "Location Performance", "Regional Analysis", "Foot Traffic Report"],
   },
 ]
 
 const reportSections = [
-  { id: "revenue", label: "Revenue Data" },
-  { id: "orders", label: "Order Details" },
-  { id: "products", label: "Product Performance" },
-  { id: "employees", label: "Employee Metrics" },
-  { id: "inventory", label: "Stock Information" },
-  { id: "payments", label: "Payment Breakdown" },
+  { id: "revenue", labelKey: "secRevenue" },
+  { id: "orders", labelKey: "secOrders" },
+  { id: "products", labelKey: "secProducts" },
+  { id: "employees", labelKey: "secEmployees" },
+  { id: "inventory", labelKey: "secInventory" },
+  { id: "payments", labelKey: "secPayments" },
 ]
 
 export default function ReportsPage() {
+  const t = useTranslations("reports")
+  const tc = useTranslations("common")
   const [open, setOpen] = useState(false)
   const [selectedSections, setSelectedSections] = useState<string[]>([])
 
@@ -96,49 +99,49 @@ export default function ReportsPage() {
   return (
     <div className="flex flex-col gap-6">
       <nav className="flex items-center gap-1 text-sm text-muted-foreground">
-        <span>Home</span>
+        <span>{tc("home")}</span>
         <ChevronRightIcon className="size-3.5" />
-        <span className="text-foreground">Reports</span>
+        <span className="text-foreground">{t("breadcrumb")}</span>
       </nav>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h1 className="text-2xl font-medium">Reports</h1>
+        <h1 className="text-2xl font-medium">{t("title")}</h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <AnimateButton variant="accent">
               <PlusIcon />
-              Generate Custom Report
+              {t("generateCustom")}
             </AnimateButton>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Generate Custom Report</DialogTitle>
+              <DialogTitle>{t("generateCustom")}</DialogTitle>
               <DialogDescription>
-                Configure your custom report parameters
+                {t("configureParams")}
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="report-name">Report Name</Label>
-                <Input id="report-name" placeholder="e.g. Q3 Performance Review" />
+                <Label htmlFor="report-name">{t("reportName")}</Label>
+                <Input id="report-name" placeholder={t("reportNamePlaceholder")} />
               </div>
               <div className="flex flex-col gap-2">
-                <Label>Date Range</Label>
+                <Label>{t("dateRange")}</Label>
                 <Select>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select range" />
+                    <SelectValue placeholder={t("selectRange")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="7">Last 7 days</SelectItem>
-                    <SelectItem value="30">Last 30 days</SelectItem>
-                    <SelectItem value="90">Last 90 days</SelectItem>
-                    <SelectItem value="365">Last year</SelectItem>
-                    <SelectItem value="custom">Custom range</SelectItem>
+                    <SelectItem value="7">{t("last7")}</SelectItem>
+                    <SelectItem value="30">{t("last30")}</SelectItem>
+                    <SelectItem value="90">{t("last90")}</SelectItem>
+                    <SelectItem value="365">{t("lastYear")}</SelectItem>
+                    <SelectItem value="custom">{t("customRange")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex flex-col gap-2">
-                <Label>Sections to Include</Label>
+                <Label>{t("sectionsToInclude")}</Label>
                 <div className="grid grid-cols-2 gap-2">
                   {reportSections.map((section) => (
                     <Label key={section.id} className="flex items-center gap-2 cursor-pointer rounded-md border p-2 text-sm font-normal has-data-[state=checked]:border-primary">
@@ -146,15 +149,15 @@ export default function ReportsPage() {
                         checked={selectedSections.includes(section.id)}
                         onCheckedChange={() => toggleSection(section.id)}
                       />
-                      {section.label}
+                      {t(section.labelKey)}
                     </Label>
                   ))}
                 </div>
               </div>
             </div>
             <DialogFooter>
-              <AnimateButton variant="outline" onClick={() => setOpen(false)}>Cancel</AnimateButton>
-              <AnimateButton onClick={() => { setOpen(false) }}>Generate Report</AnimateButton>
+              <AnimateButton variant="outline" onClick={() => setOpen(false)}>{t("cancel")}</AnimateButton>
+              <AnimateButton onClick={() => { setOpen(false) }}>{t("generateReport")}</AnimateButton>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -167,7 +170,7 @@ export default function ReportsPage() {
         animate="visible"
       >
         {reportCategories.map((category) => (
-          <motion.div key={category.title} variants={itemVariants}>
+          <motion.div key={category.titleKey} variants={itemVariants}>
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
@@ -175,8 +178,8 @@ export default function ReportsPage() {
                     <category.icon className="size-5 text-primary" />
                   </div>
                 </div>
-                <CardTitle className="mt-2">{category.title}</CardTitle>
-                <CardDescription>{category.description}</CardDescription>
+                <CardTitle className="mt-2">{t(category.titleKey)}</CardTitle>
+                <CardDescription>{t(category.descriptionKey)}</CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-2">
                 {category.reports.map((report) => (

@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireEmployeeContext } from "@/lib/auth-utils"
+import { getTranslations } from "next-intl/server"
 import { Badge } from "@/components/ui/badge"
 import { formatMoney } from "@/lib/money"
 import {
@@ -15,25 +16,33 @@ import { TableRowsSkeleton } from "@/components/shared/skeleton-primitives"
 
 export const metadata = { title: "Inventory | RetailCore" }
 
-function stockStatus(quantity: number, minStock: number) {
-  if (quantity <= 0) return { label: "Out of Stock", variant: "outline" as const }
-  if (quantity <= minStock) return { label: "Low Stock", variant: "secondary" as const }
-  if (quantity <= minStock * 2) return { label: "Critical", variant: "destructive" as const }
-  return { label: "In Stock", variant: "default" as const }
+function stockStatusKey(quantity: number, minStock: number) {
+  if (quantity <= 0) return "statusOut"
+  if (quantity <= minStock) return "statusLow"
+  if (quantity <= minStock * 2) return "statusCritical"
+  return "statusIn"
 }
 
-function InventoryTableSection({ shopId }: { shopId: string }) {
+function statusVariant(key: string): "outline" | "secondary" | "destructive" | "default" {
+  if (key === "statusOut") return "outline"
+  if (key === "statusLow") return "secondary"
+  if (key === "statusCritical") return "destructive"
+  return "default"
+}
+
+async function InventoryTableSection({ shopId }: { shopId: string }) {
+  const t = await getTranslations("employeeInventory")
   return (
     <div className="rounded-lg border">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Product</TableHead>
-              <TableHead>SKU</TableHead>
-              <TableHead>Shop Stock</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>{t("colProduct")}</TableHead>
+              <TableHead>{t("colSku")}</TableHead>
+              <TableHead>{t("colShopStock")}</TableHead>
+              <TableHead>{t("colPrice")}</TableHead>
+              <TableHead>{t("colStatus")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -55,6 +64,7 @@ function InventoryTableSection({ shopId }: { shopId: string }) {
 }
 
 async function InventoryRows({ shopId }: { shopId: string }) {
+  const t = await getTranslations("employeeInventory")
   const inventory = await prisma.inventory.findMany({
     where: { shopId },
     orderBy: { product: { name: "asc" } },
@@ -72,12 +82,12 @@ async function InventoryRows({ shopId }: { shopId: string }) {
       {activeItems.length === 0 && (
         <TableRow>
           <TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
-            No inventory at this shop
+            {t("empty")}
           </TableCell>
         </TableRow>
       )}
       {activeItems.map((item) => {
-        const status = stockStatus(item.quantity, item.minStock)
+        const statusKey = stockStatusKey(item.quantity, item.minStock)
         return (
           <TableRow key={item.id} className="transition-colors hover:bg-muted/50">
             <TableCell className="font-medium">{item.product.name}</TableCell>
@@ -85,7 +95,7 @@ async function InventoryRows({ shopId }: { shopId: string }) {
             <TableCell>{item.quantity}</TableCell>
             <TableCell>{formatMoney(item.product.price)}</TableCell>
             <TableCell>
-              <Badge variant={status.variant}>{status.label}</Badge>
+              <Badge variant={statusVariant(statusKey)}>{t(statusKey)}</Badge>
             </TableCell>
           </TableRow>
         )
@@ -96,12 +106,13 @@ async function InventoryRows({ shopId }: { shopId: string }) {
 
 export default async function EmployeeInventoryPage() {
   const ctx = await requireEmployeeContext()
+  const t = await getTranslations("employeeInventory")
 
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm text-muted-foreground">Dashboard / Inventory</p>
-        <h1 className="text-2xl font-semibold tracking-tight">Inventory</h1>
+        <p className="text-sm text-muted-foreground">{t("breadcrumb")}</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="text-sm text-muted-foreground">{ctx.shopName}</p>
       </div>
 

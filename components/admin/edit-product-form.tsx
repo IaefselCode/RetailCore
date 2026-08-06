@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { ArrowLeft, Loader2, Save } from "lucide-react"
 import { toast } from "sonner"
@@ -44,6 +45,9 @@ export function EditProductForm({
   categories: Category[]
 }) {
   const router = useRouter()
+  const t = useTranslations("editProduct")
+  const tp = useTranslations("addProduct")
+  const tc = useTranslations("common")
   const [pending, startTransition] = useTransition()
   const [form, setForm] = useState({
     name: product.name,
@@ -87,12 +91,12 @@ export function EditProductForm({
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <nav className="text-sm text-muted-foreground">
-        Home <span className="mx-1">/</span>
-        <Link href="/admin/products" className="hover:text-foreground">Products</Link>
+        {tc("home")} <span className="mx-1">/</span>
+        <Link href="/admin/products" className="hover:text-foreground">{tp("breadcrumb")}</Link>
         <span className="mx-1">/</span>
         <Link href={`/admin/products/${product.id}`} className="hover:text-foreground">{product.name}</Link>
         <span className="mx-1">/</span>
-        <span className="text-foreground">Edit</span>
+        <span className="text-foreground">{t("edit")}</span>
       </nav>
 
       <div className="flex items-center gap-4">
@@ -101,15 +105,15 @@ export function EditProductForm({
             <ArrowLeft className="size-4" />
           </AnimateButton>
         </Link>
-        <h1 className="text-2xl font-semibold">Edit Product</h1>
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
       </div>
 
       <form onSubmit={submit}>
         <Card>
-          <CardHeader><CardTitle>Product Details</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{t("productDetails")}</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">{tp("productName")} *</Label>
               <Input id="name" value={form.name} onChange={(e) => update("name", e.target.value)} required />
             </div>
             <div className="space-y-2">
@@ -117,25 +121,25 @@ export function EditProductForm({
               <Input id="sku" value={form.sku} onChange={(e) => update("sku", e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{tp("description")}</Label>
               <Textarea id="description" value={form.description} onChange={(e) => update("description", e.target.value)} rows={3} />
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="price">Price *</Label>
+                <Label htmlFor="price">{tp("price")} *</Label>
                 <Input id="price" type="number" min="0" step="0.01" value={form.price} onChange={(e) => update("price", e.target.value)} required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="cost">Cost</Label>
+                <Label htmlFor="cost">{tp("cost")}</Label>
                 <Input id="cost" type="number" min="0" step="0.01" value={form.cost} onChange={(e) => update("cost", e.target.value)} />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label>{tp("category")}</Label>
               <Select value={form.categoryId || "none"} onValueChange={(v) => update("categoryId", v === "none" ? "" : v ?? "")}>
-                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={tp("selectCategory")} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="none">{t("none")}</SelectItem>
                   {categories.map((c) => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
@@ -143,20 +147,20 @@ export function EditProductForm({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="newCategory">Or create new category</Label>
-              <Input id="newCategory" value={form.newCategory} onChange={(e) => update("newCategory", e.target.value)} placeholder="New category name" />
+              <Label htmlFor="newCategory">{tp("newCategory")}</Label>
+              <Input id="newCategory" value={form.newCategory} onChange={(e) => update("newCategory", e.target.value)} placeholder={tp("newCategoryPlaceholder")} />
             </div>
             <div className="space-y-2">
-              <Label>Product Image</Label>
+              <Label>{tp("productImage")}</Label>
               <ImageUpload value={form.imageUrl} onChange={(url) => update("imageUrl", url)} />
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <AnimateButton type="button" variant="outline" asChild>
-                <Link href={`/admin/products/${product.id}`}>Cancel</Link>
+                <Link href={`/admin/products/${product.id}`}>{tc("cancel")}</Link>
               </AnimateButton>
               <AnimateButton type="submit" variant="accent" disabled={pending}>
                 {pending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-                Save Changes
+                {t("saveChanges")}
               </AnimateButton>
             </div>
           </CardContent>

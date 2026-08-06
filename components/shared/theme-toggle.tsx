@@ -1,9 +1,9 @@
 "use client"
 
-import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { buttonVariants } from "@/components/ui/animate-button"
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler"
 import { cn } from "@/lib/utils"
 
 export function ThemeToggle() {
@@ -11,16 +11,15 @@ export function ThemeToggle() {
   const isDark = resolvedTheme === "dark"
 
   return (
-    <button
-      type="button"
+    <AnimatedThemeToggler
+      theme={isDark ? "dark" : "light"}
+      onThemeChange={(next) => setTheme(next)}
+      variant="circle"
       aria-label="Toggle theme"
-      onClick={() => setTheme(isDark ? "light" : "dark")}
       className={cn(
         buttonVariants({ variant: "ghost", size: "icon-sm" }),
-        "shrink-0"
+        "shrink-0 [&_svg]:size-4"
       )}
-    >
-      {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-    </button>
+    />
   )
 }
