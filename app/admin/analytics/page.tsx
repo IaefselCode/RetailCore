@@ -19,16 +19,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Progress, ProgressIndicator, ProgressTrack } from "@/components/ui/progress"
+import {
+  DataTable,
+  createAppColumnHelper,
+} from "@/components/shared/data-table"
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -64,6 +60,39 @@ const shops = [
 ]
 
 const chartData = [35, 55, 42, 78, 61, 90, 75, 85, 68, 95, 72, 88]
+
+interface ShopRow {
+  name: string
+  revenue: string
+  orders: number
+  growth: string
+}
+
+const shopHelper = createAppColumnHelper<ShopRow>()
+
+function ShopTable() {
+  const t = useTranslations("analytics")
+  const columns = shopHelper.columns([
+    shopHelper.accessor("name", {
+      header: t("colShop"),
+      cell: ({ getValue }) => <span className="font-medium">{getValue() as string}</span>,
+    }),
+    shopHelper.accessor("revenue", { header: t("colRevenue"), cell: ({ getValue }) => getValue() as string }),
+    shopHelper.accessor("orders", { header: t("colOrders"), cell: ({ getValue }) => getValue() as number }),
+    shopHelper.accessor("growth", {
+      header: t("colGrowth"),
+      cell: ({ getValue }) => {
+        const g = getValue() as string
+        return (
+          <Badge variant={g.startsWith("+") ? "default" : "destructive"}>
+            {g}
+          </Badge>
+        )
+      },
+    }),
+  ])
+  return <DataTable data={shops} columns={columns} getRowId={(row) => row.name} />
+}
 
 export default function AnalyticsPage() {
   const t = useTranslations("analytics")
@@ -177,32 +206,7 @@ export default function AnalyticsPage() {
           <CardDescription>{t("revenueBreakdown")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("colShop")}</TableHead>
-                <TableHead>{t("colRevenue")}</TableHead>
-                <TableHead>{t("colOrders")}</TableHead>
-                <TableHead>{t("colGrowth")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {shops.map((shop) => (
-                <TableRow key={shop.name}>
-                  <TableCell className="font-medium">{shop.name}</TableCell>
-                  <TableCell>{shop.revenue}</TableCell>
-                  <TableCell>{shop.orders}</TableCell>
-                  <TableCell>
-                    <Badge variant={shop.growth.startsWith("+") ? "default" : "destructive"}>
-                      {shop.growth}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          </div>
+          <ShopTable />
         </CardContent>
       </Card>
 

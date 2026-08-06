@@ -16,6 +16,10 @@ import {
   SelectItem,
 } from "@/components/ui/select"
 import {
+  createAppColumnHelper,
+  useAppTable,
+} from "@/components/shared/data-table"
+import {
   Table,
   TableHeader,
   TableBody,
@@ -46,6 +50,8 @@ interface CartItem {
 
 const TAX_RATE = 0.18
 const initialState: ActionResult | null = null
+
+const cartHelper = createAppColumnHelper<CartItem>()
 
 function RecordSaleFormBody({
   products,
@@ -193,40 +199,12 @@ function RecordSaleFormBody({
                     <p className="text-sm text-muted-foreground">{t("cartIsEmpty")}</p>
                   </div>
                 ) : (
-                  <div className="rounded-lg border overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{t("colProduct")}</TableHead>
-                          <TableHead>{t("colQty")}</TableHead>
-                          <TableHead>{t("colPrice")}</TableHead>
-                          <TableHead>{t("colSubtotal")}</TableHead>
-                          <TableHead></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {cart.map((item) => (
-                          <TableRow key={item.id}>
-                            <TableCell className="font-medium">{item.name}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1">
-                                <Button type="button" variant="outline" size="icon-xs" onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</Button>
-                                <span className="w-6 text-center text-sm">{item.quantity}</span>
-                                <Button type="button" variant="outline" size="icon-xs" onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</Button>
-                              </div>
-                            </TableCell>
-                            <TableCell>{formatMoney(item.price)}</TableCell>
-                            <TableCell>{formatMoney(item.price * item.quantity)}</TableCell>
-                            <TableCell>
-                              <Button type="button" variant="ghost" size="icon-sm" onClick={() => removeFromCart(item.id)}>
-                                <Trash2 className="size-4 text-destructive" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                  <CartTable
+                    cart={cart}
+                    t={t}
+                    onQuantity={updateQuantity}
+                    onRemove={removeFromCart}
+                  />
                 )}
               </CardContent>
             </Card>
@@ -274,6 +252,106 @@ function RecordSaleFormBody({
           </div>
         </div>
       </form>
+    </div>
+  )
+}
+
+function CartTable({
+  cart,
+  t,
+  onQuantity,
+  onRemove,
+}: {
+  cart: CartItem[]
+  t: (key: string, values?: Record<string, string | number>) => string
+  onQuantity: (id: string, quantity: number) => void
+  onRemove: (id: string) => void
+}) {
+  const table = useAppTable({
+    data: cart,
+    columns: cartHelper.columns([
+      cartHelper.accessor("name", {
+        header: t("colProduct"),
+        cell: ({ getValue }) => <span className="font-medium">{getValue() as string}</span>,
+      }),
+      cartHelper.accessor("quantity", {
+        header: t("colQty"),
+        cell: ({ row }) => (
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-xs"
+              onClick={() => onQuantity(row.original.id, row.original.quantity - 1)}
+            >
+              -
+            </Button>
+            <span className="w-6 text-center text-sm">{row.original.quantity}</span>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-xs"
+              onClick={() => onQuantity(row.original.id, row.original.quantity + 1)}
+            >
+              +
+            </Button>
+          </div>
+        ),
+      }),
+      cartHelper.accessor("price", {
+        header: t("colPrice"),
+        cell: ({ getValue }) => formatMoney(getValue() as number),
+      }),
+      cartHelper.display({
+        id: "subtotal",
+        header: t("colSubtotal"),
+        cell: ({ row }) => formatMoney(row.original.price * row.original.quantity),
+      }),
+      cartHelper.display({
+        id: "remove",
+        cell: ({ row }) => (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => onRemove(row.original.id)}
+          >
+            <Trash2 className="size-4 text-destructive" />
+          </Button>
+        ),
+      }),
+    ]),
+    getRowId: (row) => row.id,
+  })
+
+  const rows = table.getRowModel().rows
+
+  return (
+    <div className="rounded-lg border overflow-x-auto">
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((group) => (
+            <TableRow key={group.id}>
+              {group.headers.map((header) => (
+                <TableHead key={header.id}>
+                  {header.isPlaceholder ? null : <table.FlexRender header={header} />}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow key={row.id}>
+              {row.getAllCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  <table.FlexRender cell={cell} />
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   )
 }

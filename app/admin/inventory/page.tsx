@@ -7,9 +7,10 @@ import { Package, AlertTriangle, XCircle, ShoppingCart, ArrowRightLeft } from "l
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SkeletonStat, TableRowsSkeleton } from "@/components/shared/skeleton-primitives"
+import { ServerTable, createServerColumnHelper } from "@/components/shared/server-table"
 
 export const metadata = { title: "Inventory | RetailCore" }
 
@@ -18,6 +19,19 @@ function stockStatus(quantity: number, minStock: number) {
   if (quantity <= minStock) return { key: "statusLow", variant: "secondary" as const }
   return { key: "statusIn", variant: "default" as const }
 }
+
+interface InventoryRow {
+  id: string
+  productName: string
+  sku: string
+  shopName: string
+  quantity: number
+  minStock: number
+  statusKey: string
+  statusVariant: "default" | "secondary" | "destructive"
+}
+
+const inventoryHelper = createServerColumnHelper<InventoryRow>()
 
 async function TotalUnitsValue() {
   const rows = await prisma.inventory.findMany({ select: { quantity: true } })
@@ -98,7 +112,7 @@ async function InventoryTableSection() {
 }
 
 async function InventoryTable({ t }: { t: (key: string) => string }) {
-  const rows = await prisma.inventory.findMany({
+  const inv = await prisma.inventory.findMany({
     orderBy: [{ shop: { name: "asc" } }, { product: { name: "asc" } }],
     include: {
       product: { select: { name: true, sku: true } },
@@ -106,46 +120,51 @@ async function InventoryTable({ t }: { t: (key: string) => string }) {
     },
   })
 
+  const rows: InventoryRow[] = inv.map((row) => {
+    const status = stockStatus(row.quantity, row.minStock)
+    return {
+      id: row.id,
+      productName: row.product.name,
+      sku: row.product.sku,
+      shopName: row.shop.name,
+      quantity: row.quantity,
+      minStock: row.minStock,
+      statusKey: status.key,
+      statusVariant: status.variant,
+    }
+  })
+
+  const columns = inventoryHelper.columns([
+    inventoryHelper.accessor("productName", {
+      header: t("colProduct"),
+      cell: ({ getValue }) => <span className="font-medium">{getValue() as string}</span>,
+    }),
+    inventoryHelper.accessor("sku", {
+      header: t("colSku"),
+      cell: ({ getValue }) => <span className="text-muted-foreground">{getValue() as string}</span>,
+    }),
+    inventoryHelper.accessor("shopName", { header: t("colShop"), cell: ({ getValue }) => getValue() as string }),
+    inventoryHelper.accessor("quantity", {
+      header: t("colQuantity"),
+      cell: ({ getValue }) => <span className="font-semibold">{getValue() as number}</span>,
+    }),
+    inventoryHelper.accessor("minStock", { header: t("colMinStock"), cell: ({ getValue }) => getValue() as number }),
+    inventoryHelper.accessor("statusKey", {
+      header: t("colStatus"),
+      cell: ({ row }) => <Badge variant={row.original.statusVariant}>{t(row.original.statusKey)}</Badge>,
+    }),
+  ])
+
   return (
     <>
-      {/* Desktop: table */}
-      <div className="hidden overflow-x-auto md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("colProduct")}</TableHead>
-              <TableHead>{t("colSku")}</TableHead>
-              <TableHead>{t("colShop")}</TableHead>
-              <TableHead>{t("colQuantity")}</TableHead>
-              <TableHead>{t("colMinStock")}</TableHead>
-              <TableHead>{t("colStatus")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-                  {t("empty")}
-                </TableCell>
-              </TableRow>
-            )}
-            {rows.map((row) => {
-              const status = stockStatus(row.quantity, row.minStock)
-              return (
-                <TableRow key={row.id} className="transition-colors hover:bg-muted/50">
-                  <TableCell className="font-medium">{row.product.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{row.product.sku}</TableCell>
-                  <TableCell>{row.shop.name}</TableCell>
-                  <TableCell className="font-semibold">{row.quantity}</TableCell>
-                  <TableCell>{row.minStock}</TableCell>
-                  <TableCell>
-                    <Badge variant={status.variant}>{t(status.key)}</Badge>
-                  </TableCell>
-                </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
+      {/* Desktop: table (TanStack) */}
+      <div className="hidden md:block">
+        <ServerTable
+          data={rows}
+          columns={columns}
+          getRowId={(row) => row.id}
+          empty={t("empty")}
+        />
       </div>
 
       {/* Mobile: stacked cards */}
@@ -153,23 +172,20 @@ async function InventoryTable({ t }: { t: (key: string) => string }) {
         {rows.length === 0 && (
           <p className="py-8 text-center text-sm text-muted-foreground">{t("empty")}</p>
         )}
-        {rows.map((row) => {
-          const status = stockStatus(row.quantity, row.minStock)
-          return (
-            <div key={row.id} className="flex items-center justify-between gap-3 px-4 py-3">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{row.product.name}</p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {row.shop.name} · {row.product.sku}
-                </p>
-              </div>
-              <div className="shrink-0 text-right">
-                <p className="text-sm font-semibold">{row.quantity}</p>
-                <Badge variant={status.variant}>{t(status.key)}</Badge>
-              </div>
+        {rows.map((row) => (
+          <div key={row.id} className="flex items-center justify-between gap-3 px-4 py-3">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">{row.productName}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {row.shopName} · {row.sku}
+              </p>
             </div>
-          )
-        })}
+            <div className="shrink-0 text-right">
+              <p className="text-sm font-semibold">{row.quantity}</p>
+              <Badge variant={row.statusVariant}>{t(row.statusKey)}</Badge>
+            </div>
+          </div>
+        ))}
       </div>
     </>
   )

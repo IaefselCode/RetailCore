@@ -4,15 +4,8 @@ import { prisma } from "@/lib/prisma"
 import { getTranslations } from "next-intl/server"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table"
-import { TableRowsSkeleton } from "@/components/shared/skeleton-primitives"
+import { ServerTable, createServerColumnHelper } from "@/components/shared/server-table"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const EVENT_KEYS: Record<string, string> = {
   login_success: "login",
@@ -21,6 +14,17 @@ const EVENT_KEYS: Record<string, string> = {
   password_reset_complete: "passwordChanged",
   admin_password_reset: "adminReset",
 }
+
+interface AuditRow {
+  id: string
+  createdAt: Date
+  event: string
+  email: string
+  ip: string | null
+  userAgent: string | null
+}
+
+const auditHelper = createServerColumnHelper<AuditRow>()
 
 export default async function AdminAuditPage() {
   await requireRole("ADMIN")
@@ -46,54 +50,39 @@ async function AuditTableSection() {
         <CardTitle className="text-base">{t("authEvents")}</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("colWhen")}</TableHead>
-                <TableHead>{t("colEvent")}</TableHead>
-                <TableHead>{t("colEmail")}</TableHead>
-                <TableHead>{t("colIp")}</TableHead>
-                <TableHead>{t("colUserAgent")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <Suspense
-                fallback={
-                  <TableRowsSkeleton
-                    rows={10}
-                    columns={["w-36", "w-20", "w-32", "w-24", "w-48"]}
-                  />
-                }
-              >
-                <AuditBodyRows />
-              </Suspense>
-            </TableBody>
-          </Table>
-        </div>
+        <Suspense
+          fallback={
+            <div className="flex h-40 items-center justify-center">
+              <Skeleton className="h-24 w-full max-w-md" />
+            </div>
+          }
+        >
+          <AuditTableBody />
+        </Suspense>
       </CardContent>
     </Card>
   )
 }
 
-async function AuditBodyRows() {
+async function AuditTableBody() {
   const t = await getTranslations("audit")
   const logs = await prisma.authLog.findMany({
     orderBy: { createdAt: "desc" },
     take: 200,
   })
 
-  return (
-    <>
-      {logs.length === 0 && (
-        <TableRow>
-          <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-            {t("empty")}
-          </TableCell>
-        </TableRow>
-      )}
-      {logs.map((log) => {
-        const key = EVENT_KEYS[log.event]
+  const columns = auditHelper.columns([
+    auditHelper.accessor("createdAt", {
+      header: t("colWhen"),
+      cell: ({ getValue }) => (
+        <span className="whitespace-nowrap text-xs">{(getValue() as Date).toLocaleString()}</span>
+      ),
+    }),
+    auditHelper.accessor("event", {
+      header: t("colEvent"),
+      cell: ({ getValue }) => {
+        const event = getValue() as string
+        const key = EVENT_KEYS[event]
         const variant: "default" | "secondary" | "destructive" = key
           ? key === "failedLogin"
             ? "destructive"
@@ -101,22 +90,30 @@ async function AuditBodyRows() {
             ? "default"
             : "secondary"
           : "secondary"
-        return (
-          <TableRow key={log.id}>
-            <TableCell className="whitespace-nowrap text-xs">
-              {log.createdAt.toLocaleString()}
-            </TableCell>
-            <TableCell>
-              <Badge variant={variant}>{key ? t(key) : log.event}</Badge>
-            </TableCell>
-            <TableCell>{log.email}</TableCell>
-            <TableCell className="text-xs">{log.ip ?? "—"}</TableCell>
-            <TableCell className="max-w-[240px] truncate text-xs text-muted-foreground">
-              {log.userAgent ?? "—"}
-            </TableCell>
-          </TableRow>
-        )
-      })}
-    </>
+        return <Badge variant={variant}>{key ? t(key) : event}</Badge>
+      },
+    }),
+    auditHelper.accessor("email", { header: t("colEmail"), cell: ({ getValue }) => getValue() as string }),
+    auditHelper.accessor("ip", {
+      header: t("colIp"),
+      cell: ({ getValue }) => <span className="text-xs">{(getValue() as string | null) ?? "—"}</span>,
+    }),
+    auditHelper.accessor("userAgent", {
+      header: t("colUserAgent"),
+      cell: ({ getValue }) => (
+        <span className="max-w-[240px] truncate text-xs text-muted-foreground">
+          {(getValue() as string | null) ?? "—"}
+        </span>
+      ),
+    }),
+  ])
+
+  return (
+    <ServerTable
+      data={logs}
+      columns={columns}
+      getRowId={(row) => row.id}
+      empty={t("empty")}
+    />
   )
 }

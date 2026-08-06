@@ -3,22 +3,12 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { Search, ChevronRight, Trash2 } from "lucide-react"
+import { ChevronRight, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
-import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,8 +19,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  DataTable,
+  createAppColumnHelper,
+} from "@/components/shared/data-table"
 import { setEmployeeActive, deleteEmployee } from "@/lib/organization-actions"
 import { EmployeeFormDialog, type EmployeeRow, type ShopOption } from "@/components/admin/employee-form-dialog"
+
+const helper = createAppColumnHelper<EmployeeRow>()
 
 export function EmployeesTable({
   employees,
@@ -42,19 +38,9 @@ export function EmployeesTable({
   const router = useRouter()
   const t = useTranslations("employees")
   const tc = useTranslations("common")
-  const [search, setSearch] = useState("")
   const [editing, setEditing] = useState<EmployeeRow | null | undefined>(undefined)
   const [deleting, setDeleting] = useState<EmployeeRow | null>(null)
   const [pending, startTransition] = useTransition()
-
-  const q = search.toLowerCase()
-  const filtered = employees.filter(
-    (e) =>
-      `${e.firstName} ${e.lastName}`.toLowerCase().includes(q) ||
-      (e.position ?? "").toLowerCase().includes(q) ||
-      e.shopName.toLowerCase().includes(q) ||
-      e.email.toLowerCase().includes(q)
-  )
 
   function toggle(emp: EmployeeRow) {
     const fd = new FormData()
@@ -71,98 +57,83 @@ export function EmployeesTable({
     })
   }
 
-  return (
-    <div className="space-y-4">
-      <div className="relative w-full sm:max-w-sm">
-        <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder={t("searchPlaceholder")}
-          className="pl-8"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+  const columns = helper.columns([
+    helper.accessor("firstName", {
+      id: "name",
+      header: t("colName"),
+      cell: ({ row }) => (
+        <div>
+          <p className="font-medium">{row.original.firstName} {row.original.lastName}</p>
+          <p className="text-xs text-muted-foreground">{row.original.email}</p>
+        </div>
+      ),
+    }),
+    helper.accessor("position", {
+      header: t("colPosition"),
+      cell: ({ getValue }) => (getValue() as string | null) ?? "—",
+    }),
+    helper.accessor("shopName", { header: t("colShop"), cell: ({ getValue }) => getValue() as string }),
+    helper.accessor("isActive", {
+      id: "status",
+      header: t("colStatus"),
+      filterFn: "equals",
+      cell: ({ getValue }) => (
+        <Badge variant={getValue() ? "default" : "secondary"}>
+          {getValue() ? tc("active") : tc("inactive")}
+        </Badge>
+      ),
+    }),
+    helper.accessor("hireDate", {
+      header: t("colHireDate"),
+      cell: ({ getValue }) => {
+        const d = getValue() as string | null
+        return <span className="text-muted-foreground">{d ? new Date(d).toLocaleDateString() : "—"}</span>
+      },
+    }),
+    helper.display({
+      id: "actions",
+      header: t("colActions"),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <AnimateButton size="sm" variant="outline" onClick={() => setEditing(row.original)} disabled={pending}>
+            {tc("edit")}
+          </AnimateButton>
+          <AnimateButton size="sm" variant="ghost" asChild>
+            <Link href={`/admin/employees/${row.original.id}`}>
+              {tc("view")} <ChevronRight className="size-3" />
+            </Link>
+          </AnimateButton>
+          <AnimateButton
+            size="icon-sm"
+            variant="ghost"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => setDeleting(row.original)}
+            disabled={pending}
+            aria-label={t("deleteConfirmTitle")}
+          >
+            <Trash2 className="size-4" />
+          </AnimateButton>
+          <Switch
+            checked={row.original.isActive}
+            onCheckedChange={() => toggle(row.original)}
+            disabled={pending}
+            aria-label={row.original.isActive ? tc("inactive") : tc("active")}
+          />
+        </div>
+      ),
+    }),
+  ])
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("colName")}</TableHead>
-                  <TableHead>{t("colPosition")}</TableHead>
-                  <TableHead>{t("colShop")}</TableHead>
-                  <TableHead>{t("colStatus")}</TableHead>
-                  <TableHead>{t("colHireDate")}</TableHead>
-                  <TableHead>{t("colActions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-                      {t("noResults")}
-                    </TableCell>
-                  </TableRow>
-                )}
-                {filtered.map((emp) => (
-                  <TableRow key={emp.id} className="transition-colors hover:bg-muted/50">
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{emp.firstName} {emp.lastName}</p>
-                        <p className="text-xs text-muted-foreground">{emp.email}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>{emp.position ?? "—"}</TableCell>
-                    <TableCell>{emp.shopName}</TableCell>
-                    <TableCell>
-                      <Badge variant={emp.isActive ? "default" : "secondary"}>
-                        {emp.isActive ? tc("active") : tc("inactive")}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {emp.hireDate ? new Date(emp.hireDate).toLocaleDateString() : "—"}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <AnimateButton
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setEditing(emp)}
-                          disabled={pending}
-                        >
-                          {tc("edit")}
-                        </AnimateButton>
-                        <AnimateButton size="sm" variant="ghost" asChild>
-                          <Link href={`/admin/employees/${emp.id}`}>
-                            {tc("view")} <ChevronRight className="size-3" />
-                          </Link>
-                        </AnimateButton>
-                        <AnimateButton
-                          size="icon-sm"
-                          variant="ghost"
-                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => setDeleting(emp)}
-                          disabled={pending}
-                          aria-label={t("deleteConfirmTitle")}
-                        >
-                          <Trash2 className="size-4" />
-                        </AnimateButton>
-                        <Switch
-                          checked={emp.isActive}
-                          onCheckedChange={() => toggle(emp)}
-                          disabled={pending}
-                          aria-label={emp.isActive ? tc("inactive") : tc("active")}
-                        />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+  return (
+    <>
+      <DataTable
+        data={employees}
+        columns={columns}
+        getRowId={(row) => row.id}
+        searchable
+        searchPlaceholder={t("searchPlaceholder")}
+        empty={t("noResults")}
+      />
 
       <EmployeeFormDialog
         employee={editing === undefined ? undefined : editing ?? null}
@@ -205,6 +176,6 @@ export function EmployeesTable({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   )
 }

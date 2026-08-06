@@ -4,16 +4,10 @@ import { requireEmployeeContext } from "@/lib/auth-utils"
 import { getTranslations } from "next-intl/server"
 import { Badge } from "@/components/ui/badge"
 import { formatMoney } from "@/lib/money"
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-} from "@/components/ui/table"
+import { Table, TableHeader, TableBody, TableHead, TableRow } from "@/components/ui/table"
 import { SalesHistoryFilter } from "@/components/employee/sales-history-filter"
 import { TableRowsSkeleton } from "@/components/shared/skeleton-primitives"
+import { ServerTable, createServerColumnHelper } from "@/components/shared/server-table"
 
 export const metadata = { title: "Sales History | RetailCore" }
 
@@ -30,6 +24,18 @@ const STATUS_KEYS: Record<string, string> = {
   PENDING: "pending",
   CANCELLED: "cancelled",
 }
+
+interface EmpSalesRow {
+  id: string
+  invoiceNo: string
+  customerName: string | null
+  itemCount: number
+  total: number
+  createdAt: Date
+  status: string
+}
+
+const empSalesHelper = createServerColumnHelper<EmpSalesRow>()
 
 async function SalesTableSection({
   shopId,
@@ -94,35 +100,53 @@ async function SalesBodyRows({ where }: { where: Record<string, unknown> }) {
     include: { items: { select: { quantity: true } } },
   })
 
+  const rows: EmpSalesRow[] = sales.map((sale) => ({
+    id: sale.id,
+    invoiceNo: sale.invoiceNo,
+    customerName: sale.customerName,
+    itemCount: sale.items.reduce((sum, i) => sum + i.quantity, 0),
+    total: Number(sale.total),
+    createdAt: sale.createdAt,
+    status: sale.status,
+  }))
+
+  const columns = empSalesHelper.columns([
+    empSalesHelper.accessor("invoiceNo", {
+      header: t("colInvoice"),
+      cell: ({ getValue }) => <span className="font-mono text-xs">{getValue() as string}</span>,
+    }),
+    empSalesHelper.accessor("customerName", {
+      header: t("colCustomer"),
+      cell: ({ getValue }) => (getValue() as string | null) ?? "—",
+    }),
+    empSalesHelper.accessor("itemCount", { header: t("colItems"), cell: ({ getValue }) => getValue() as number }),
+    empSalesHelper.accessor("total", {
+      header: t("colAmount"),
+      cell: ({ getValue }) => <span className="font-medium">{formatMoney(getValue() as number)}</span>,
+    }),
+    empSalesHelper.accessor("createdAt", {
+      header: t("colDate"),
+      cell: ({ getValue }) => (
+        <span className="text-muted-foreground">{(getValue() as Date).toLocaleDateString()}</span>
+      ),
+    }),
+    empSalesHelper.accessor("status", {
+      header: t("colStatus"),
+      cell: ({ getValue }) => (
+        <Badge variant={statusVariant[getValue() as string] ?? "default"}>
+          {t(STATUS_KEYS[getValue() as string] ?? (getValue() as string))}
+        </Badge>
+      ),
+    }),
+  ])
+
   return (
-    <>
-      {sales.length === 0 && (
-        <TableRow>
-          <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-            {t("empty")}
-          </TableCell>
-        </TableRow>
-      )}
-      {sales.map((sale) => {
-        const itemCount = sale.items.reduce((sum, i) => sum + i.quantity, 0)
-        return (
-          <TableRow key={sale.id} className="transition-colors hover:bg-muted/50">
-            <TableCell className="font-mono text-xs">{sale.invoiceNo}</TableCell>
-            <TableCell>{sale.customerName ?? "—"}</TableCell>
-            <TableCell>{itemCount}</TableCell>
-            <TableCell className="font-medium">{formatMoney(sale.total)}</TableCell>
-            <TableCell className="text-muted-foreground">
-              {new Date(sale.createdAt).toLocaleDateString()}
-            </TableCell>
-            <TableCell>
-              <Badge variant={statusVariant[sale.status] ?? "default"}>
-                {t(STATUS_KEYS[sale.status] ?? sale.status)}
-              </Badge>
-            </TableCell>
-          </TableRow>
-        )
-      })}
-    </>
+    <ServerTable
+      data={rows}
+      columns={columns}
+      getRowId={(row) => row.id}
+      empty={t("empty")}
+    />
   )
 }
 

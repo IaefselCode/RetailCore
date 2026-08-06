@@ -6,7 +6,7 @@ import { Store, MapPin, DollarSign, ShoppingCart, Users, Package, ArrowLeft, Che
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table"
+import { ServerTable, createServerColumnHelper } from "@/components/shared/server-table"
 import Link from "next/link"
 import { formatMoney } from "@/lib/money"
 
@@ -25,6 +25,28 @@ const STATUS_KEYS: Record<string, string> = {
   CANCELLED: "cancelled",
   REFUNDED: "refunded",
 }
+
+interface ShopEmployeeRow {
+  id: string
+  name: string
+  position: string | null
+  email: string
+  isActive: boolean
+}
+
+interface ShopSaleRow {
+  id: string
+  invoiceNo: string
+  customerName: string | null
+  employeeName: string
+  total: number
+  paymentMethod: string | null
+  createdAt: Date
+  status: string
+}
+
+const empHelper = createServerColumnHelper<ShopEmployeeRow>()
+const saleHelper = createServerColumnHelper<ShopSaleRow>()
 
 export default async function ShopDetailsPage({
   params,
@@ -156,48 +178,11 @@ export default async function ShopDetailsPage({
           <CardTitle>{t("employeesTitle")}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("colName")}</TableHead>
-                  <TableHead>{t("colPosition")}</TableHead>
-                  <TableHead>{t("colEmail")}</TableHead>
-                  <TableHead>{t("colStatus")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {shop.employees.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="py-6 text-center text-sm text-muted-foreground">
-                      {t("noEmployees")}
-                    </TableCell>
-                  </TableRow>
-                )}
-                {shop.employees.map((emp) => (
-                  <TableRow key={emp.id} className="transition-colors hover:bg-muted/50">
-                    <TableCell>
-                      <Link href={`/admin/employees/${emp.id}`} className="font-medium hover:underline">
-                        {emp.user.firstName} {emp.user.lastName}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{emp.position ?? "—"}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <Mail className="size-3" />
-                        {emp.user.email}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={emp.isActive ? "default" : "secondary"}>
-                        {emp.isActive ? tc("active") : tc("inactive")}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <ShopEmployeesTable
+            employees={shop.employees}
+            t={t}
+            tc={tc}
+          />
         </CardContent>
       </Card>
 
@@ -206,53 +191,152 @@ export default async function ShopDetailsPage({
           <CardTitle>{t("recentTransactions")}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("colInvoice")}</TableHead>
-                  <TableHead>{t("colCustomer")}</TableHead>
-                  <TableHead>{t("colEmployee")}</TableHead>
-                  <TableHead>{t("colAmount")}</TableHead>
-                  <TableHead>{t("colPayment")}</TableHead>
-                  <TableHead>{t("colDate")}</TableHead>
-                  <TableHead>{t("colStatus")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {shop.sales.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-6 text-center text-sm text-muted-foreground">
-                      {t("noSales")}
-                    </TableCell>
-                  </TableRow>
-                )}
-                {shop.sales.map((sale) => (
-                  <TableRow key={sale.id} className="transition-colors hover:bg-muted/50">
-                    <TableCell className="font-mono text-xs">{sale.invoiceNo}</TableCell>
-                    <TableCell>{sale.customerName ?? "—"}</TableCell>
-                    <TableCell>
-                      {sale.employee
-                        ? `${sale.employee.user.firstName} ${sale.employee.user.lastName}`
-                        : "—"}
-                    </TableCell>
-                    <TableCell className="font-medium">{formatMoney(sale.total)}</TableCell>
-                    <TableCell>{sale.paymentMethod ?? "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(sale.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariant[sale.status] ?? "default"}>
-                        {t(STATUS_KEYS[sale.status] ?? sale.status)}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <ShopSalesTable
+            sales={shop.sales}
+            t={t}
+          />
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function ShopEmployeesTable({
+  employees,
+  t,
+  tc,
+}: {
+  employees: {
+    id: string
+    position: string | null
+    isActive: boolean
+    user: { firstName: string | null; lastName: string | null; email: string }
+  }[]
+  t: (key: string) => string
+  tc: (key: string) => string
+}) {
+  const rows: ShopEmployeeRow[] = employees.map((emp) => ({
+    id: emp.id,
+    name: `${emp.user.firstName ?? ""} ${emp.user.lastName ?? ""}`.trim(),
+    position: emp.position,
+    email: emp.user.email,
+    isActive: emp.isActive,
+  }))
+
+  const columns = empHelper.columns([
+    empHelper.accessor("name", {
+      header: t("colName"),
+      cell: ({ row }) => (
+        <Link href={`/admin/employees/${row.original.id}`} className="font-medium hover:underline">
+          {row.original.name}
+        </Link>
+      ),
+    }),
+    empHelper.accessor("position", {
+      header: t("colPosition"),
+      cell: ({ getValue }) => (getValue() as string | null) ?? "—",
+    }),
+    empHelper.accessor("email", {
+      header: t("colEmail"),
+      cell: ({ getValue }) => (
+        <div className="flex items-center gap-1 text-muted-foreground">
+          <Mail className="size-3" />
+          {getValue() as string}
+        </div>
+      ),
+    }),
+    empHelper.accessor("isActive", {
+      header: t("colStatus"),
+      cell: ({ getValue }) => (
+        <Badge variant={getValue() ? "default" : "secondary"}>
+          {getValue() ? tc("active") : tc("inactive")}
+        </Badge>
+      ),
+    }),
+  ])
+
+  return (
+    <ServerTable
+      data={rows}
+      columns={columns}
+      getRowId={(row) => row.id}
+      empty={t("noEmployees")}
+    />
+  )
+}
+
+function ShopSalesTable({
+  sales,
+  t,
+}: {
+  sales: {
+    id: string
+    invoiceNo: string
+    customerName: string | null
+    total: number | { toString(): string }
+    paymentMethod: string | null
+    status: string
+    createdAt: Date
+    employee: { user: { firstName: string | null; lastName: string | null } } | null
+  }[]
+  t: (key: string) => string
+}) {
+  const rows: ShopSaleRow[] = sales.map((sale) => ({
+    id: sale.id,
+    invoiceNo: sale.invoiceNo,
+    customerName: sale.customerName,
+    employeeName: sale.employee
+      ? `${sale.employee.user.firstName ?? ""} ${sale.employee.user.lastName ?? ""}`.trim()
+      : "",
+    total: Number(sale.total),
+    paymentMethod: sale.paymentMethod,
+    createdAt: sale.createdAt,
+    status: sale.status,
+  }))
+
+  const columns = saleHelper.columns([
+    saleHelper.accessor("invoiceNo", {
+      header: t("colInvoice"),
+      cell: ({ getValue }) => <span className="font-mono text-xs">{getValue() as string}</span>,
+    }),
+    saleHelper.accessor("customerName", {
+      header: t("colCustomer"),
+      cell: ({ getValue }) => (getValue() as string | null) ?? "—",
+    }),
+    saleHelper.accessor("employeeName", {
+      header: t("colEmployee"),
+      cell: ({ getValue }) => (getValue() as string) || "—",
+    }),
+    saleHelper.accessor("total", {
+      header: t("colAmount"),
+      cell: ({ getValue }) => <span className="font-medium">{formatMoney(getValue() as number)}</span>,
+    }),
+    saleHelper.accessor("paymentMethod", {
+      header: t("colPayment"),
+      cell: ({ getValue }) => (getValue() as string | null) ?? "—",
+    }),
+    saleHelper.accessor("createdAt", {
+      header: t("colDate"),
+      cell: ({ getValue }) => (
+        <span className="text-muted-foreground">{(getValue() as Date).toLocaleDateString()}</span>
+      ),
+    }),
+    saleHelper.accessor("status", {
+      header: t("colStatus"),
+      cell: ({ getValue }) => (
+        <Badge variant={statusVariant[getValue() as string] ?? "default"}>
+          {t(STATUS_KEYS[getValue() as string] ?? (getValue() as string))}
+        </Badge>
+      ),
+    }),
+  ])
+
+  return (
+    <ServerTable
+      data={rows}
+      columns={columns}
+      getRowId={(row) => row.id}
+      empty={t("noSales")}
+    />
   )
 }

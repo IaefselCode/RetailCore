@@ -5,10 +5,11 @@ import { auth } from "@/lib/auth"
 import { getTranslations } from "next-intl/server"
 import { AdminDashboard } from "@/components/admin/admin-dashboard"
 import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatMoney } from "@/lib/money"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SkeletonStat, TableRowsSkeleton, ListSkeleton } from "@/components/shared/skeleton-primitives"
+import { ServerTable, createServerColumnHelper } from "@/components/shared/server-table"
 
 export const metadata = { title: "Dashboard | RetailCore" }
 
@@ -28,6 +29,18 @@ const statusBadge: Record<string, "default" | "secondary" | "destructive"> = {
   REFUNDED: "destructive",
   CANCELLED: "destructive",
 }
+
+interface RecentSaleRow {
+  id: string
+  invoiceNo: string
+  customerName: string | null
+  shopName: string
+  itemCount: number
+  total: number
+  status: string
+}
+
+const recentSaleHelper = createServerColumnHelper<RecentSaleRow>()
 
 async function TodaySalesValue() {
   const agg = await prisma.sale.aggregate({
@@ -68,56 +81,62 @@ async function RecentSalesContent() {
     },
   })
 
+  const rows: RecentSaleRow[] = recentSales.map((sale) => ({
+    id: sale.id,
+    invoiceNo: sale.invoiceNo,
+    customerName: sale.customerName,
+    shopName: sale.shop.name,
+    itemCount: sale.items.reduce((sum, i) => sum + i.quantity, 0),
+    total: Number(sale.total),
+    status: sale.status,
+  }))
+
+  const columns = recentSaleHelper.columns([
+    recentSaleHelper.accessor("invoiceNo", {
+      header: t("colInvoice"),
+      cell: ({ getValue }) => <span className="font-mono text-xs">{getValue() as string}</span>,
+    }),
+    recentSaleHelper.accessor("customerName", {
+      header: t("colCustomer"),
+      cell: ({ getValue }) => (getValue() as string | null) ?? "—",
+    }),
+    recentSaleHelper.accessor("shopName", { header: t("colShop"), cell: ({ getValue }) => getValue() as string }),
+    recentSaleHelper.accessor("itemCount", { header: t("colItems"), cell: ({ getValue }) => getValue() as number }),
+    recentSaleHelper.accessor("total", {
+      header: t("colAmount"),
+      cell: ({ getValue }) => <span className="font-medium">{formatMoney(getValue() as number)}</span>,
+    }),
+    recentSaleHelper.accessor("status", {
+      header: t("colStatus"),
+      cell: ({ getValue }) => (
+        <Badge variant={statusBadge[getValue() as string] ?? "default"}>{getValue() as string}</Badge>
+      ),
+    }),
+  ])
+
   return (
     <>
-      {/* Desktop: full table */}
-      <div className="hidden overflow-x-auto md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("colInvoice")}</TableHead>
-              <TableHead>{t("colCustomer")}</TableHead>
-              <TableHead>{t("colShop")}</TableHead>
-              <TableHead>{t("colItems")}</TableHead>
-              <TableHead>{t("colAmount")}</TableHead>
-              <TableHead>{t("colStatus")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {recentSales.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-                  {t("noSales")}
-                </TableCell>
-              </TableRow>
-            )}
-            {recentSales.map((sale) => (
-              <TableRow key={sale.invoiceNo}>
-                <TableCell className="font-mono text-xs">{sale.invoiceNo}</TableCell>
-                <TableCell>{sale.customerName ?? "—"}</TableCell>
-                <TableCell>{sale.shop.name}</TableCell>
-                <TableCell>{sale.items.reduce((sum, i) => sum + i.quantity, 0)}</TableCell>
-                <TableCell className="font-medium">{formatMoney(sale.total)}</TableCell>
-                <TableCell>
-                  <Badge variant={statusBadge[sale.status] ?? "default"}>{sale.status}</Badge>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      {/* Desktop: table (TanStack) */}
+      <div className="hidden md:block">
+        <ServerTable
+          data={rows}
+          columns={columns}
+          getRowId={(row) => row.id}
+          empty={t("noSales")}
+        />
       </div>
 
       {/* Mobile: stacked cards */}
       <div className="divide-y md:hidden">
-        {recentSales.length === 0 && (
+        {rows.length === 0 && (
           <p className="py-8 text-center text-sm text-muted-foreground">{t("noSales")}</p>
         )}
-        {recentSales.map((sale) => (
-          <div key={sale.invoiceNo} className="flex items-center justify-between gap-3 px-4 py-3">
+        {rows.map((sale) => (
+          <div key={sale.id} className="flex items-center justify-between gap-3 px-4 py-3">
             <div className="min-w-0">
               <p className="truncate font-mono text-xs">{sale.invoiceNo}</p>
               <p className="truncate text-sm text-muted-foreground">
-                {sale.customerName ?? "—"} · {sale.shop.name}
+                {sale.customerName ?? "—"} · {sale.shopName}
               </p>
             </div>
             <div className="shrink-0 text-right">

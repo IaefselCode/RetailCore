@@ -17,6 +17,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
+  createAppColumnHelper,
+  useAppTable,
+} from "@/components/shared/data-table"
+import {
   Table,
   TableBody,
   TableCell,
@@ -37,6 +41,118 @@ interface ProductOption {
   name: string
   sku: string
   stockByShop: Record<string, number>
+}
+
+interface DistributionRow {
+  id: string
+  name: string
+  currentStock: number
+  quantity: string
+}
+
+const distHelper = createAppColumnHelper<DistributionRow>()
+
+function DistributionTable({
+  shops,
+  stockByShop,
+  distributions,
+  t,
+  onQuantityChange,
+  notes,
+  onNotesChange,
+  onDistribute,
+  pending,
+}: {
+  shops: ShopOption[]
+  stockByShop: Record<string, number>
+  distributions: Record<string, string>
+  t: (key: string, values?: Record<string, string | number>) => string
+  onQuantityChange: (id: string, value: string) => void
+  notes: string
+  onNotesChange: (value: string) => void
+  onDistribute: () => void
+  pending: boolean
+}) {
+  const rows: DistributionRow[] = shops.map((shop) => ({
+    id: shop.id,
+    name: shop.name,
+    currentStock: stockByShop[shop.id] ?? 0,
+    quantity: distributions[shop.id] ?? "",
+  }))
+
+  const table = useAppTable({
+    data: rows,
+    columns: distHelper.columns([
+      distHelper.accessor("name", {
+        header: t("shop"),
+        cell: ({ getValue }) => <span className="font-medium">{getValue() as string}</span>,
+      }),
+      distHelper.accessor("currentStock", {
+        header: t("currentStock"),
+        cell: ({ getValue }) => getValue() as number,
+      }),
+      distHelper.accessor("quantity", {
+        header: t("transferQty"),
+        cell: ({ row }) => (
+          <Input
+            type="number"
+            min="0"
+            placeholder="0"
+            value={row.original.quantity}
+            onChange={(e) => onQuantityChange(row.original.id, e.target.value)}
+            className="w-24"
+          />
+        ),
+      }),
+    ]),
+    getRowId: (row) => row.id,
+  })
+
+  const tableRows = table.getRowModel().rows
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>{t("distributeToShops")}</CardTitle></CardHeader>
+      <CardContent className="space-y-4">
+        <div className="overflow-x-auto rounded-lg border">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((group) => (
+                <TableRow key={group.id}>
+                  {group.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder ? null : <table.FlexRender header={header} />}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {tableRows.map((row) => (
+                <TableRow key={row.id}>
+                  {row.getAllCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      <table.FlexRender cell={cell} />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="notes">{t("notes")}</Label>
+          <Input id="notes" value={notes} onChange={(e) => onNotesChange(e.target.value)} />
+        </div>
+        <div className="flex justify-end">
+          <AnimateButton variant="accent" onClick={onDistribute} disabled={pending}>
+            <Send className="size-4" />
+            {t("distribute")}
+          </AnimateButton>
+        </div>
+      </CardContent>
+    </Card>
+  )
 }
 
 export function StockDistributionForm({
@@ -139,54 +255,19 @@ export function StockDistributionForm({
       </Card>
 
       {product && fromShopId && (
-        <Card>
-          <CardHeader><CardTitle>{t("distributeToShops")}</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="overflow-x-auto rounded-lg border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("shop")}</TableHead>
-                    <TableHead>{t("currentStock")}</TableHead>
-                    <TableHead>{t("transferQty")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {shops
-                    .filter((s) => s.id !== fromShopId)
-                    .map((shop) => (
-                      <TableRow key={shop.id}>
-                        <TableCell className="font-medium">{shop.name}</TableCell>
-                        <TableCell>{product.stockByShop[shop.id] ?? 0}</TableCell>
-                        <TableCell>
-                          <Input
-                            type="number"
-                            min="0"
-                            placeholder="0"
-                            value={distributions[shop.id] ?? ""}
-                            onChange={(e) =>
-                              setDistributions((prev) => ({ ...prev, [shop.id]: e.target.value }))
-                            }
-                            className="w-24"
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="notes">{t("notes")}</Label>
-              <Input id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
-            </div>
-            <div className="flex justify-end">
-              <AnimateButton variant="accent" onClick={submit} disabled={pending}>
-                <Send className="size-4" />
-                {t("distribute")}
-              </AnimateButton>
-            </div>
-          </CardContent>
-        </Card>
+        <DistributionTable
+          shops={shops.filter((s) => s.id !== fromShopId)}
+          stockByShop={product.stockByShop}
+          distributions={distributions}
+          t={t}
+          onQuantityChange={(id, value) =>
+            setDistributions((prev) => ({ ...prev, [id]: value }))
+          }
+          onNotesChange={setNotes}
+          notes={notes}
+          onDistribute={submit}
+          pending={pending}
+        />
       )}
     </div>
   )

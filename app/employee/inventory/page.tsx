@@ -4,15 +4,9 @@ import { requireEmployeeContext } from "@/lib/auth-utils"
 import { getTranslations } from "next-intl/server"
 import { Badge } from "@/components/ui/badge"
 import { formatMoney } from "@/lib/money"
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-} from "@/components/ui/table"
+import { Table, TableHeader, TableBody, TableHead, TableRow } from "@/components/ui/table"
 import { TableRowsSkeleton } from "@/components/shared/skeleton-primitives"
+import { ServerTable, createServerColumnHelper } from "@/components/shared/server-table"
 
 export const metadata = { title: "Inventory | RetailCore" }
 
@@ -29,6 +23,18 @@ function statusVariant(key: string): "outline" | "secondary" | "destructive" | "
   if (key === "statusCritical") return "destructive"
   return "default"
 }
+
+interface EmpInventoryRow {
+  id: string
+  productName: string
+  sku: string
+  quantity: number
+  price: number
+  statusKey: string
+  statusVariant: "outline" | "secondary" | "destructive" | "default"
+}
+
+const invHelper = createServerColumnHelper<EmpInventoryRow>()
 
 async function InventoryTableSection({ shopId }: { shopId: string }) {
   const t = await getTranslations("employeeInventory")
@@ -77,30 +83,46 @@ async function InventoryRows({ shopId }: { shopId: string }) {
 
   const activeItems = inventory.filter((i) => i.product.isActive)
 
+  const rows: EmpInventoryRow[] = activeItems.map((item) => {
+    const statusKey = stockStatusKey(item.quantity, item.minStock)
+    return {
+      id: item.id,
+      productName: item.product.name,
+      sku: item.product.sku,
+      quantity: item.quantity,
+      price: Number(item.product.price),
+      statusKey,
+      statusVariant: statusVariant(statusKey),
+    }
+  })
+
+  const columns = invHelper.columns([
+    invHelper.accessor("productName", {
+      header: t("colProduct"),
+      cell: ({ getValue }) => <span className="font-medium">{getValue() as string}</span>,
+    }),
+    invHelper.accessor("sku", {
+      header: t("colSku"),
+      cell: ({ getValue }) => <span className="text-muted-foreground">{getValue() as string}</span>,
+    }),
+    invHelper.accessor("quantity", { header: t("colShopStock"), cell: ({ getValue }) => getValue() as number }),
+    invHelper.accessor("price", {
+      header: t("colPrice"),
+      cell: ({ getValue }) => formatMoney(getValue() as number),
+    }),
+    invHelper.accessor("statusKey", {
+      header: t("colStatus"),
+      cell: ({ row }) => <Badge variant={row.original.statusVariant}>{t(row.original.statusKey)}</Badge>,
+    }),
+  ])
+
   return (
-    <>
-      {activeItems.length === 0 && (
-        <TableRow>
-          <TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
-            {t("empty")}
-          </TableCell>
-        </TableRow>
-      )}
-      {activeItems.map((item) => {
-        const statusKey = stockStatusKey(item.quantity, item.minStock)
-        return (
-          <TableRow key={item.id} className="transition-colors hover:bg-muted/50">
-            <TableCell className="font-medium">{item.product.name}</TableCell>
-            <TableCell className="text-muted-foreground">{item.product.sku}</TableCell>
-            <TableCell>{item.quantity}</TableCell>
-            <TableCell>{formatMoney(item.product.price)}</TableCell>
-            <TableCell>
-              <Badge variant={statusVariant(statusKey)}>{t(statusKey)}</Badge>
-            </TableCell>
-          </TableRow>
-        )
-      })}
-    </>
+    <ServerTable
+      data={rows}
+      columns={columns}
+      getRowId={(row) => row.id}
+      empty={t("empty")}
+    />
   )
 }
 

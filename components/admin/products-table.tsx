@@ -1,14 +1,12 @@
 "use client"
 
-import { useTransition, useState, useEffect, useRef } from "react"
-import { useRouter, usePathname, useSearchParams } from "next/navigation"
+import { useTransition } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
-import { Search, ChevronRight } from "lucide-react"
+import { ChevronRight } from "lucide-react"
 import { toast } from "sonner"
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import {
   Select,
@@ -17,15 +15,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
+import {
+  DataTable,
+  createAppColumnHelper,
+} from "@/components/shared/data-table"
 import { toggleProductActive } from "@/lib/products-actions"
 import { formatMoney } from "@/lib/money"
 
@@ -47,48 +41,24 @@ interface Category {
   name: string
 }
 
+const helper = createAppColumnHelper<ProductRow>()
+
 export function ProductsTable({
   products,
   categories,
   initialSearch,
-  initialCategory,
   initialStatus,
+  initialCategoryId,
 }: {
   products: ProductRow[]
   categories: Category[]
   initialSearch: string
-  initialCategory: string
   initialStatus: string
+  initialCategoryId?: string
 }) {
   const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
   const t = useTranslations("products")
   const [pending, startTransition] = useTransition()
-  const [search, setSearch] = useState(initialSearch)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    const current = searchParams.get("search") ?? ""
-    if (search === current) return
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      const params = new URLSearchParams(searchParams.toString())
-      if (search) params.set("search", search)
-      else params.delete("search")
-      router.push(`${pathname}?${params.toString()}`)
-    }, 300)
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
-  }, [search, pathname, router, searchParams])
-
-  function updateParams(key: string, value: string) {
-    const params = new URLSearchParams(searchParams.toString())
-    if (value && value !== "all") params.set(key, value)
-    else params.delete(key)
-    router.push(`${pathname}?${params.toString()}`)
-  }
 
   function toggle(product: ProductRow) {
     const fd = new FormData()
@@ -105,102 +75,131 @@ export function ProductsTable({
     })
   }
 
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative flex-1 sm:max-w-sm">
-          <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={t("searchPlaceholder")}
-            className="pl-8"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+  const columns = helper.columns([
+    helper.accessor("name", {
+      header: t("colProduct"),
+      cell: ({ getValue, row }) => (
+        <Link href={`/admin/products/${row.original.id}`} className="font-medium hover:underline">
+          {getValue() as string}
+        </Link>
+      ),
+    }),
+    helper.accessor("sku", {
+      header: t("colSku"),
+      cell: ({ getValue }) => (
+        <span className="font-mono text-xs text-muted-foreground">{getValue() as string}</span>
+      ),
+    }),
+    helper.accessor("categoryId", {
+      id: "categoryId",
+      header: t("colCategory"),
+      filterFn: "equalsString",
+      cell: ({ row }) => row.original.categoryName ?? "—",
+    }),
+    helper.accessor("price", {
+      header: t("colPrice"),
+      cell: ({ getValue }) => formatMoney(getValue() as number),
+    }),
+    helper.accessor("totalStock", {
+      header: t("colStock"),
+      cell: ({ getValue }) => getValue() as number,
+    }),
+    helper.accessor("isActive", {
+      id: "status",
+      header: t("colStatus"),
+      filterFn: "equals",
+      cell: ({ getValue }) => (
+        <Badge variant={getValue() ? "default" : "secondary"}>
+          {getValue() ? t("active") : t("inactive")}
+        </Badge>
+      ),
+    }),
+    helper.display({
+      id: "actions",
+      header: t("colActions"),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <AnimateButton size="sm" variant="outline" asChild>
+            <Link href={`/admin/products/${row.original.id}`}>
+              {t("view")}
+              <ChevronRight className="size-3" />
+            </Link>
+          </AnimateButton>
+          <Switch
+            checked={row.original.isActive}
+            onCheckedChange={() => toggle(row.original)}
+            disabled={pending}
           />
         </div>
-        <Select value={initialCategory} onValueChange={(v) => v && updateParams("category", v)}>
-          <SelectTrigger className="w-full sm:w-40">
-            <SelectValue placeholder={t("colCategory")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("allCategories")}</SelectItem>
-            {categories.map((c) => (
-              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={initialStatus} onValueChange={(v) => v && updateParams("status", v)}>
-          <SelectTrigger className="w-full sm:w-32">
-            <SelectValue placeholder={t("colStatus")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("allStatus")}</SelectItem>
-            <SelectItem value="active">{t("active")}</SelectItem>
-            <SelectItem value="inactive">{t("inactive")}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      ),
+    }),
+  ])
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("colProduct")}</TableHead>
-                  <TableHead>{t("colSku")}</TableHead>
-                  <TableHead>{t("colCategory")}</TableHead>
-                  <TableHead>{t("colPrice")}</TableHead>
-                  <TableHead>{t("colStock")}</TableHead>
-                  <TableHead>{t("colStatus")}</TableHead>
-                  <TableHead>{t("colActions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {products.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">
-                      {t("empty")}
-                    </TableCell>
-                  </TableRow>
-                )}
-                {products.map((product) => (
-                  <TableRow key={product.id} className="transition-colors hover:bg-muted/50">
-                    <TableCell>
-                      <Link href={`/admin/products/${product.id}`} className="font-medium hover:underline">
-                        {product.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">{product.sku}</TableCell>
-                    <TableCell>{product.categoryName ?? "—"}</TableCell>
-                    <TableCell>{formatMoney(product.price)}</TableCell>
-                    <TableCell>{product.totalStock}</TableCell>
-                    <TableCell>
-                      <Badge variant={product.isActive ? "default" : "secondary"}>
-                        {product.isActive ? t("active") : t("inactive")}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <AnimateButton size="sm" variant="outline" asChild>
-                          <Link href={`/admin/products/${product.id}`}>
-                            {t("view")}
-                            <ChevronRight className="size-3" />
-                          </Link>
-                        </AnimateButton>
-                        <Switch
-                          checked={product.isActive}
-                          onCheckedChange={() => toggle(product)}
-                          disabled={pending}
-                        />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+  return (
+    <DataTable
+      data={products}
+      columns={columns}
+      getRowId={(row) => row.id}
+      searchable
+      searchPlaceholder={t("searchPlaceholder")}
+      toolbar={(table) => (
+        <>
+          <Select
+            value={String((table.getColumn("categoryId")?.getFilterValue() as string) ?? "all")}
+            onValueChange={(v) => {
+              if (!v) return
+              table.getColumn("categoryId")?.setFilterValue(v === "all" ? undefined : v)
+            }}
+          >
+            <SelectTrigger className="w-full sm:w-40">
+              <SelectValue placeholder={t("colCategory")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("allCategories")}</SelectItem>
+              {categories.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={
+              table.getColumn("status")?.getFilterValue() === true
+                ? "active"
+                : table.getColumn("status")?.getFilterValue() === false
+                ? "inactive"
+                : "all"
+            }
+            onValueChange={(v) => {
+              if (!v) return
+              table
+                .getColumn("status")
+                ?.setFilterValue(v === "all" ? undefined : v === "active")
+            }}
+          >
+            <SelectTrigger className="w-full sm:w-32">
+              <SelectValue placeholder={t("colStatus")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("allStatus")}</SelectItem>
+              <SelectItem value="active">{t("active")}</SelectItem>
+              <SelectItem value="inactive">{t("inactive")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </>
+      )}
+      initialGlobalFilter={initialSearch}
+      initialColumnFilters={[
+        ...(initialCategoryId && initialCategoryId !== "all"
+          ? [{ id: "categoryId", value: initialCategoryId }]
+          : []),
+        ...(initialStatus === "active"
+          ? [{ id: "status", value: true }]
+          : initialStatus === "inactive"
+          ? [{ id: "status", value: false }]
+          : []),
+      ]}
+      empty={t("empty")}
+      className="mt-4"
+    />
   )
 }

@@ -9,7 +9,7 @@ import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table"
+import { ServerTable, createServerColumnHelper } from "@/components/shared/server-table"
 import Link from "next/link"
 import { formatMoney } from "@/lib/money"
 
@@ -28,6 +28,19 @@ const STATUS_KEYS: Record<string, string> = {
   CANCELLED: "cancelled",
   REFUNDED: "refunded",
 }
+
+interface EmpSaleRow {
+  id: string
+  invoiceNo: string
+  customerName: string | null
+  items: number
+  total: number
+  paymentMethod: string | null
+  createdAt: Date
+  status: string
+}
+
+const empSaleHelper = createServerColumnHelper<EmpSaleRow>()
 
 export default async function EmployeeDetailsPage({
   params,
@@ -200,51 +213,82 @@ export default async function EmployeeDetailsPage({
               <CardTitle>{t("salesHistory")}</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t("colInvoice")}</TableHead>
-                      <TableHead>{t("colCustomer")}</TableHead>
-                      <TableHead>{t("colItems")}</TableHead>
-                      <TableHead>{t("colAmount")}</TableHead>
-                      <TableHead>{t("colPayment")}</TableHead>
-                      <TableHead>{t("colDate")}</TableHead>
-                      <TableHead>{t("colStatus")}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {sales.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={7} className="py-6 text-center text-sm text-muted-foreground">
-                          {t("noSales")}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                    {sales.map((sale) => (
-                      <TableRow key={sale.id} className="transition-colors hover:bg-muted/50">
-                        <TableCell className="font-mono text-xs">{sale.invoiceNo}</TableCell>
-                        <TableCell>{sale.customerName ?? "—"}</TableCell>
-                        <TableCell>{sale._count.items}</TableCell>
-                        <TableCell className="font-medium">{formatMoney(sale.total)}</TableCell>
-                        <TableCell>{sale.paymentMethod ?? "—"}</TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {new Date(sale.createdAt).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={statusVariant[sale.status] ?? "default"}>
-                            {t(STATUS_KEYS[sale.status] ?? sale.status)}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+              <EmployeeSalesTable sales={sales} t={t} />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
     </div>
+  )
+}
+
+function EmployeeSalesTable({
+  sales,
+  t,
+}: {
+  sales: {
+    id: string
+    invoiceNo: string
+    customerName: string | null
+    total: number | { toString(): string }
+    paymentMethod: string | null
+    status: string
+    createdAt: Date
+    _count: { items: number }
+  }[]
+  t: (key: string) => string
+}) {
+  const rows: EmpSaleRow[] = sales.map((sale) => ({
+    id: sale.id,
+    invoiceNo: sale.invoiceNo,
+    customerName: sale.customerName,
+    items: sale._count.items,
+    total: Number(sale.total),
+    paymentMethod: sale.paymentMethod,
+    createdAt: sale.createdAt,
+    status: sale.status,
+  }))
+
+  const columns = empSaleHelper.columns([
+    empSaleHelper.accessor("invoiceNo", {
+      header: t("colInvoice"),
+      cell: ({ getValue }) => <span className="font-mono text-xs">{getValue() as string}</span>,
+    }),
+    empSaleHelper.accessor("customerName", {
+      header: t("colCustomer"),
+      cell: ({ getValue }) => (getValue() as string | null) ?? "—",
+    }),
+    empSaleHelper.accessor("items", { header: t("colItems"), cell: ({ getValue }) => getValue() as number }),
+    empSaleHelper.accessor("total", {
+      header: t("colAmount"),
+      cell: ({ getValue }) => <span className="font-medium">{formatMoney(getValue() as number)}</span>,
+    }),
+    empSaleHelper.accessor("paymentMethod", {
+      header: t("colPayment"),
+      cell: ({ getValue }) => (getValue() as string | null) ?? "—",
+    }),
+    empSaleHelper.accessor("createdAt", {
+      header: t("colDate"),
+      cell: ({ getValue }) => (
+        <span className="text-muted-foreground">{(getValue() as Date).toLocaleDateString()}</span>
+      ),
+    }),
+    empSaleHelper.accessor("status", {
+      header: t("colStatus"),
+      cell: ({ getValue }) => (
+        <Badge variant={statusVariant[getValue() as string] ?? "default"}>
+          {t(STATUS_KEYS[getValue() as string] ?? (getValue() as string))}
+        </Badge>
+      ),
+    }),
+  ])
+
+  return (
+    <ServerTable
+      data={rows}
+      columns={columns}
+      getRowId={(row) => row.id}
+      empty={t("noSales")}
+    />
   )
 }

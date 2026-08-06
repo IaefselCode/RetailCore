@@ -16,15 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { AnimateButton } from "@/components/ui/animate-button"
+import {
+  createAppColumnHelper,
+  useAppTable,
+} from "@/components/shared/data-table"
 import { refundSale, getCsvExport } from "@/lib/sales-actions"
 import { formatMoney } from "@/lib/money"
 
@@ -44,6 +41,8 @@ interface ShopOption {
   id: string
   name: string
 }
+
+const helper = createAppColumnHelper<SalesHistoryRow>()
 
 const statusBadge: Record<string, "default" | "secondary" | "destructive"> = {
   COMPLETED: "default",
@@ -127,6 +126,62 @@ export function SalesHistoryTable({
     toast.success(t("csvExported"))
   }
 
+  const table = useAppTable({
+    data: sales,
+    columns: helper.columns([
+      helper.accessor("invoiceNo", {
+        header: t("colInvoice"),
+        cell: ({ getValue }) => <span className="font-mono text-xs">{getValue() as string}</span>,
+      }),
+      helper.accessor("customerName", {
+        header: t("colCustomer"),
+        cell: ({ getValue }) => (getValue() as string | null) ?? "—",
+      }),
+      helper.accessor("shopName", { header: t("colShop"), cell: ({ getValue }) => getValue() as string }),
+      helper.accessor("itemCount", { header: t("colItems"), cell: ({ getValue }) => getValue() as number }),
+      helper.accessor("total", {
+        header: t("colAmount"),
+        cell: ({ getValue }) => <span className="font-medium">{formatMoney(getValue() as number)}</span>,
+      }),
+      helper.accessor("paymentMethod", {
+        header: t("colPayment"),
+        cell: ({ getValue }) => (getValue() as string | null) ?? "—",
+      }),
+      helper.accessor("createdAt", {
+        header: t("colDate"),
+        cell: ({ getValue }) => (
+          <span className="text-muted-foreground">{new Date(getValue() as string).toLocaleDateString()}</span>
+        ),
+      }),
+      helper.accessor("status", {
+        header: t("colStatus"),
+        cell: ({ getValue }) => (
+          <Badge variant={statusBadge[getValue() as string] ?? "default"}>
+            {getValue() as string}
+          </Badge>
+        ),
+      }),
+      helper.display({
+        id: "actions",
+        header: t("colActions"),
+        cell: ({ row }) =>
+          row.original.status === "COMPLETED" ? (
+            <AnimateButton size="sm" variant="outline" disabled={pending} onClick={() => refund(row.original.id)}>
+              {t("refund")}
+            </AnimateButton>
+          ) : null,
+      }),
+    ]),
+    getRowId: (row) => row.id,
+    manualPagination: true,
+    rowCount: total,
+    initialState: {
+      pagination: { pageIndex: initialFilters.page - 1, pageSize: PAGE_SIZE },
+    },
+  })
+
+  const rows = table.getRowModel().rows
+
   return (
     <div className="space-y-6">
       <nav className="text-sm text-muted-foreground">
@@ -200,48 +255,33 @@ export function SalesHistoryTable({
 
       <Card>
         <div className="overflow-x-auto">
-          <Table>              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("colInvoice")}</TableHead>
-                  <TableHead>{t("colCustomer")}</TableHead>
-                  <TableHead>{t("colShop")}</TableHead>
-                  <TableHead>{t("colItems")}</TableHead>
-                  <TableHead>{t("colAmount")}</TableHead>
-                  <TableHead>{t("colPayment")}</TableHead>
-                  <TableHead>{t("colDate")}</TableHead>
-                  <TableHead>{t("colStatus")}</TableHead>
-                  <TableHead>{t("colActions")}</TableHead>
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((group) => (
+                <TableRow key={group.id}>
+                  {group.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder ? null : <table.FlexRender header={header} />}
+                    </TableHead>
+                  ))}
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sales.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={9} className="py-8 text-center text-sm text-muted-foreground">
-                      {t("empty")}
+              ))}
+            </TableHeader>
+            <TableBody>
+              {rows.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={9} className="py-8 text-center text-sm text-muted-foreground">
+                    {t("empty")}
+                  </TableCell>
+                </TableRow>
+              )}
+              {rows.map((row) => (
+                <TableRow key={row.id} className="transition-colors hover:bg-muted/50">
+                  {row.getAllCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      <table.FlexRender cell={cell} />
                     </TableCell>
-                  </TableRow>
-                )}
-              {sales.map((sale) => (
-                <TableRow key={sale.id} className="transition-colors hover:bg-muted/50">
-                  <TableCell className="font-mono text-xs">{sale.invoiceNo}</TableCell>
-                  <TableCell>{sale.customerName ?? "—"}</TableCell>
-                  <TableCell>{sale.shopName}</TableCell>
-                  <TableCell>{sale.itemCount}</TableCell>
-                  <TableCell className="font-medium">{formatMoney(sale.total)}</TableCell>
-                  <TableCell>{sale.paymentMethod ?? "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {new Date(sale.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusBadge[sale.status] ?? "default"}>{sale.status}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    {sale.status === "COMPLETED" && (
-                      <AnimateButton size="sm" variant="outline" disabled={pending} onClick={() => refund(sale.id)}>
-                        {t("refund")}
-                      </AnimateButton>
-                    )}
-                  </TableCell>
+                  ))}
                 </TableRow>
               ))}
             </TableBody>

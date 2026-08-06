@@ -57,28 +57,10 @@ export default async function ProductsPage({
 
 async function ProductsContent({ searchParams }: { searchParams: SearchParams }) {
   const t = await getTranslations("products")
-  const where = {
-    ...(searchParams.search
-      ? {
-          OR: [
-            { name: { contains: searchParams.search, mode: "insensitive" as const } },
-            { sku: { contains: searchParams.search, mode: "insensitive" as const } },
-          ],
-        }
-      : {}),
-    ...(searchParams.category && searchParams.category !== "all"
-      ? { categoryId: searchParams.category }
-      : {}),
-    ...(searchParams.status === "active"
-      ? { isActive: true }
-      : searchParams.status === "inactive"
-      ? { isActive: false }
-      : {}),
-  }
-
+  // All products are fetched server-side; search/category/status filtering is
+  // handled client-side by the TanStack table (seeded from URL params).
   const [products, categories] = await Promise.all([
     prisma.product.findMany({
-      where,
       orderBy: { createdAt: "desc" },
       include: {
         category: { select: { id: true, name: true } },
@@ -137,11 +119,12 @@ async function ProductsContent({ searchParams }: { searchParams: SearchParams })
       </div>
 
       <ProductsTable
+        key={`${searchParams.search ?? ""}|${searchParams.category ?? "all"}|${searchParams.status ?? "all"}`}
         products={productRows}
         categories={categories}
         initialSearch={searchParams.search ?? ""}
-        initialCategory={searchParams.category ?? "all"}
         initialStatus={searchParams.status ?? "all"}
+        initialCategoryId={searchParams.category}
       />
     </>
   )

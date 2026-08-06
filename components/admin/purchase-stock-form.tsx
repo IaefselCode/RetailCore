@@ -17,6 +17,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
+  createAppColumnHelper,
+  useAppTable,
+} from "@/components/shared/data-table"
+import {
   Table,
   TableBody,
   TableCell,
@@ -41,6 +45,89 @@ interface ProductOption {
 }
 
 type LineItem = { productId: string; productName: string; quantity: string; unitCost: string }
+
+const lineHelper = createAppColumnHelper<LineItem>()
+
+function LineItemsTable({
+  items,
+  t,
+  onRemove,
+}: {
+  items: LineItem[]
+  t: (key: string, values?: Record<string, string | number>) => string
+  onRemove: (index: number) => void
+}) {
+  const table = useAppTable({
+    data: items,
+    columns: lineHelper.columns([
+      lineHelper.accessor("productName", {
+        header: t("product"),
+        cell: ({ getValue }) => getValue() as string,
+      }),
+      lineHelper.accessor("quantity", {
+        header: t("qty"),
+        cell: ({ getValue }) => getValue() as string,
+      }),
+      lineHelper.accessor("unitCost", {
+        header: t("unitCost"),
+        cell: ({ getValue }) => formatMoney(parseFloat(getValue() as string) || 0),
+      }),
+      lineHelper.display({
+        id: "lineTotal",
+        header: t("lineTotal"),
+        cell: ({ row }) =>
+          formatMoney(
+            (parseFloat(row.original.quantity) || 0) * (parseFloat(row.original.unitCost) || 0)
+          ),
+      }),
+      lineHelper.display({
+        id: "remove",
+        cell: ({ row }) => (
+          <AnimateButton
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => onRemove(row.index)}
+          >
+            <Trash2 className="size-4 text-destructive" />
+          </AnimateButton>
+        ),
+      }),
+    ]),
+    getRowId: (row, index) => `${row.productId}-${index}`,
+  })
+
+  const rows = table.getRowModel().rows
+
+  return (
+    <div className="overflow-x-auto rounded-lg border">
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((group) => (
+            <TableRow key={group.id}>
+              {group.headers.map((header) => (
+                <TableHead key={header.id}>
+                  {header.isPlaceholder ? null : <table.FlexRender header={header} />}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow key={row.id}>
+              {row.getAllCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  <table.FlexRender cell={cell} />
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
 
 export function PurchaseStockForm({
   shops,
@@ -182,36 +269,11 @@ export function PurchaseStockForm({
           </div>
 
           {lineItems.length > 0 && (
-            <div className="overflow-x-auto rounded-lg border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("product")}</TableHead>
-                    <TableHead>{t("qty")}</TableHead>
-                    <TableHead>{t("unitCost")}</TableHead>
-                    <TableHead>{t("lineTotal")}</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {lineItems.map((item, i) => (
-                    <TableRow key={i}>
-                      <TableCell>{item.productName}</TableCell>
-                      <TableCell>{item.quantity}</TableCell>
-                      <TableCell>{formatMoney(parseFloat(item.unitCost) || 0)}</TableCell>
-                      <TableCell>
-                        {formatMoney((parseFloat(item.quantity) || 0) * (parseFloat(item.unitCost) || 0))}
-                      </TableCell>
-                      <TableCell>
-                        <AnimateButton type="button" variant="ghost" size="icon-sm" onClick={() => removeLineItem(i)}>
-                          <Trash2 className="size-4 text-destructive" />
-                        </AnimateButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <LineItemsTable
+              items={lineItems}
+              t={t}
+              onRemove={removeLineItem}
+            />
           )}
 
           <div className="flex items-center justify-between">
