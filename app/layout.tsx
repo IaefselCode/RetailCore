@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, JetBrains_Mono } from "next/font/google";
+import { Inter, Merriweather, JetBrains_Mono } from "next/font/google";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { ThemeProvider } from "next-themes"
 import { setRequestLocale, getMessages } from "next-intl/server"
@@ -8,9 +8,15 @@ import { getUserLocale } from "@/lib/i18n-server"
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner"
 
-const bricolageGrotesque = Bricolage_Grotesque({
+const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
+});
+
+const merriweather = Merriweather({
+  variable: "--font-serif",
+  subsets: ["latin"],
+  weight: ["400", "700", "900"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -35,7 +41,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${bricolageGrotesque.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${merriweather.variable} ${jetbrainsMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
