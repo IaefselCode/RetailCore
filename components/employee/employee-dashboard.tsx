@@ -123,7 +123,7 @@ export function EmployeeDashboard({
                   <CardTitle className="text-2xl font-bold">{kpi.value}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-xs text-muted-foreground">{kpi.description}</p>
+                  <div className="text-xs text-muted-foreground">{kpi.description}</div>
                 </CardContent>
               </Card>
             </motion.div>
