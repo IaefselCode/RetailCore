@@ -709,6 +709,7 @@
     "notifications": "Notifications",
     "security": "Security",
     "preferences": "Preferences",
+    "preferencesDesc": "Language and appearance settings",
     "generalSettings": "General Settings",
     "generalSettingsDesc": "Manage your shop's basic information",
     "shopName": "Shop Name",

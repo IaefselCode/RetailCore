@@ -122,6 +122,7 @@ async function InventoryRows({ shopId }: { shopId: string }) {
       columns={columns}
       getRowId={(row) => row.id}
       empty={t("empty")}
+      bodyOnly
     />
   )
 }

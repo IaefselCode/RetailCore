@@ -39,6 +39,12 @@ export interface ServerTableProps<T extends RowData> {
   getRowId?: (row: T) => string
   /** Message shown when there are no rows. */
   empty?: ReactNode
+  /**
+   * Render only the `<TableRow>`s (no table chrome). Use when the page
+   * already provides its own `<Table>`/`<TableHeader>`/`<TableBody>` and
+   * only the data rows stream in (e.g. inside a Suspense within a tbody).
+   */
+  bodyOnly?: boolean
   className?: string
 }
 
@@ -51,6 +57,7 @@ export function ServerTable<T extends RowData>({
   columns,
   getRowId,
   empty,
+  bodyOnly = false,
   className,
 }: ServerTableProps<T>) {
   const table = constructTable<ServerFeatures, T>({
@@ -62,6 +69,32 @@ export function ServerTable<T extends RowData>({
 
   const rows = table.getRowModel().rows
   const headerGroups = table.getHeaderGroups()
+
+  const rowNodes =
+    rows.length === 0 ? (
+      <TableRow>
+        <TableCell
+          colSpan={columns.length}
+          className="py-8 text-center text-sm text-muted-foreground"
+        >
+          {empty}
+        </TableCell>
+      </TableRow>
+    ) : (
+      rows.map((row) => (
+        <TableRow key={row.id} className="transition-colors hover:bg-muted/50">
+          {row.getAllCells().map((cell) => (
+            <TableCell key={cell.id}>
+              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </TableCell>
+          ))}
+        </TableRow>
+      ))
+    )
+
+  if (bodyOnly) {
+    return <>{rowNodes}</>
+  }
 
   return (
     <div className={cn("overflow-x-auto", className)}>
@@ -79,24 +112,7 @@ export function ServerTable<T extends RowData>({
             </TableRow>
           ))}
         </TableHeader>
-        <TableBody>
-          {rows.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="py-8 text-center text-sm text-muted-foreground">
-                {empty}
-              </TableCell>
-            </TableRow>
-          )}
-          {rows.map((row) => (
-            <TableRow key={row.id} className="transition-colors hover:bg-muted/50">
-              {row.getAllCells().map((cell) => (
-                <TableCell key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
+        <TableBody>{rowNodes}</TableBody>
       </Table>
     </div>
   )

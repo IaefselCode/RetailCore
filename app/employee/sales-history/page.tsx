@@ -146,6 +146,7 @@ async function SalesBodyRows({ where }: { where: Record<string, unknown> }) {
       columns={columns}
       getRowId={(row) => row.id}
       empty={t("empty")}
+      bodyOnly
     />
   )
 }
