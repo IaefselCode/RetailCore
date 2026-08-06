@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatMoney } from "@/lib/money"
+import { Skeleton } from "@/components/ui/skeleton"
 import { SkeletonStat, TableRowsSkeleton } from "@/components/shared/skeleton-primitives"
 
 export const metadata = { title: "Sales | RetailCore" }
@@ -75,10 +76,46 @@ async function RecentTransactionsSection() {
       <CardContent className="p-0">
         <Suspense
           fallback={
-            <TableRowsSkeleton
-              rows={8}
-              columns={["w-24", "w-20", "w-24", "w-8", "w-16", "w-16", "w-24", "w-20"]}
-            />
+            <>
+              {/* Desktop: full table chrome so the fallback stays valid HTML */}
+              <div className="hidden overflow-x-auto md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t("colInvoice")}</TableHead>
+                      <TableHead>{t("colCustomer")}</TableHead>
+                      <TableHead>{t("colShop")}</TableHead>
+                      <TableHead>{t("colItems")}</TableHead>
+                      <TableHead>{t("colAmount")}</TableHead>
+                      <TableHead>{t("colPayment")}</TableHead>
+                      <TableHead>{t("colDate")}</TableHead>
+                      <TableHead>{t("colStatus")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRowsSkeleton
+                      rows={8}
+                      columns={["w-24", "w-20", "w-24", "w-8", "w-16", "w-16", "w-24", "w-20"]}
+                    />
+                  </TableBody>
+                </Table>
+              </div>
+              {/* Mobile: stacked list skeleton */}
+              <div className="divide-y md:hidden">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between gap-3 px-4 py-3"
+                  >
+                    <div className="min-w-0 space-y-1.5">
+                      <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-3 w-32" />
+                    </div>
+                    <Skeleton className="h-4 w-16 shrink-0" />
+                  </div>
+                ))}
+              </div>
+            </>
           }
         >
           <RecentTransactionsTable t={t} />

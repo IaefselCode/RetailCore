@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Skeleton } from "@/components/ui/skeleton"
 import { SkeletonStat, TableRowsSkeleton } from "@/components/shared/skeleton-primitives"
 
 export const metadata = { title: "Inventory | RetailCore" }
@@ -49,10 +50,44 @@ async function InventoryTableSection() {
       <CardContent className="p-0">
         <Suspense
           fallback={
-            <TableRowsSkeleton
-              rows={8}
-              columns={["w-32", "w-20", "w-24", "w-10", "w-8", "w-20"]}
-            />
+            <>
+              {/* Desktop: full table chrome so the fallback stays valid HTML */}
+              <div className="hidden overflow-x-auto md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t("colProduct")}</TableHead>
+                      <TableHead>{t("colSku")}</TableHead>
+                      <TableHead>{t("colShop")}</TableHead>
+                      <TableHead>{t("colQuantity")}</TableHead>
+                      <TableHead>{t("colMinStock")}</TableHead>
+                      <TableHead>{t("colStatus")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRowsSkeleton
+                      rows={8}
+                      columns={["w-32", "w-20", "w-24", "w-10", "w-8", "w-20"]}
+                    />
+                  </TableBody>
+                </Table>
+              </div>
+              {/* Mobile: stacked list skeleton */}
+              <div className="divide-y md:hidden">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between gap-3 px-4 py-3"
+                  >
+                    <div className="min-w-0 space-y-1.5">
+                      <Skeleton className="h-3 w-32" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                    <Skeleton className="h-4 w-16 shrink-0" />
+                  </div>
+                ))}
+              </div>
+            </>
           }
         >
           <InventoryTable t={t} />

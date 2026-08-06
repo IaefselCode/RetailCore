@@ -33,7 +33,11 @@ import { PageSkeleton } from "@/components/shared/page-skeleton"
 // own history patch).
 let installed = false
 
-const FAILSAFE_MS = 800
+// Only guards aborted/hash navigations where the pathname never changes —
+// real route changes hide via the pathname effect at commit. Generous enough
+// that slow pages (cold cache, heavy DB queries) keep their skeleton until
+// the new route actually renders.
+const FAILSAFE_MS = 5000
 
 export function RouteLoadingIndicator() {
   const pathname = usePathname()
@@ -41,6 +45,10 @@ export function RouteLoadingIndicator() {
   const prevPathname = useRef(pathname)
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const mountedRef = useRef(true)
+  // Set by show(), cleared by hide(). Lets the deferred (microtask) show be
+  // cancelled if the new route commits (and hide() runs) before it drains —
+  // otherwise the loader would stick on fast/prefetched navigations.
+  const pendingShow = useRef(false)
 
   useEffect(() => {
     return () => {
@@ -50,7 +58,14 @@ export function RouteLoadingIndicator() {
 
   const show = useCallback(() => {
     if (!mountedRef.current) return
-    setLoading(true)
+    // Defer the state update: Next's router patches history from inside its own
+    // useInsertionEffect, and React forbids scheduling updates synchronously in
+    // that phase ("useInsertionEffect must not schedule updates"). A microtask
+    // moves the setState out of that commit-time call stack.
+    pendingShow.current = true
+    queueMicrotask(() => {
+      if (pendingShow.current && mountedRef.current) setLoading(true)
+    })
     if (hideTimer.current) clearTimeout(hideTimer.current)
     // Failsafe: only matters for navigations where the pathname never changes
     // (hash/search-param changes, aborted navigations). Real route changes
@@ -61,6 +76,7 @@ export function RouteLoadingIndicator() {
   }, [])
 
   const hide = useCallback(() => {
+    pendingShow.current = false
     if (hideTimer.current) {
       clearTimeout(hideTimer.current)
       hideTimer.current = null
