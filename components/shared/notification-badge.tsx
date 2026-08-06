@@ -4,7 +4,7 @@ import { NotificationBell } from "@/components/shared/notification-bell"
 
 export async function NotificationBadge({
   href,
-  size = "icon",
+  size = "icon-sm",
 }: {
   href: string
   size?: "icon" | "icon-sm"

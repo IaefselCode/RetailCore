@@ -16,11 +16,11 @@ export function ThemeToggle() {
       aria-label="Toggle theme"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       className={cn(
-        buttonVariants({ variant: "ghost", size: "icon" }),
+        buttonVariants({ variant: "ghost", size: "icon-sm" }),
         "shrink-0"
       )}
     >
-      {isDark ? <Sun className="size-5" /> : <Moon className="size-5" />}
+      {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
     </button>
   )
 }
