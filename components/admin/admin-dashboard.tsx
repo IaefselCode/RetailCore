@@ -16,6 +16,7 @@ import {
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody } from "@/components/ui/table"
 import { AnimateButton } from "@/components/ui/animate-button"
 
 function getGreetingKey(hour: number) {
@@ -26,21 +27,23 @@ function getGreetingKey(hour: number) {
 
 interface AdminDashboardProps {
   firstName: string | null
-  values: {
+  kpiSlots: {
     todaySales: ReactNode
     ordersToday: ReactNode
     monthRevenue: ReactNode
     productCount: ReactNode
   }
-  recentSalesSection: ReactNode
-  lowStockSection: ReactNode
+  recentSalesHeader: ReactNode
+  recentSalesRows: ReactNode
+  lowStockItems: ReactNode
 }
 
 export function AdminDashboard({
   firstName,
-  values,
-  recentSalesSection,
-  lowStockSection,
+  kpiSlots,
+  recentSalesHeader,
+  recentSalesRows,
+  lowStockItems,
 }: AdminDashboardProps) {
   const t = useTranslations("dashboard")
   const greeting = t(getGreetingKey(new Date().getHours()))
@@ -48,25 +51,25 @@ export function AdminDashboard({
   const kpis = [
     {
       label: "Today's Sales",
-      value: values.todaySales,
+      value: kpiSlots.todaySales,
       icon: DollarSign,
       hint: "Completed sales today",
     },
     {
       label: "Orders Today",
-      value: values.ordersToday,
+      value: kpiSlots.ordersToday,
       icon: ShoppingCart,
       hint: "Invoices issued today",
     },
     {
       label: "This Month Revenue",
-      value: values.monthRevenue,
+      value: kpiSlots.monthRevenue,
       icon: TrendingUp,
       hint: "Completed sales this month",
     },
     {
       label: "Active Products",
-      value: values.productCount,
+      value: kpiSlots.productCount,
       icon: Package,
       hint: "Products in catalog",
     },
@@ -135,7 +138,14 @@ export function AdminDashboard({
               </Link>
             </AnimateButton>
           </CardHeader>
-          {recentSalesSection}
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                {recentSalesHeader}
+                <TableBody>{recentSalesRows}</TableBody>
+              </Table>
+            </div>
+          </CardContent>
         </Card>
 
         <Card>
@@ -146,7 +156,7 @@ export function AdminDashboard({
             <CardDescription>{t("productsBelowReorderLevel")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {lowStockSection}
+            {lowStockItems}
             <div className="pt-2">
               <AnimateButton asChild variant="outline" size="sm" className="w-full">
                 <Link href="/admin/inventory">

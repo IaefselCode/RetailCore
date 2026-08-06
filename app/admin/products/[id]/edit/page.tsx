@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
 import { notFound } from "next/navigation"
 import { EditProductForm } from "@/components/admin/edit-product-form"
-import { SkeletonForm } from "@/components/shared/skeletons"
+import { FormSkeleton } from "@/components/shared/skeleton-primitives"
 
 export const metadata = { title: "Edit Product | RetailCore" }
 
@@ -16,7 +16,7 @@ export default async function EditProductPage({
   const { id } = await params
 
   return (
-    <Suspense fallback={<SkeletonForm fields={4} />}>
+    <Suspense fallback={<FormSkeleton fields={4} />}>
       <EditProductContent id={id} />
     </Suspense>
   )
@@ -46,4 +46,3 @@ async function EditProductContent({ id }: { id: string }) {
     />
   )
 }
-

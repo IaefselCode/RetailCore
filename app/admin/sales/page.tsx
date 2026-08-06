@@ -7,9 +7,8 @@ import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonStat } from "@/components/shared/skeletons"
 import { formatMoney } from "@/lib/money"
+import { SkeletonStat, TableRowsSkeleton } from "@/components/shared/skeleton-primitives"
 
 export const metadata = { title: "Sales | RetailCore" }
 
@@ -67,7 +66,45 @@ async function TransactionsTodayValue() {
   return <>{count}</>
 }
 
-async function RecentTransactionsSection() {
+function RecentTransactionsSection() {
+  return (
+    <Card>
+      <CardHeader><CardTitle>Recent Transactions</CardTitle></CardHeader>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Invoice</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Shop</TableHead>
+                <TableHead>Items</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Payment</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <Suspense
+                fallback={
+                  <TableRowsSkeleton
+                    rows={8}
+                    columns={["w-24", "w-20", "w-24", "w-8", "w-16", "w-16", "w-24", "w-20"]}
+                  />
+                }
+              >
+                <RecentTransactionsRows />
+              </Suspense>
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+async function RecentTransactionsRows() {
   const recentSales = await prisma.sale.findMany({
     orderBy: { createdAt: "desc" },
     take: 10,
@@ -78,74 +115,37 @@ async function RecentTransactionsSection() {
   })
 
   return (
-    <Card>
-      <CardHeader><CardTitle>Recent Transactions</CardTitle></CardHeader>
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Invoice</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Shop</TableHead>
-              <TableHead>Items</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Payment</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {recentSales.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
-                  No sales yet
-                </TableCell>
-              </TableRow>
-            )}
-            {recentSales.map((sale) => {
-              const itemCount = sale.items.reduce((sum, i) => sum + i.quantity, 0)
-              return (
-                <TableRow key={sale.id} className="transition-colors hover:bg-muted/50">
-                  <TableCell className="font-mono text-xs">{sale.invoiceNo}</TableCell>
-                  <TableCell>{sale.customerName ?? "—"}</TableCell>
-                  <TableCell>{sale.shop.name}</TableCell>
-                  <TableCell>{itemCount}</TableCell>
-                  <TableCell className="font-medium">{formatMoney(sale.total)}</TableCell>
-                  <TableCell>{sale.paymentMethod ?? "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {new Date(sale.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusBadge[sale.status] ?? "default"}>{sale.status}</Badge>
-                  </TableCell>
-                </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
-      </div>
-    </Card>
+    <>
+      {recentSales.length === 0 && (
+        <TableRow>
+          <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
+            No sales yet
+          </TableCell>
+        </TableRow>
+      )}
+      {recentSales.map((sale) => {
+        const itemCount = sale.items.reduce((sum, i) => sum + i.quantity, 0)
+        return (
+          <TableRow key={sale.id} className="transition-colors hover:bg-muted/50">
+            <TableCell className="font-mono text-xs">{sale.invoiceNo}</TableCell>
+            <TableCell>{sale.customerName ?? "—"}</TableCell>
+            <TableCell>{sale.shop.name}</TableCell>
+            <TableCell>{itemCount}</TableCell>
+            <TableCell className="font-medium">{formatMoney(sale.total)}</TableCell>
+            <TableCell>{sale.paymentMethod ?? "—"}</TableCell>
+            <TableCell className="text-muted-foreground">
+              {new Date(sale.createdAt).toLocaleDateString()}
+            </TableCell>
+            <TableCell>
+              <Badge variant={statusBadge[sale.status] ?? "default"}>{sale.status}</Badge>
+            </TableCell>
+          </TableRow>
+        )
+      })}
+    </>
   )
 }
 
-function RecentTransactionsSkeleton() {
-  return (
-    <Card>
-      <CardHeader>
-        <Skeleton className="h-5 w-40" />
-      </CardHeader>
-      <div className="space-y-3 p-4">
-        {Array.from({ length: 6 }).map((_, r) => (
-          <div key={r} className="grid grid-cols-8 gap-4">
-            {Array.from({ length: 8 }).map((_, c) => (
-              <Skeleton key={c} className="h-4" />
-            ))}
-          </div>
-        ))}
-      </div>
-    </Card>
-  )
-}
 export default async function SalesPage() {
   await requireRole("ADMIN")
 
@@ -208,10 +208,7 @@ export default async function SalesPage() {
         </Card>
       </div>
 
-      <Suspense fallback={<RecentTransactionsSkeleton />}>
-        <RecentTransactionsSection />
-      </Suspense>
+      <RecentTransactionsSection />
     </div>
   )
 }
-

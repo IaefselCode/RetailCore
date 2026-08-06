@@ -5,8 +5,13 @@ import Link from "next/link"
 import { CirclePlus, Package } from "lucide-react"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { SkeletonKpiGrid, SkeletonTable } from "@/components/shared/skeletons"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ProductsTable } from "@/components/admin/products-table"
+import {
+  SearchBarSkeleton,
+  SkeletonStat,
+  SkeletonTable,
+} from "@/components/shared/skeleton-primitives"
 
 export const metadata = { title: "Products | RetailCore" }
 
@@ -139,11 +144,38 @@ async function ProductsContent({ searchParams }: { searchParams: SearchParams })
 }
 
 function ProductsSkeleton() {
+  // Mirrors ProductsContent's exact arrangement: KPI cards + toolbar + table.
   return (
     <>
-      <SkeletonKpiGrid count={3} />
-      <SkeletonTable rows={6} cols={7} toolbar />
+      {/* KPI cards (data area) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {["Total Products", "Active", "Inactive"].map((label) => (
+          <Card key={label}>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                <SkeletonStat className="h-7 w-12" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Toolbar: search + 2 selects (mirrors ProductsTable) */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <SearchBarSkeleton className="flex-1 sm:max-w-sm" />
+        <Skeleton className="h-9 w-full rounded-md sm:w-40" />
+        <Skeleton className="h-9 w-full rounded-md sm:w-32" />
+      </div>
+
+      {/* Products table (data area) */}
+      <SkeletonTable
+        rows={6}
+        columns={["w-40", "w-20", "w-20", "w-16", "w-10", "w-16", "w-40"]}
+        headers={["Product", "SKU", "Category", "Price", "Stock", "Status", "Actions"]}
+      />
     </>
   )
 }
-

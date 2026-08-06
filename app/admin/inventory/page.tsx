@@ -5,10 +5,9 @@ import Link from "next/link"
 import { Package, AlertTriangle, XCircle, ShoppingCart, ArrowRightLeft } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonStat } from "@/components/shared/skeletons"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { SkeletonStat, TableRowsSkeleton } from "@/components/shared/skeleton-primitives"
 
 export const metadata = { title: "Inventory | RetailCore" }
 
@@ -42,7 +41,42 @@ async function OverstockedCountValue() {
   return <>{count}</>
 }
 
-async function InventoryTableSection() {
+function InventoryTableSection() {
+  return (
+    <Card>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead>SKU</TableHead>
+                <TableHead>Shop</TableHead>
+                <TableHead>Quantity</TableHead>
+                <TableHead>Min Stock</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <Suspense
+                fallback={
+                  <TableRowsSkeleton
+                    rows={8}
+                    columns={["w-32", "w-20", "w-24", "w-10", "w-8", "w-20"]}
+                  />
+                }
+              >
+                <InventoryRows />
+              </Suspense>
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+async function InventoryRows() {
   const rows = await prisma.inventory.findMany({
     orderBy: [{ shop: { name: "asc" } }, { product: { name: "asc" } }],
     include: {
@@ -52,60 +86,33 @@ async function InventoryTableSection() {
   })
 
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Product</TableHead>
-            <TableHead>SKU</TableHead>
-            <TableHead>Shop</TableHead>
-            <TableHead>Quantity</TableHead>
-            <TableHead>Min Stock</TableHead>
-            <TableHead>Status</TableHead>
+    <>
+      {rows.length === 0 && (
+        <TableRow>
+          <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
+            No inventory records yet
+          </TableCell>
+        </TableRow>
+      )}
+      {rows.map((row) => {
+        const status = stockStatus(row.quantity, row.minStock)
+        return (
+          <TableRow key={row.id} className="transition-colors hover:bg-muted/50">
+            <TableCell className="font-medium">{row.product.name}</TableCell>
+            <TableCell className="text-muted-foreground">{row.product.sku}</TableCell>
+            <TableCell>{row.shop.name}</TableCell>
+            <TableCell className="font-semibold">{row.quantity}</TableCell>
+            <TableCell>{row.minStock}</TableCell>
+            <TableCell>
+              <Badge variant={status.variant}>{status.label}</Badge>
+            </TableCell>
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-                No inventory records yet
-              </TableCell>
-            </TableRow>
-          )}
-          {rows.map((row) => {
-            const status = stockStatus(row.quantity, row.minStock)
-            return (
-              <TableRow key={row.id} className="transition-colors hover:bg-muted/50">
-                <TableCell className="font-medium">{row.product.name}</TableCell>
-                <TableCell className="text-muted-foreground">{row.product.sku}</TableCell>
-                <TableCell>{row.shop.name}</TableCell>
-                <TableCell className="font-semibold">{row.quantity}</TableCell>
-                <TableCell>{row.minStock}</TableCell>
-                <TableCell>
-                  <Badge variant={status.variant}>{status.label}</Badge>
-                </TableCell>
-              </TableRow>
-            )
-          })}
-        </TableBody>
-      </Table>
-    </div>
+        )
+      })}
+    </>
   )
 }
 
-function InventoryTableSkeleton() {
-  return (
-    <div className="space-y-3 p-4">
-      {Array.from({ length: 6 }).map((_, r) => (
-        <div key={r} className="grid grid-cols-6 gap-4">
-          {Array.from({ length: 6 }).map((_, c) => (
-            <Skeleton key={c} className="h-4" />
-          ))}
-        </div>
-      ))}
-    </div>
-  )
-}
 export default async function InventoryPage() {
   await requireRole("ADMIN")
 
@@ -171,11 +178,7 @@ export default async function InventoryPage() {
         </Card>
       </div>
 
-      <Card>
-        <Suspense fallback={<InventoryTableSkeleton />}>
-          <InventoryTableSection />
-        </Suspense>
-      </Card>
+      <InventoryTableSection />
     </div>
   )
 }

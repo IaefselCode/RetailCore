@@ -2,11 +2,9 @@ import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireEmployeeContext } from "@/lib/auth-utils"
 import { EmployeeDashboard } from "@/components/employee/employee-dashboard"
-import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonStat } from "@/components/shared/skeletons"
-import { ActivitiesCard } from "@/components/ui/activities-card"
 import { ShoppingCart } from "lucide-react"
 import { formatMoney } from "@/lib/money"
+import { SkeletonStat, ListSkeleton } from "@/components/shared/skeleton-primitives"
 
 export const metadata = { title: "Dashboard | RetailCore" }
 
@@ -72,7 +70,8 @@ async function StockUnitsValue({ shopId }: { shopId: string }) {
   const agg = await prisma.inventory.aggregate({ where: { shopId }, _sum: { quantity: true } })
   return <>{Number(agg._sum.quantity ?? 0)}</>
 }
-async function RecentSalesSection({ shopId, employeeId }: { shopId: string; employeeId: string }) {
+
+async function ActivityItems({ shopId, employeeId }: { shopId: string; employeeId: string }) {
   const recentSales = await prisma.sale.findMany({
     where: { shopId, employeeId },
     orderBy: { createdAt: "desc" },
@@ -84,24 +83,37 @@ async function RecentSalesSection({ shopId, employeeId }: { shopId: string; empl
     },
   })
 
-  const activities = recentSales.map((sale) => ({
-    icon: <ShoppingCart className="size-5" />,
-    title: sale.invoiceNo,
-    desc: `Processed by you - ${formatMoney(sale.total)}`,
-    time: timeAgo(sale.createdAt.toISOString()),
-  }))
+  if (recentSales.length === 0) {
+    return (
+      <div className="py-8 text-center text-sm text-muted-foreground">
+        No transactions yet
+      </div>
+    )
+  }
 
   return (
-    <ActivitiesCard
-      headerIcon={<ShoppingCart className="size-6 text-gray-500" />}
-      title="Recent Activity"
-      subtitle="Your latest transactions"
-      activities={activities}
-    />
+    <>
+      {recentSales.map((sale) => (
+        <div key={sale.invoiceNo} className="flex items-start gap-3 py-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <ShoppingCart className="size-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium">{sale.invoiceNo}</p>
+            <p className="text-sm text-muted-foreground">
+              Processed by you - {formatMoney(sale.total)}
+            </p>
+          </div>
+          <span className="text-xs text-muted-foreground shrink-0">
+            {timeAgo(sale.createdAt.toISOString())}
+          </span>
+        </div>
+      ))}
+    </>
   )
 }
 
-async function LowStockSection({ shopId }: { shopId: string }) {
+async function LowStockItems({ shopId }: { shopId: string }) {
   const inventory = await prisma.inventory.findMany({
     where: { shopId },
     include: { product: { select: { name: true, sku: true } } },
@@ -139,84 +151,48 @@ async function LowStockSection({ shopId }: { shopId: string }) {
   )
 }
 
-function RecentSalesSkeleton() {
-  return (
-    <div className="space-y-3 rounded-lg p-4">
-      <Skeleton className="h-5 w-40" />
-      <Skeleton className="h-4 w-44" />
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3">
-          <Skeleton className="size-9 rounded-lg" />
-          <div className="flex-1 space-y-1.5">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-3 w-48" />
-          </div>
-          <Skeleton className="h-3 w-16" />
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function LowStockSkeleton() {
-  return (
-    <div className="space-y-3">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="flex items-center justify-between gap-3">
-          <div className="space-y-1.5">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-3 w-24" />
-          </div>
-          <Skeleton className="h-5 w-14" />
-        </div>
-      ))}
-    </div>
-  )
-}
 export default async function EmployeeDashboardPage() {
   const ctx = await requireEmployeeContext()
-
-  const values = {
-    todaySales: (
-      <Suspense fallback={<SkeletonStat />}>
-        <TodaySalesValue shopId={ctx.shopId} />
-      </Suspense>
-    ),
-    ordersToday: (
-      <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
-        <OrdersTodayValue shopId={ctx.shopId} />
-      </Suspense>
-    ),
-    lowStockCount: (
-      <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
-        <LowStockCountValue shopId={ctx.shopId} />
-      </Suspense>
-    ),
-    monthSales: (
-      <Suspense fallback={<SkeletonStat />}>
-        <MonthSalesValue shopId={ctx.shopId} employeeId={ctx.employeeId} />
-      </Suspense>
-    ),
-    stockUnits: (
-      <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
-        <StockUnitsValue shopId={ctx.shopId} />
-      </Suspense>
-    ),
-  }
 
   return (
     <EmployeeDashboard
       firstName={ctx.firstName}
       shopName={ctx.shopName}
-      values={values}
-      recentSalesSection={
-        <Suspense fallback={<RecentSalesSkeleton />}>
-          <RecentSalesSection shopId={ctx.shopId} employeeId={ctx.employeeId} />
+      kpiSlots={{
+        todaySales: (
+          <Suspense fallback={<SkeletonStat />}>
+            <TodaySalesValue shopId={ctx.shopId} />
+          </Suspense>
+        ),
+        ordersToday: (
+          <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
+            <OrdersTodayValue shopId={ctx.shopId} />
+          </Suspense>
+        ),
+        lowStockCount: (
+          <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
+            <LowStockCountValue shopId={ctx.shopId} />
+          </Suspense>
+        ),
+        monthSales: (
+          <Suspense fallback={<SkeletonStat />}>
+            <MonthSalesValue shopId={ctx.shopId} employeeId={ctx.employeeId} />
+          </Suspense>
+        ),
+        stockUnits: (
+          <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
+            <StockUnitsValue shopId={ctx.shopId} />
+          </Suspense>
+        ),
+      }}
+      activityItems={
+        <Suspense fallback={<ListSkeleton rows={5} icon />}>
+          <ActivityItems shopId={ctx.shopId} employeeId={ctx.employeeId} />
         </Suspense>
       }
-      lowStockSection={
-        <Suspense fallback={<LowStockSkeleton />}>
-          <LowStockSection shopId={ctx.shopId} />
+      lowStockItems={
+        <Suspense fallback={<ListSkeleton rows={4} />}>
+          <LowStockItems shopId={ctx.shopId} />
         </Suspense>
       }
     />

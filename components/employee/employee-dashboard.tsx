@@ -31,23 +31,23 @@ function getGreeting(hour: number) {
 interface EmployeeDashboardProps {
   firstName: string
   shopName: string
-  values: {
+  kpiSlots: {
     todaySales: ReactNode
     ordersToday: ReactNode
     lowStockCount: ReactNode
     monthSales: ReactNode
     stockUnits: ReactNode
   }
-  recentSalesSection: ReactNode
-  lowStockSection: ReactNode
+  activityItems: ReactNode
+  lowStockItems: ReactNode
 }
 
 export function EmployeeDashboard({
   firstName,
   shopName,
-  values,
-  recentSalesSection,
-  lowStockSection,
+  kpiSlots,
+  activityItems,
+  lowStockItems,
 }: EmployeeDashboardProps) {
   const t = useTranslations("dashboard")
   const tEmployee = useTranslations("employeeDashboard")
@@ -55,27 +55,27 @@ export function EmployeeDashboard({
   const kpis = [
     {
       title: "Today's Sales",
-      value: values.todaySales,
+      value: kpiSlots.todaySales,
       icon: DollarSign,
       description: shopName,
     },
     {
       title: "Orders Today",
-      value: values.ordersToday,
+      value: kpiSlots.ordersToday,
       icon: ShoppingCart,
       description: "Completed today",
     },
     {
       title: tEmployee("lowStockAlerts"),
-      value: values.lowStockCount,
+      value: kpiSlots.lowStockCount,
       icon: AlertTriangle,
       description: "Below reorder level",
     },
     {
       title: "My Month",
-      value: values.monthSales,
+      value: kpiSlots.monthSales,
       icon: TrendingUp,
-      description: <>{values.stockUnits} units in stock</>,
+      description: <>{kpiSlots.stockUnits} units in stock</>,
     },
   ]
 
@@ -126,14 +126,30 @@ export function EmployeeDashboard({
       </motion.div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {recentSalesSection}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShoppingCart className="size-4" /> {tEmployee("lastTransactions")}
+              </CardTitle>
+              <CardDescription>{tEmployee("recentActivity")}</CardDescription>
+            </CardHeader>
+            <CardContent className="divide-y">
+              {activityItems}
+            </CardContent>
+          </Card>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card>
+          <Card className="h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="size-4 text-amber-500" /> {t("lowStockAlerts")}
@@ -141,7 +157,7 @@ export function EmployeeDashboard({
               <CardDescription>{t("productsBelowReorderLevel")}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">{lowStockSection}</div>
+              <div className="space-y-3">{lowStockItems}</div>
             </CardContent>
           </Card>
         </motion.div>

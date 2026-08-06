@@ -3,11 +3,14 @@ import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
 import { Users, Home, ChevronRight, Plus } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonStat } from "@/components/shared/skeletons"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import Link from "next/link"
 import { EmployeesTable } from "@/components/admin/employees-table"
+import {
+  SearchBarSkeleton,
+  SkeletonStat,
+  SkeletonTable,
+} from "@/components/shared/skeleton-primitives"
 
 export const metadata = { title: "Employee Management | RetailCore" }
 
@@ -26,7 +29,7 @@ async function InactiveEmployeesValue() {
   return <>{count}</>
 }
 
-async function EmployeesTableSection() {
+async function LoadedEmployeesTable() {
   const [employees, shops] = await Promise.all([
     prisma.employee.findMany({
       orderBy: { createdAt: "asc" },
@@ -58,24 +61,20 @@ async function EmployeesTableSection() {
 
   return <EmployeesTable employees={employeeRows} shops={shops} />
 }
-
 function EmployeesTableSkeleton() {
+  // Mirrors EmployeesTable's exact arrangement: search bar + table.
   return (
-    <div className="space-y-3 p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <Skeleton className="h-9 w-full sm:max-w-xs" />
-        <Skeleton className="h-9 w-36" />
-      </div>
-      {Array.from({ length: 6 }).map((_, r) => (
-        <div key={r} className="grid grid-cols-6 gap-4">
-          {Array.from({ length: 6 }).map((_, c) => (
-            <Skeleton key={c} className="h-4" />
-          ))}
-        </div>
-      ))}
+    <div className="space-y-4">
+      <SearchBarSkeleton className="sm:max-w-sm" />
+      <SkeletonTable
+        rows={6}
+        columns={["w-40", "w-24", "w-28", "w-16", "w-24", "w-40"]}
+        headers={["Employee", "Position", "Shop Assignment", "Status", "Hire Date", "Actions"]}
+      />
     </div>
   )
 }
+
 export default async function EmployeesPage() {
   await requireRole("ADMIN")
 
@@ -143,7 +142,7 @@ export default async function EmployeesPage() {
       </div>
 
       <Suspense fallback={<EmployeesTableSkeleton />}>
-        <EmployeesTableSection />
+        <LoadedEmployeesTable />
       </Suspense>
     </div>
   )

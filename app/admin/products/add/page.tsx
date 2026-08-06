@@ -4,7 +4,7 @@ import { requireRole } from "@/lib/auth-utils"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import { AddProductWizard } from "@/components/admin/add-product-wizard"
-import { SkeletonWizard } from "@/components/shared/skeletons"
+import { WizardSkeleton } from "@/components/shared/skeleton-primitives"
 
 export const metadata = { title: "Add Product | RetailCore" }
 
@@ -25,7 +25,7 @@ export default async function AddProductPage() {
         <p className="text-sm text-muted-foreground">Fill in the product details across all steps</p>
       </div>
 
-      <Suspense fallback={<SkeletonWizard steps={3} />}>
+      <Suspense fallback={<WizardSkeleton steps={3} />}>
         <AddProductContent />
       </Suspense>
     </div>
@@ -40,4 +40,3 @@ async function AddProductContent() {
 
   return <AddProductWizard categories={categories} />
 }
-

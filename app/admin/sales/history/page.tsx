@@ -1,9 +1,10 @@
 import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
-import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonTable } from "@/components/shared/skeletons"
 import { SalesHistoryTable } from "@/components/admin/sales-history-table"
+import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonTable } from "@/components/shared/skeleton-primitives"
 
 export const metadata = { title: "Sales History | RetailCore" }
 
@@ -31,6 +32,44 @@ export default async function SalesHistoryPage({
     <Suspense fallback={<SalesHistorySkeleton />}>
       <SalesHistoryContent searchParams={params} page={page} />
     </Suspense>
+  )
+}
+
+function SalesHistorySkeleton() {
+  // Mirrors SalesHistoryTable's exact arrangement: heading + export,
+  // filter bar, table (9 cols), pagination.
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-8 w-48" />
+        </div>
+        <Skeleton className="h-9 w-32" />
+      </div>
+
+      <Card>
+        <CardContent className="flex flex-wrap gap-3 pt-6">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-full rounded-md sm:w-40" />
+          ))}
+        </CardContent>
+      </Card>
+
+      <SkeletonTable
+        rows={10}
+        columns={["w-24", "w-20", "w-24", "w-8", "w-16", "w-16", "w-24", "w-20", "w-16"]}
+        headers={["Invoice", "Customer", "Shop", "Items", "Amount", "Payment", "Date", "Status", "Actions"]}
+      />
+
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-4 w-40" />
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-24" />
+          <Skeleton className="h-9 w-24" />
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -103,31 +142,3 @@ async function SalesHistoryContent({
     />
   )
 }
-
-function SalesHistorySkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-48" />
-        <Skeleton className="h-7 w-48" />
-      </div>
-
-      <div className="flex flex-wrap gap-3 p-4">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-9 w-40" />
-        ))}
-      </div>
-
-      <SkeletonTable rows={8} cols={8} />
-
-      <div className="flex items-center justify-between">
-        <Skeleton className="h-4 w-40" />
-        <div className="flex gap-2">
-          <Skeleton className="h-9 w-24" />
-          <Skeleton className="h-9 w-24" />
-        </div>
-      </div>
-    </div>
-  )
-}
-

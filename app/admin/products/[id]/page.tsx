@@ -3,7 +3,10 @@ import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
 import { notFound } from "next/navigation"
 import { ProductDetailActions } from "@/components/admin/product-detail-actions"
-import { SkeletonDetail } from "@/components/shared/skeletons"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Table, TableHeader, TableBody, TableHead, TableRow } from "@/components/ui/table"
+import { TableRowsSkeleton } from "@/components/shared/skeleton-primitives"
 
 export const metadata = { title: "Product Details | RetailCore" }
 
@@ -16,7 +19,7 @@ export default async function ProductDetailPage({
   const { id } = await params
 
   return (
-    <Suspense fallback={<SkeletonDetail icon />}>
+    <Suspense fallback={<ProductDetailSkeleton />}>
       <ProductDetailContent id={id} />
     </Suspense>
   )
@@ -57,3 +60,51 @@ async function ProductDetailContent({ id }: { id: string }) {
   return <ProductDetailActions product={data} />
 }
 
+function ProductDetailSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <Skeleton className="h-9 w-36" />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i}>
+            <CardHeader>
+              <Skeleton className="h-4 w-24" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-7 w-16" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-40" />
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {["Shop", "Stock", "Min Stock"].map((h) => (
+                  <TableHead key={h}>
+                    <Skeleton className="h-4 w-16" />
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRowsSkeleton rows={4} columns={["w-32", "w-16", "w-12"]} />
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

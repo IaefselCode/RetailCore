@@ -2,8 +2,7 @@ import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
 import { StockDistributionForm } from "@/components/admin/stock-distribution-form"
-import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonTable } from "@/components/shared/skeletons"
+import { FormSkeleton } from "@/components/shared/skeleton-primitives"
 
 export const metadata = { title: "Stock Distribution | RetailCore" }
 
@@ -11,7 +10,7 @@ export default async function StockDistributionPage() {
   await requireRole("ADMIN")
 
   return (
-    <Suspense fallback={<StockDistributionSkeleton />}>
+    <Suspense fallback={<FormSkeleton fields={4} />}>
       <StockDistributionContent />
     </Suspense>
   )
@@ -50,30 +49,3 @@ async function StockDistributionContent() {
     />
   )
 }
-
-function StockDistributionSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="space-y-4 rounded-lg p-6">
-        <Skeleton className="h-5 w-40" />
-        <div className="grid gap-4 sm:grid-cols-2">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="space-y-2">
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-9 w-full" />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-4 rounded-lg p-6">
-        <Skeleton className="h-5 w-32" />
-        <SkeletonTable rows={3} cols={4} />
-        <div className="flex justify-end">
-          <Skeleton className="h-9 w-36" />
-        </div>
-      </div>
-    </div>
-  )
-}
-

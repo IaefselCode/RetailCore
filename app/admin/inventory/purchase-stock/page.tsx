@@ -2,8 +2,7 @@ import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
 import { PurchaseStockForm } from "@/components/admin/purchase-stock-form"
-import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonTable } from "@/components/shared/skeletons"
+import { FormSkeleton } from "@/components/shared/skeleton-primitives"
 
 export const metadata = { title: "Purchase Stock | RetailCore" }
 
@@ -11,7 +10,7 @@ export default async function PurchaseStockPage() {
   await requireRole("ADMIN")
 
   return (
-    <Suspense fallback={<PurchaseStockSkeleton />}>
+    <Suspense fallback={<FormSkeleton fields={4} />}>
       <PurchaseStockContent />
     </Suspense>
   )
@@ -43,41 +42,3 @@ async function PurchaseStockContent() {
     />
   )
 }
-
-function PurchaseStockSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="space-y-4 rounded-lg p-6">
-        <Skeleton className="h-5 w-32" />
-        <div className="grid gap-4 sm:grid-cols-2">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="space-y-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-9 w-full" />
-            </div>
-          ))}
-        </div>
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-16" />
-          <Skeleton className="h-9 w-full" />
-        </div>
-      </div>
-
-      <div className="space-y-4 rounded-lg p-6">
-        <Skeleton className="h-5 w-24" />
-        <div className="flex flex-wrap gap-2">
-          <Skeleton className="h-9 w-64" />
-          <Skeleton className="h-9 w-24" />
-          <Skeleton className="h-9 w-32" />
-          <Skeleton className="h-9 w-20" />
-        </div>
-        <SkeletonTable rows={3} cols={5} />
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-4 w-40" />
-          <Skeleton className="h-9 w-36" />
-        </div>
-      </div>
-    </div>
-  )
-}
-

@@ -4,7 +4,7 @@ import { requireRole } from "@/lib/auth-utils"
 import { Home, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { AddEmployeeForm } from "@/components/admin/add-employee-form"
-import { SkeletonForm } from "@/components/shared/skeletons"
+import { FormSkeleton } from "@/components/shared/skeleton-primitives"
 
 export const metadata = { title: "Add Employee | RetailCore" }
 
@@ -27,7 +27,7 @@ export default async function AddEmployeePage() {
         <p className="text-sm text-muted-foreground">Create a staff account and assign them to a shop</p>
       </div>
 
-      <Suspense fallback={<SkeletonForm fields={4} />}>
+      <Suspense fallback={<FormSkeleton fields={4} />}>
         <AddEmployeeContent />
       </Suspense>
     </div>
@@ -43,4 +43,3 @@ async function AddEmployeeContent() {
 
   return <AddEmployeeForm shops={shops} />
 }
-
