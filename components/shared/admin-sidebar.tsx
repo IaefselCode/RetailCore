@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { signOut, useSession } from "next-auth/react"
 import {
   LayoutDashboard,
@@ -31,15 +32,15 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 const navItems = [
-  { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-  { label: "Shops", href: "/admin/shops", icon: Store },
-  { label: "Employees", href: "/admin/employees", icon: Users },
-  { label: "Products", href: "/admin/products", icon: Package },
-  { label: "Inventory", href: "/admin/inventory", icon: Warehouse },
-  { label: "Sales", href: "/admin/sales", icon: CreditCard },
-  { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { label: "Reports", href: "/admin/reports", icon: FileText },
-  { label: "Audit Log", href: "/admin/audit", icon: ScrollText },
+  { labelKey: "dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  { labelKey: "shops", href: "/admin/shops", icon: Store },
+  { labelKey: "employees", href: "/admin/employees", icon: Users },
+  { labelKey: "products", href: "/admin/products", icon: Package },
+  { labelKey: "inventory", href: "/admin/inventory", icon: Warehouse },
+  { labelKey: "sales", href: "/admin/sales", icon: CreditCard },
+  { labelKey: "analytics", href: "/admin/analytics", icon: BarChart3 },
+  { labelKey: "reports", href: "/admin/reports", icon: FileText },
+  { labelKey: "auditLog", href: "/admin/audit", icon: ScrollText },
 ]
 
 interface AdminSidebarProps {
@@ -51,6 +52,8 @@ export function AdminSidebar({ onNavClick }: AdminSidebarProps) {
   const router = useRouter()
   const { data: session } = useSession()
   const user = session?.user ?? null
+  const tn = useTranslations("nav")
+  const tc = useTranslations("common")
 
   const initials = (() => {
     if (!user) return "AU"
@@ -83,7 +86,7 @@ export function AdminSidebar({ onNavClick }: AdminSidebarProps) {
               )}
             >
               <Icon className="size-4 shrink-0" />
-              {item.label}
+              {tn(item.labelKey)}
             </Link>
           )
         })}
@@ -101,7 +104,7 @@ export function AdminSidebar({ onNavClick }: AdminSidebarProps) {
           )}
         >
           <Settings className="size-4 shrink-0" />
-          Settings
+          {tn("settings")}
         </Link>
       </div>
       <Separator />
@@ -118,16 +121,16 @@ export function AdminSidebar({ onNavClick }: AdminSidebarProps) {
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" side="right" className="w-48">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel>{tn("profile")}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => router.push("/admin/profile")}>
               <User className="size-4" />
-              Profile
+              {tn("profile")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
               <LogOut className="size-4" />
-              Sign out
+              {tc("signOut")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

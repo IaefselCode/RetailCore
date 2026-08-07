@@ -150,6 +150,63 @@ async function RecentSalesContent() {
   )
 }
 
+const MONTH_KEYS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+async function AnalyticsSection() {
+  const t = await getTranslations("dashboard")
+  const twelveMonthsAgo = new Date()
+  twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11, 1)
+  twelveMonthsAgo.setHours(0, 0, 0, 0)
+
+  const sales = await prisma.sale.findMany({
+    where: {
+      status: "COMPLETED",
+      createdAt: { gte: twelveMonthsAgo },
+    },
+    select: { total: true, createdAt: true },
+  })
+
+  // Bucket completed sales by month for the last 12 months.
+  const buckets = new Map<string, number>()
+  let revenue = 0
+  for (const sale of sales) {
+    revenue += Number(sale.total)
+    const key = `${sale.createdAt.getFullYear()}-${sale.createdAt.getMonth()}`
+    buckets.set(key, (buckets.get(key) ?? 0) + Number(sale.total))
+  }
+
+  // Best month over the trailing 12 months.
+  let bestLabel = "—"
+  let bestValue = 0
+  const now = new Date()
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const value = buckets.get(`${d.getFullYear()}-${d.getMonth()}`) ?? 0
+    if (value > bestValue) {
+      bestValue = value
+      bestLabel = `${MONTH_KEYS[d.getMonth()]} ${d.getFullYear()}`
+    }
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div>
+        <p className="text-xs text-muted-foreground">{t("analyticsRevenue")}</p>
+        <p className="text-xl font-semibold">{formatMoney(revenue)}</p>
+      </div>
+      <div>
+        <p className="text-xs text-muted-foreground">{t("analyticsOrders")}</p>
+        <p className="text-xl font-semibold">{sales.length.toLocaleString()}</p>
+      </div>
+      <div>
+        <p className="text-xs text-muted-foreground">{t("analyticsBestMonth")}</p>
+        <p className="text-xl font-semibold">{bestLabel}</p>
+        <p className="text-xs text-muted-foreground">{formatMoney(bestValue)}</p>
+      </div>
+    </div>
+  )
+}
+
 async function LowStockItems() {
   const t = await getTranslations("dashboard")
   const inventory = await prisma.inventory.findMany({
@@ -277,6 +334,22 @@ export default async function AdminDashboardPage() {
       lowStockItems={
         <Suspense fallback={<ListSkeleton rows={5} />}>
           <LowStockItems />
+        </Suspense>
+      }
+      analyticsSection={
+        <Suspense
+          fallback={
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-5 w-28" />
+                </div>
+              ))}
+            </div>
+          }
+        >
+          <AnalyticsSection />
         </Suspense>
       }
     />

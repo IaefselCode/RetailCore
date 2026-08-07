@@ -130,7 +130,13 @@
     "colAmount": "Amount",
     "colStatus": "Status",
     "noSales": "No sales yet",
-    "healthyStock": "All stock levels are healthy"
+    "healthyStock": "All stock levels are healthy",
+    "analyticsTitle": "Analytics",
+    "analyticsDesc": "Revenue performance over the last 12 months",
+    "viewAnalytics": "View full analytics",
+    "analyticsRevenue": "12-Month Revenue",
+    "analyticsOrders": "Orders (12 months)",
+    "analyticsBestMonth": "Best Month"
   },
   "employeeDashboard": {
     "today": "Today",
@@ -259,7 +265,8 @@
     "deleteConfirmTitle": "Delete Employee?",
     "deleteConfirmDescription": "This will permanently delete this employee and their user account. Their past sales will be kept but no longer linked to them. This action cannot be undone.",
     "deleteConfirmButton": "Delete Employee",
-    "deleted": "Employee deleted."
+    "deleted": "Employee deleted.",
+    "allShops": "All Shops"
   },
   "inventory": {
     "title": "Inventory Management",
@@ -299,7 +306,10 @@
     "colStatus": "Status",
     "colActions": "Actions",
     "empty": "No products found",
-    "view": "View"
+    "view": "View",
+    "deleteConfirmTitle": "Delete Product?",
+    "deleteConfirmDescription": "This will permanently delete this product and its stock records. Products with sales history cannot be deleted — deactivate them instead. This action cannot be undone.",
+    "deleteConfirmButton": "Delete Product"
   },
   "sales": {
     "title": "Sales Management",
@@ -369,7 +379,19 @@
     "failedLogin": "Failed login",
     "resetRequested": "Reset requested",
     "passwordChanged": "Password changed",
-    "adminReset": "Admin reset"
+    "adminReset": "Admin reset",
+    "colActions": "Actions",
+    "export": "Export CSV",
+    "exported": "Logs exported.",
+    "exportFailed": "Export failed.",
+    "clearAll": "Clear All",
+    "clearAllTitle": "Clear all logs?",
+    "clearAllDescription": "This will permanently delete every authentication log entry. This action cannot be undone.",
+    "clearAllConfirm": "Clear All",
+    "delete": "Delete entry",
+    "deleteTitle": "Delete this log entry?",
+    "deleteDescription": "This will permanently delete this authentication log entry. This action cannot be undone.",
+    "deleteConfirm": "Delete"
   },
   "employeeInventory": {
     "title": "Inventory",
@@ -616,10 +638,6 @@
   "analytics": {
     "breadcrumb": "Analytics",
     "title": "Business Analytics",
-    "last7": "Last 7 days",
-    "last30": "Last 30 days",
-    "last90": "Last 90 days",
-    "lastYear": "Last year",
     "revenue": "Revenue",
     "orders": "Orders",
     "conversionRate": "Conversion Rate",
@@ -634,7 +652,19 @@
     "colRevenue": "Revenue",
     "colOrders": "Orders",
     "colGrowth": "Growth",
-    "exportReport": "Export Report"
+    "exportReport": "Export Report",
+    "topShop": "Top Shop",
+    "revenueSeries": "Revenue",
+    "profitSeries": "Profit",
+    "granularityDaily": "Daily",
+    "granularityWeekly": "Weekly",
+    "granularityMonthly": "Monthly",
+    "granularityYearly": "Yearly",
+    "dailyPerformance": "Daily revenue and profit",
+    "weeklyPerformance": "Weekly revenue and profit",
+    "yearlyPerformance": "Yearly revenue and profit",
+    "chartBar": "Bar chart",
+    "chartLine": "Line chart"
   },
   "reports": {
     "breadcrumb": "Reports",

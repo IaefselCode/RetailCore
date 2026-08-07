@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ServerTable, createServerColumnHelper } from "@/components/shared/server-table"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AuditToolbar, DeleteLogButton } from "@/components/admin/audit-actions"
 
 const EVENT_KEYS: Record<string, string> = {
   login_success: "login",
@@ -16,6 +17,15 @@ const EVENT_KEYS: Record<string, string> = {
 }
 
 interface AuditRow {
+  id: string
+  createdAt: Date
+  event: string
+  email: string
+  ip: string | null
+  userAgent: string | null
+}
+
+interface AuditLogData {
   id: string
   createdAt: Date
   event: string
@@ -46,8 +56,9 @@ async function AuditTableSection() {
   const t = await getTranslations("audit")
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between gap-3">
         <CardTitle className="text-base">{t("authEvents")}</CardTitle>
+        <AuditToolbar />
       </CardHeader>
       <CardContent className="p-0">
         <Suspense
@@ -105,6 +116,11 @@ async function AuditTableBody() {
           {(getValue() as string | null) ?? "—"}
         </span>
       ),
+    }),
+    auditHelper.display({
+      id: "actions",
+      header: t("colActions"),
+      cell: ({ row }) => <DeleteLogButton id={(row.original as AuditLogData).id} />,
     }),
   ])
 

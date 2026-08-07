@@ -115,7 +115,9 @@ export function DataTable<T extends RowData>({
     initialState: {
       sorting: initialSorting,
       globalFilter: initialGlobalFilter,
-      columnFilters: initialColumnFilters,
+      // Always initialize columnFilters to an array — TanStack v9's
+      // setFilterValue does `old.find(...)` and crashes when it's undefined.
+      columnFilters: initialColumnFilters ?? [],
       pagination: { pageIndex: 0, pageSize },
     },
     getColumnCanGlobalFilter: (column) => column.id !== "actions",

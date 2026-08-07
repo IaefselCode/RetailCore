@@ -12,6 +12,7 @@ import {
   Plus,
   Store,
   ShoppingBag,
+  BarChart3,
 } from "lucide-react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
@@ -34,6 +35,7 @@ interface AdminDashboardProps {
   }
   recentSalesContent: ReactNode
   lowStockItems: ReactNode
+  analyticsSection: ReactNode
 }
 
 export function AdminDashboard({
@@ -41,6 +43,7 @@ export function AdminDashboard({
   kpiSlots,
   recentSalesContent,
   lowStockItems,
+  analyticsSection,
 }: AdminDashboardProps) {
   const t = useTranslations("dashboard")
   const greeting = t(getGreetingKey(new Date().getHours()))
@@ -117,6 +120,23 @@ export function AdminDashboard({
           </motion.div>
         ))}
       </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-3">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="size-4 text-primary" /> {t("analyticsTitle")}
+            </CardTitle>
+            <CardDescription>{t("analyticsDesc")}</CardDescription>
+          </div>
+          <AnimateButton asChild variant="ghost" size="sm">
+            <Link href="/admin/analytics">
+              {t("viewAnalytics")} <ArrowRight className="size-4" />
+            </Link>
+          </AnimateButton>
+        </CardHeader>
+        <CardContent>{analyticsSection}</CardContent>
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">

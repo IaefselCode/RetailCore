@@ -130,7 +130,13 @@
     "colAmount": "Kiasi",
     "colStatus": "Hali",
     "noSales": "Hakuna mauzo bado",
-    "healthyStock": "Viwango vyote vya hisa ni sawa"
+    "healthyStock": "Viwango vyote vya hisa ni sawa",
+    "analyticsTitle": "Uchambuzi",
+    "analyticsDesc": "Utendaji wa mapato kwa miezi 12 iliyopita",
+    "viewAnalytics": "Angalia uchambuzi kamili",
+    "analyticsRevenue": "Mapato ya Miezi 12",
+    "analyticsOrders": "Maagizo (Miezi 12)",
+    "analyticsBestMonth": "Mwezi Bora"
   },
   "employeeDashboard": {
     "today": "Leo",
@@ -240,7 +246,8 @@
     "deleteConfirmTitle": "Futa Mfanyakazi?",
     "deleteConfirmDescription": "Hili litafuta mfanyakazi huyu kabisa pamoja na akaunti yake. Mauzo yake ya zamani yatahifadhiwa lakini hayatahusishwa naye tena. Hatua hii haiwezi kutenduliwa.",
     "deleteConfirmButton": "Futa Mfanyakazi",
-    "deleted": "Mfanyakazi amefutwa."
+    "deleted": "Mfanyakazi amefutwa.",
+    "allShops": "Maduka Yote"
   },
   "inventory": {
     "title": "Usimamizi wa Hisa",
@@ -280,7 +287,10 @@
     "colStatus": "Hali",
     "colActions": "Vitendo",
     "empty": "Hakuna bidhaa zilizopatikana",
-    "view": "Angalia"
+    "view": "Angalia",
+    "deleteConfirmTitle": "Futa Bidhaa?",
+    "deleteConfirmDescription": "Hii itafuta bidhaa hii kabisa pamoja na rekodi zake za hisa. Bidhaa zilizo na historia ya mauzo haziwezi kufutwa — zima badala yake. Hatua hii haiwezi kutenduliwa.",
+    "deleteConfirmButton": "Futa Bidhaa"
   },
   "sales": {
     "title": "Usimamizi wa Mauzo",
@@ -350,7 +360,19 @@
     "failedLogin": "Kuingia kumeshindikana",
     "resetRequested": "Uwekaji upya umeombwa",
     "passwordChanged": "Nenosiri limebadilishwa",
-    "adminReset": "Uwekaji upya wa msimamizi"
+    "adminReset": "Uwekaji upya wa msimamizi",
+    "colActions": "Vitendo",
+    "export": "Hamisha CSV",
+    "exported": "Kumbukumbu zimehamishwa.",
+    "exportFailed": "Uhamisho umeshindikana.",
+    "clearAll": "Futa Zote",
+    "clearAllTitle": "Futa kumbukumbu zote?",
+    "clearAllDescription": "Hii itafuta kabisa kila kumbukumbu ya matukio ya kuingia. Hatua hii haiwezi kutenduliwa.",
+    "clearAllConfirm": "Futa Zote",
+    "delete": "Futa ingizo",
+    "deleteTitle": "Futa kumbukumbu hii?",
+    "deleteDescription": "Hii itafuta kabisa kumbukumbu hii ya matukio ya kuingia. Hatua hii haiwezi kutenduliwa.",
+    "deleteConfirm": "Futa"
   },
   "employeeInventory": {
     "title": "Hisa",
@@ -597,10 +619,6 @@
   "analytics": {
     "breadcrumb": "Uchambuzi",
     "title": "Uchambuzi wa Biashara",
-    "last7": "Siku 7 zilizopita",
-    "last30": "Siku 30 zilizopita",
-    "last90": "Siku 90 zilizopita",
-    "lastYear": "Mwaka uliopita",
     "revenue": "Mapato",
     "orders": "Maagizo",
     "conversionRate": "Kiwango cha Ubadilishaji",
@@ -615,7 +633,19 @@
     "colRevenue": "Mapato",
     "colOrders": "Maagizo",
     "colGrowth": "Ukuaji",
-    "exportReport": "Hamisha Ripoti"
+    "exportReport": "Hamisha Ripoti",
+    "topShop": "Duka Bora",
+    "revenueSeries": "Mapato",
+    "profitSeries": "Faida",
+    "granularityDaily": "Kila Siku",
+    "granularityWeekly": "Kila Wiki",
+    "granularityMonthly": "Kila Mwezi",
+    "granularityYearly": "Kila Mwaka",
+    "dailyPerformance": "Mapato na faida ya kila siku",
+    "weeklyPerformance": "Mapato na faida ya kila wiki",
+    "yearlyPerformance": "Mapato na faida ya kila mwaka",
+    "chartBar": "Chati ya pau",
+    "chartLine": "Chati ya mstari"
   },
   "reports": {
     "breadcrumb": "Ripoti",

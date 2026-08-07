@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useSession } from "next-auth/react"
 import {
   LayoutDashboard,
@@ -19,23 +20,24 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 
 const navItems = [
-  { label: "Dashboard", href: "/employee/dashboard", icon: LayoutDashboard },
-  { label: "Inventory", href: "/employee/inventory", icon: Warehouse },
-  { label: "Products", href: "/employee/products", icon: Package },
-  { label: "Record Sale", href: "/employee/record-sale", icon: ShoppingCart },
-  { label: "Sales History", href: "/employee/sales-history", icon: History },
+  { labelKey: "dashboard", href: "/employee/dashboard", icon: LayoutDashboard },
+  { labelKey: "inventory", href: "/employee/inventory", icon: Warehouse },
+  { labelKey: "products", href: "/employee/products", icon: Package },
+  { labelKey: "recordSale", href: "/employee/record-sale", icon: ShoppingCart },
+  { labelKey: "salesHistory", href: "/employee/sales-history", icon: History },
 ]
 
 const bottomItems = [
-  { label: "Notifications", href: "/employee/notifications", icon: Bell },
-  { label: "Profile", href: "/employee/profile", icon: User },
-  { label: "Settings", href: "/employee/settings", icon: Settings },
+  { labelKey: "notifications", href: "/employee/notifications", icon: Bell },
+  { labelKey: "profile", href: "/employee/profile", icon: User },
+  { labelKey: "settings", href: "/employee/settings", icon: Settings },
 ]
 
 export function EmployeeSidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
   const user = session?.user ?? null
+  const tn = useTranslations("nav")
 
   const initials = (() => {
     if (!user) return "EM"
@@ -72,7 +74,7 @@ export function EmployeeSidebar() {
               )}
             >
               <Icon className="size-4 shrink-0" />
-              {item.label}
+              {tn(item.labelKey)}
             </Link>
           )
         })}
@@ -96,7 +98,7 @@ export function EmployeeSidebar() {
               )}
             >
               <Icon className="size-4 shrink-0" />
-              {item.label}
+              {tn(item.labelKey)}
             </Link>
           )
         })}

@@ -1,13 +1,24 @@
 "use client"
 
-import { useTransition } from "react"
+import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
-import { ChevronRight } from "lucide-react"
+import { ChevronRight, Trash2, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import {
   Select,
   SelectContent,
@@ -20,7 +31,7 @@ import {
   DataTable,
   createAppColumnHelper,
 } from "@/components/shared/data-table"
-import { toggleProductActive } from "@/lib/products-actions"
+import { toggleProductActive, deleteProduct } from "@/lib/products-actions"
 import { formatMoney } from "@/lib/money"
 
 export interface ProductRow {
@@ -58,7 +69,26 @@ export function ProductsTable({
 }) {
   const router = useRouter()
   const t = useTranslations("products")
+  const tc = useTranslations("common")
+  const [deleteTarget, setDeleteTarget] = useState<ProductRow | null>(null)
   const [pending, startTransition] = useTransition()
+
+  function confirmDelete() {
+    if (!deleteTarget) return
+    const fd = new FormData()
+    fd.append("id", deleteTarget.id)
+    startTransition(async () => {
+      const result = await deleteProduct(fd)
+      if (result.success) {
+        toast.success(result.message)
+        setDeleteTarget(null)
+        router.refresh()
+      } else {
+        toast.error(result.message)
+        setDeleteTarget(null)
+      }
+    })
+  }
 
   function toggle(product: ProductRow) {
     const fd = new FormData()
@@ -125,6 +155,16 @@ export function ProductsTable({
               <ChevronRight className="size-3" />
             </Link>
           </AnimateButton>
+          <AnimateButton
+            size="icon-sm"
+            variant="ghost"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => setDeleteTarget(row.original)}
+            disabled={pending}
+            aria-label={t("deleteConfirmTitle")}
+          >
+            <Trash2 className="size-4" />
+          </AnimateButton>
           <Switch
             checked={row.original.isActive}
             onCheckedChange={() => toggle(row.original)}
@@ -136,6 +176,7 @@ export function ProductsTable({
   ])
 
   return (
+    <>
     <DataTable
       data={products}
       columns={columns}
@@ -201,5 +242,24 @@ export function ProductsTable({
       empty={t("empty")}
       className="mt-4"
     />
+
+    <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <AlertDialogContent size="sm">
+        <AlertDialogHeader>
+          <AlertDialogMedia>
+            <AlertTriangle className="size-8 text-destructive" />
+          </AlertDialogMedia>
+          <AlertDialogTitle>{t("deleteConfirmTitle")}</AlertDialogTitle>
+          <AlertDialogDescription>{t("deleteConfirmDescription")}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => setDeleteTarget(null)}>{tc("cancel")}</AlertDialogCancel>
+          <AlertDialogAction variant="destructive" disabled={pending} onClick={confirmDelete}>
+            {t("deleteConfirmButton")}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   )
 }

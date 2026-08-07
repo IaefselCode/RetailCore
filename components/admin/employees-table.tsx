@@ -4,6 +4,13 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { ChevronRight, Trash2 } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { toast } from "sonner"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
@@ -72,7 +79,12 @@ export function EmployeesTable({
       header: t("colPosition"),
       cell: ({ getValue }) => (getValue() as string | null) ?? "—",
     }),
-    helper.accessor("shopName", { header: t("colShop"), cell: ({ getValue }) => getValue() as string }),
+    helper.accessor("shopId", {
+      id: "shop",
+      header: t("colShop"),
+      filterFn: "equalsString",
+      cell: ({ row }) => row.original.shopName,
+    }),
     helper.accessor("isActive", {
       id: "status",
       header: t("colStatus"),
@@ -132,6 +144,25 @@ export function EmployeesTable({
         getRowId={(row) => row.id}
         searchable
         searchPlaceholder={t("searchPlaceholder")}
+        toolbar={(table) => (
+          <Select
+            value={String((table.getColumn("shop")?.getFilterValue() as string) ?? "all")}
+            onValueChange={(v) => {
+              if (!v) return
+              table.getColumn("shop")?.setFilterValue(v === "all" ? undefined : v)
+            }}
+          >
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder={t("allShops")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("allShops")}</SelectItem>
+              {shops.map((s) => (
+                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         empty={t("noResults")}
       />
 

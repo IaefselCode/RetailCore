@@ -69,25 +69,27 @@ function ShopsTableSkeleton({ headers }: { headers: string[] }) {
 export default async function ShopsPage() {
   await requireRole("ADMIN")
   const t = await getTranslations("shops")
+  const tn = await getTranslations("nav")
+  const tc = await getTranslations("common")
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-1 text-sm text-muted-foreground">
         <Home className="size-3.5" />
-        <span>Home</span>
+        <span>{tc("home")}</span>
         <ChevronRight className="size-3.5" />
-        <span className="text-foreground">Shops</span>
+        <span className="text-foreground">{tn("shops")}</span>
       </div>
 
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Shop Management</h1>
-        <p className="text-sm text-muted-foreground">Manage all retail locations</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Shops</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("total")}</CardTitle>
             <Store className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -100,7 +102,7 @@ export default async function ShopsPage() {
         </Card>
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("active")}</CardTitle>
             <Store className="size-4 text-green-500" />
           </CardHeader>
           <CardContent>
@@ -113,7 +115,7 @@ export default async function ShopsPage() {
         </Card>
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Inactive</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("inactive")}</CardTitle>
             <Store className="size-4 text-red-500" />
           </CardHeader>
           <CardContent>
