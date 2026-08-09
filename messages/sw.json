@@ -58,6 +58,16 @@
     "settings": "Mipangilio",
     "signOut": "Toka"
   },
+  "globalSearch": {
+    "placeholder": "Tafuta mfumo mzima...",
+    "searching": "Inatafuta...",
+    "noResults": "Hakuna matokeo",
+    "products": "Bidhaa",
+    "shops": "Maduka",
+    "employees": "Wafanyakazi",
+    "sales": "Mauzo",
+    "viewAll": "Tazama zote"
+  },
   "auth": {
     "welcomeBack": "Karibu tena",
     "signInTitle": "Ingia katika akaunti yako",

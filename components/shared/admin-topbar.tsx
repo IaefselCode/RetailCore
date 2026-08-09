@@ -1,15 +1,16 @@
 "use client"
 
-import { Search, Menu, User, LogOut, Settings } from "lucide-react"
+import { Menu, User, LogOut, Settings } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { signOut, useSession } from "next-auth/react"
+import { useTranslations } from "next-intl"
 import { motion } from "motion/react"
 
 import { Button as AnimateButton } from "@/components/ui/animate-button"
-import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
 import { LanguageSwitcher } from "@/components/shared/language-switcher"
+import { GlobalSearch } from "@/components/shared/global-search"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { NotificationBell } from "@/components/shared/notification-bell"
 
@@ -20,6 +21,7 @@ interface AdminTopbarProps {
 
 export function AdminTopbar({ onMenuClick, notificationSlot }: AdminTopbarProps) {
   const router = useRouter()
+  const t = useTranslations("topbar")
   const { data: session } = useSession()
   const user = session?.user ?? null
 
@@ -37,13 +39,12 @@ export function AdminTopbar({ onMenuClick, notificationSlot }: AdminTopbarProps)
       </AnimateButton>
       <div className="flex-1 min-w-0" />
       <motion.div
-        className="relative hidden sm:block max-w-xs"
+        className="hidden sm:block w-full max-w-xs"
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="Search..." className="pl-8" />
+        <GlobalSearch placeholder={t("searchPlaceholder")} />
       </motion.div>
       <div className="flex items-center gap-1 shrink-0">
         <LanguageSwitcher />

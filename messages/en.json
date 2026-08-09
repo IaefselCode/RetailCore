@@ -58,6 +58,16 @@
     "settings": "Settings",
     "signOut": "Sign out"
   },
+  "globalSearch": {
+    "placeholder": "Search the system...",
+    "searching": "Searching...",
+    "noResults": "No results found",
+    "products": "Products",
+    "shops": "Shops",
+    "employees": "Employees",
+    "sales": "Sales",
+    "viewAll": "View all"
+  },
   "auth": {
     "welcomeBack": "Welcome back",
     "signInTitle": "Sign in to your account",

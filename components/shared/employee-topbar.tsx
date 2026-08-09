@@ -1,16 +1,16 @@
 "use client"
 
-import { useState } from "react"
-import { Menu, Search, User, Settings, LogOut } from "lucide-react"
+import { Menu, User, Settings, LogOut } from "lucide-react"
 import { signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { motion } from "motion/react"
 
 import { Button as AnimateButton } from "@/components/ui/animate-button"
-import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
 import { LanguageSwitcher } from "@/components/shared/language-switcher"
+import { GlobalSearch } from "@/components/shared/global-search"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -28,7 +28,7 @@ import { NotificationBell } from "@/components/shared/notification-bell"
 
 export function EmployeeTopbar({ notificationSlot }: { notificationSlot?: React.ReactNode }) {
   const router = useRouter()
-  const [searchQuery, setSearchQuery] = useState("")
+  const t = useTranslations("topbar")
   const { data: session } = useSession()
   const user = session?.user ?? null
 
@@ -55,18 +55,12 @@ export function EmployeeTopbar({ notificationSlot }: { notificationSlot?: React.
       <div className="flex-1 min-w-0" />
 
       <motion.div
-        className="relative hidden sm:block max-w-xs"
+        className="hidden sm:block w-full max-w-xs"
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Search products, customers..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-8"
-        />
+        <GlobalSearch placeholder={t("searchPlaceholder")} />
       </motion.div>
 
       <div className="flex items-center gap-1 sm:gap-2 shrink-0">
