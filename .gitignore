@@ -46,3 +46,5 @@ public/uploads/*
 next-env.d.ts
 
 /lib/generated/prisma
+
+/.freebuff
