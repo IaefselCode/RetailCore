@@ -19,14 +19,14 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive"> = {
   COMPLETED: "default",
   PENDING: "secondary",
   CANCELLED: "destructive",
-  REFUNDED: "destructive",
+  VOIDED: "destructive",
 }
 
 const STATUS_KEYS: Record<string, string> = {
   COMPLETED: "completed",
   PENDING: "pending",
   CANCELLED: "cancelled",
-  REFUNDED: "refunded",
+  VOIDED: "voided",
 }
 
 interface EmpSaleRow {

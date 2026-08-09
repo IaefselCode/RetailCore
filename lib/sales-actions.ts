@@ -58,7 +58,17 @@ export async function recordSale(_prev: ActionResult | null, formData: FormData)
     if (products.length !== cart.length) return fail("One or more products are unavailable.")
 
     let subtotal = 0
-    const lineItems: { productId: string; quantity: number; unitPrice: number; subtotal: number }[] = []
+    let totalCost = 0
+    const lineItems: {
+      productId: string
+      name: string
+      quantity: number
+      unitPrice: number
+      unitCostPrice: number
+      subtotal: number
+      totalCost: number
+      profit: number
+    }[] = []
 
     for (const item of cart) {
       const product = products.find((p) => p.id === item.productId)!
@@ -66,14 +76,23 @@ export async function recordSale(_prev: ActionResult | null, formData: FormData)
       if (stock < item.quantity) {
         return fail(`Insufficient stock for ${product.name} (${stock} available).`)
       }
+      // Backend-authoritative price snapshot (spec §11, §82-83): the client
+      // only sends productId + quantity; prices/profit come from here.
       const unitPrice = Number(product.price)
+      const unitCostPrice = Number(product.cost) || 0
       const lineSubtotal = unitPrice * item.quantity
+      const lineCost = unitCostPrice * item.quantity
       subtotal += lineSubtotal
+      totalCost += lineCost
       lineItems.push({
         productId: product.id,
+        name: product.name,
         quantity: item.quantity,
         unitPrice,
+        unitCostPrice,
         subtotal: lineSubtotal,
+        totalCost: lineCost,
+        profit: lineSubtotal - lineCost,
       })
     }
 
@@ -95,6 +114,9 @@ export async function recordSale(_prev: ActionResult | null, formData: FormData)
           tax: toDecimalString(tax),
           discount: toDecimalString(appliedDiscount),
           total: toDecimalString(total),
+          // Goods-level profit snapshot (revenue = subtotal, cost = COGS).
+          totalCost: toDecimalString(totalCost),
+          totalProfit: toDecimalString(subtotal - totalCost),
           paymentMethod,
           status: "COMPLETED",
         },
@@ -108,12 +130,33 @@ export async function recordSale(_prev: ActionResult | null, formData: FormData)
             quantity: item.quantity,
             unitPrice: toDecimalString(item.unitPrice),
             subtotal: toDecimalString(item.subtotal),
+            unitCostPrice: toDecimalString(item.unitCostPrice),
+            totalCost: toDecimalString(item.totalCost),
+            profit: toDecimalString(item.profit),
           },
         })
 
-        await tx.inventory.updateMany({
-          where: { productId: item.productId, shopId: ctx.shopId },
+        // Check-and-decrement inside the transaction: if a concurrent sale
+        // already consumed the stock, count === 0 and this sale rolls back
+        // (spec §29-30 — inventory can never go negative).
+        const guard = await tx.inventory.updateMany({
+          where: { productId: item.productId, shopId: ctx.shopId, quantity: { gte: item.quantity } },
           data: { quantity: { decrement: item.quantity } },
+        })
+        if (guard.count === 0) {
+          throw new Error(`Insufficient stock for ${item.name} at sale time.`)
+        }
+
+        // Inventory movement history (spec §17-19, §27).
+        await tx.stockTransaction.create({
+          data: {
+            type: "SALE",
+            productId: item.productId,
+            shopId: ctx.shopId,
+            quantity: -item.quantity,
+            reference: invoiceNo,
+            notes: `Sale ${invoiceNo}`,
+          },
         })
       }
     })
@@ -161,13 +204,13 @@ export async function refundSale(formData: FormData): Promise<ActionResult> {
       include: { items: true },
     })
     if (!sale) return fail("Sale not found.")
-    if (sale.status === "REFUNDED") return fail("Sale is already refunded.")
-    if (sale.status !== "COMPLETED") return fail("Only completed sales can be refunded.")
+    if (sale.status === "VOIDED") return fail("Sale is already voided.")
+    if (sale.status !== "COMPLETED") return fail("Only completed sales can be voided.")
 
     await prisma.$transaction(async (tx) => {
       await tx.sale.update({
         where: { id: saleId },
-        data: { status: "REFUNDED" },
+        data: { status: "VOIDED" },
       })
 
       for (const item of sale.items) {
@@ -182,11 +225,24 @@ export async function refundSale(formData: FormData): Promise<ActionResult> {
           },
           update: { quantity: { increment: item.quantity } },
         })
+
+        // Reversal movement (spec §34-35): the original SALE movement stays,
+        // the reversal explains how stock came back.
+        await tx.stockTransaction.create({
+          data: {
+            type: "SALE_REVERSAL",
+            productId: item.productId,
+            shopId: sale.shopId,
+            quantity: item.quantity,
+            reference: sale.invoiceNo,
+            notes: `Void ${sale.invoiceNo}`,
+          },
+        })
       }
     })
 
     const meta = await getRequestMeta()
-    await logAuditEvent("sale_refunded", {
+    await logAuditEvent("sale_voided", {
       actorId: userId,
       entityType: "Sale",
       entityId: sale.id,
@@ -198,7 +254,7 @@ export async function refundSale(formData: FormData): Promise<ActionResult> {
     revalidatePath("/admin/sales/history")
     revalidatePath("/employee/sales-history")
     revalidatePath("/employee/inventory")
-    return { success: true, message: `Sale ${sale.invoiceNo} refunded.` }
+    return { success: true, message: `Sale ${sale.invoiceNo} voided.` }
   } catch (err) {
     console.error("refundSale failed:", err)
     return fail("Something went wrong. Please try again.")
@@ -242,7 +298,7 @@ export async function getCsvExport(filters: {
     },
   })
 
-  const header = "Invoice,Date,Shop,Employee,Customer,Items,Subtotal,Tax,Discount,Total,Payment,Status"
+  const header = "Invoice,Date,Shop,Employee,Customer,Items,Revenue,Cost,Profit,Tax,Discount,Total,Payment,Status"
   const rows = sales.map((s) => {
     const itemCount = s.items.reduce((sum, i) => sum + i.quantity, 0)
     const employee = s.employee
@@ -256,6 +312,8 @@ export async function getCsvExport(filters: {
       s.customerName ?? "",
       itemCount,
       Number(s.subtotal),
+      Number(s.totalCost),
+      Number(s.totalProfit),
       Number(s.tax),
       Number(s.discount),
       Number(s.total),

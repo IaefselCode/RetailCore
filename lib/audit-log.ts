@@ -19,7 +19,7 @@ export type AuditEvent =
   | "stock_purchased"
   | "stock_distributed"
   | "sale_recorded"
-  | "sale_refunded"
+  | "sale_voided"
 
 export async function logAuditEvent(
   event: AuditEvent,

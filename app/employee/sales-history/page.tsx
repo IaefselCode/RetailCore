@@ -13,14 +13,14 @@ export const metadata = { title: "Sales History | RetailCore" }
 
 const statusVariant: Record<string, "default" | "secondary" | "destructive"> = {
   COMPLETED: "default",
-  REFUNDED: "secondary",
+  VOIDED: "secondary",
   PENDING: "secondary",
   CANCELLED: "destructive",
 }
 
 const STATUS_KEYS: Record<string, string> = {
   COMPLETED: "completed",
-  REFUNDED: "refunded",
+  VOIDED: "voided",
   PENDING: "pending",
   CANCELLED: "cancelled",
 }

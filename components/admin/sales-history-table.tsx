@@ -47,7 +47,7 @@ const helper = createAppColumnHelper<SalesHistoryRow>()
 const statusBadge: Record<string, "default" | "secondary" | "destructive"> = {
   COMPLETED: "default",
   PENDING: "secondary",
-  REFUNDED: "destructive",
+  VOIDED: "destructive",
   CANCELLED: "destructive",
 }
 
@@ -233,7 +233,7 @@ export function SalesHistoryTable({
             <SelectContent>
               <SelectItem value="all">{t("allStatus")}</SelectItem>
               <SelectItem value="COMPLETED">{t("completed")}</SelectItem>
-              <SelectItem value="REFUNDED">{t("refunded")}</SelectItem>
+              <SelectItem value="VOIDED">{t("voided")}</SelectItem>
               <SelectItem value="PENDING">{t("pending")}</SelectItem>
               <SelectItem value="CANCELLED">{t("cancelled")}</SelectItem>
             </SelectContent>

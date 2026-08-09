@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { motion } from "motion/react"
 import { ChevronRightIcon, FileTextIcon, PackageIcon, CreditCardIcon, UsersIcon, StoreIcon, PlusIcon } from "lucide-react"
@@ -74,6 +75,10 @@ const reportCategories = [
     reports: ["Store Comparison", "Location Performance", "Regional Analysis", "Foot Traffic Report"],
   },
 ]
+
+// The Inventory Movement report is wired to the real movement-history page
+// (spec §48, §74). The remaining entries are placeholders for future work.
+const MOVEMENT_REPORT = "Inventory Movement"
 
 const reportSections = [
   { id: "revenue", labelKey: "secRevenue" },
@@ -182,12 +187,21 @@ export default function ReportsPage() {
                 <CardDescription>{t(category.descriptionKey)}</CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-2">
-                {category.reports.map((report) => (
-                  <AnimateButton key={report} variant="ghost" className="w-full justify-start text-sm font-normal h-8">
-                    <FileTextIcon className="size-3.5 text-muted-foreground" />
-                    {report}
-                  </AnimateButton>
-                ))}
+                {category.reports.map((report) =>
+                  report === MOVEMENT_REPORT ? (
+                    <AnimateButton key={report} asChild variant="ghost" className="w-full justify-start text-sm font-normal h-8">
+                      <Link href="/admin/inventory/movements">
+                        <FileTextIcon className="size-3.5 text-muted-foreground" />
+                        {report}
+                      </Link>
+                    </AnimateButton>
+                  ) : (
+                    <AnimateButton key={report} variant="ghost" className="w-full justify-start text-sm font-normal h-8">
+                      <FileTextIcon className="size-3.5 text-muted-foreground" />
+                      {report}
+                    </AnimateButton>
+                  )
+                )}
               </CardContent>
             </Card>
           </motion.div>

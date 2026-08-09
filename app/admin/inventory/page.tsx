@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
-import { Package, AlertTriangle, XCircle, ShoppingCart, ArrowRightLeft } from "lucide-react"
+import { Package, AlertTriangle, XCircle, ShoppingCart, ArrowRightLeft, History } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
@@ -205,6 +205,12 @@ export default async function InventoryPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">{t("title")}</h1>
         <div className="flex flex-wrap gap-2">
+          <Link href="/admin/inventory/movements">
+            <AnimateButton variant="outline">
+              <History className="size-4" />
+              {t("movementHistory")}
+            </AnimateButton>
+          </Link>
           <Link href="/admin/inventory/purchase-stock">
             <AnimateButton variant="accent">
               <ShoppingCart className="size-4" />

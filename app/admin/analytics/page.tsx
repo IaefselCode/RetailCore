@@ -32,10 +32,20 @@ async function loadAnalytics(): Promise<AnalyticsData> {
     prisma.sale.findMany({
       where: { createdAt: { gte: start } },
       select: {
-        total: true,
+        id: true,
+        subtotal: true,
+        totalCost: true,
+        totalProfit: true,
         status: true,
         createdAt: true,
         shopId: true,
+        employee: {
+          select: {
+            id: true,
+            user: { select: { firstName: true, lastName: true } },
+            shop: { select: { name: true } },
+          },
+        },
       },
     }),
     prisma.saleItem.findMany({
@@ -43,8 +53,9 @@ async function loadAnalytics(): Promise<AnalyticsData> {
       select: {
         quantity: true,
         subtotal: true,
-        product: { select: { name: true, cost: true } },
-        sale: { select: { createdAt: true } },
+        profit: true,
+        product: { select: { name: true } },
+        sale: { select: { createdAt: true, shopId: true, employeeId: true } },
       },
     }),
     prisma.shop.findMany({
@@ -56,21 +67,36 @@ async function loadAnalytics(): Promise<AnalyticsData> {
   const completedSales = sales.filter((s) => s.status === "COMPLETED")
   const shopNames = new Map(shops.map((s) => [s.id, s.name]))
 
-  // Per-day revenue + cogs + orders (drives the trend chart). cogs is exposed
-  // raw so the client can bucket first and floor profit only on the period.
-  const dayBuckets = new Map<string, { revenue: number; cogs: number; orders: number }>()
+  // Per-day revenue + cost + profit + orders + units (drives the trend chart).
+  // Financial values come from Sale/SaleItem price snapshots so historical
+  // periods stay correct even if product prices changed later (spec §11, §96).
+  const dayBuckets = new Map<string, { revenue: number; cost: number; profit: number; orders: number; units: number }>()
 
-  // Per-day × per-shop revenue + orders (drives Sales by Shop + Top Shop).
+  // Per-day × per-shop aggregates (drives Sales by Shop).
   const dayShopBuckets = new Map<
     string,
-    Map<string, { shopId: string; shopName: string; revenue: number; orders: number }>
+    Map<
+      string,
+      { shopId: string; shopName: string; revenue: number; cost: number; profit: number; orders: number; units: number }
+    >
+  >()
+
+  // Per-day × per-employee aggregates (drives Employee Performance).
+  const dayEmployeeBuckets = new Map<
+    string,
+    Map<
+      string,
+      { employeeId: string; name: string; shopName: string; revenue: number; profit: number; orders: number; units: number }
+    >
   >()
 
   for (const s of completedSales) {
     const key = dayKey(s.createdAt)
 
-    const bucket = dayBuckets.get(key) ?? { revenue: 0, cogs: 0, orders: 0 }
-    bucket.revenue += Number(s.total)
+    const bucket = dayBuckets.get(key) ?? { revenue: 0, cost: 0, profit: 0, orders: 0, units: 0 }
+    bucket.revenue += Number(s.subtotal)
+    bucket.cost += Number(s.totalCost)
+    bucket.profit += Number(s.totalProfit)
     bucket.orders += 1
     dayBuckets.set(key, bucket)
 
@@ -81,36 +107,79 @@ async function loadAnalytics(): Promise<AnalyticsData> {
     }
     const shopEntry =
       shopDay.get(s.shopId) ??
-      { shopId: s.shopId, shopName: shopNames.get(s.shopId) ?? "Unknown", revenue: 0, orders: 0 }
-    shopEntry.revenue += Number(s.total)
+      {
+        shopId: s.shopId,
+        shopName: shopNames.get(s.shopId) ?? "Unknown",
+        revenue: 0,
+        cost: 0,
+        profit: 0,
+        orders: 0,
+        units: 0,
+      }
+    shopEntry.revenue += Number(s.subtotal)
+    shopEntry.cost += Number(s.totalCost)
+    shopEntry.profit += Number(s.totalProfit)
     shopEntry.orders += 1
     shopDay.set(s.shopId, shopEntry)
+
+    if (s.employee) {
+      let empDay = dayEmployeeBuckets.get(key)
+      if (!empDay) {
+        empDay = new Map()
+        dayEmployeeBuckets.set(key, empDay)
+      }
+      const empEntry =
+        empDay.get(s.employee.id) ??
+        {
+          employeeId: s.employee.id,
+          name: [s.employee.user.firstName, s.employee.user.lastName].filter(Boolean).join(" ") || "Unknown",
+          shopName: s.employee.shop?.name ?? shopNames.get(s.shopId) ?? "Unknown",
+          revenue: 0,
+          profit: 0,
+          orders: 0,
+          units: 0,
+        }
+      empEntry.revenue += Number(s.subtotal)
+      empEntry.profit += Number(s.totalProfit)
+      empEntry.orders += 1
+      empDay.set(s.employee.id, empEntry)
+    }
   }
 
+  // Units are only known from line items, so attribute them per day to the
+  // global, shop, and employee buckets in a second pass over the items.
   for (const item of saleItems) {
-    const bucket = dayBuckets.get(dayKey(item.sale.createdAt))
-    if (!bucket) continue
-    const cost = item.product.cost ? Number(item.product.cost) : 0
-    bucket.cogs += item.quantity * cost
+    const key = dayKey(item.sale.createdAt)
+
+    const bucket = dayBuckets.get(key)
+    if (bucket) bucket.units += item.quantity
+
+    const shopEntry = dayShopBuckets.get(key)?.get(item.sale.shopId)
+    if (shopEntry) shopEntry.units += item.quantity
+
+    if (item.sale.employeeId) {
+      const empEntry = dayEmployeeBuckets.get(key)?.get(item.sale.employeeId)
+      if (empEntry) empEntry.units += item.quantity
+    }
   }
 
   const daily: AnalyticsData["daily"] = [...dayBuckets.entries()]
-    .map(([date, b]) => ({
-      date,
-      revenue: b.revenue,
-      cogs: b.cogs,
-      orders: b.orders,
-    }))
+    .map(([date, b]) => ({ date, ...b }))
     .sort((a, b) => a.date.localeCompare(b.date))
 
   const dailyShops: AnalyticsData["dailyShops"] = [...dayShopBuckets.entries()]
-    .flatMap(([date, m]) =>
-      [...m.values()].map((v) => ({ date, ...v }))
-    )
+    .flatMap(([date, m]) => [...m.values()].map((v) => ({ date, ...v })))
     .sort((a, b) => a.date.localeCompare(b.date))
 
-  // Per-day × per-product revenue (drives Top Products).
-  const dayProductBuckets = new Map<string, Map<string, number>>()
+  const dailyEmployees: AnalyticsData["dailyEmployees"] = [...dayEmployeeBuckets.entries()]
+    .flatMap(([date, m]) => [...m.values()].map((v) => ({ date, ...v })))
+    .sort((a, b) => a.date.localeCompare(b.date))
+
+  // Per-day × per-product revenue / profit / units (drives Top Products).
+  const dayProductBuckets = new Map<
+    string,
+    Map<string, { revenue: number; profit: number; units: number }>
+  >()
   for (const item of saleItems) {
     const key = dayKey(item.sale.createdAt)
     let productDay = dayProductBuckets.get(key)
@@ -118,21 +187,21 @@ async function loadAnalytics(): Promise<AnalyticsData> {
       productDay = new Map()
       dayProductBuckets.set(key, productDay)
     }
-    productDay.set(
-      item.product.name,
-      (productDay.get(item.product.name) ?? 0) + Number(item.subtotal)
-    )
+    const entry = productDay.get(item.product.name) ?? { revenue: 0, profit: 0, units: 0 }
+    entry.revenue += Number(item.subtotal)
+    entry.profit += Number(item.profit)
+    entry.units += item.quantity
+    productDay.set(item.product.name, entry)
   }
 
   const dailyProducts: AnalyticsData["dailyProducts"] = [...dayProductBuckets.entries()]
-    .flatMap(([date, m]) =>
-      [...m.entries()].map(([name, revenue]) => ({ date, name, revenue }))
-    )
+    .flatMap(([date, m]) => [...m.entries()].map(([name, v]) => ({ date, name, ...v })))
     .sort((a, b) => a.date.localeCompare(b.date))
 
   return {
     daily,
     dailyShops,
+    dailyEmployees,
     dailyProducts,
     // Earliest date the query covers, so the client can tell "no sales in the
     // previous window" apart from "previous window was never queried" (e.g.

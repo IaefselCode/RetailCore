@@ -6,11 +6,13 @@ import { motion } from "motion/react"
 import {
   TrendingUpIcon,
   ShoppingCartIcon,
-  TargetIcon,
   DollarSignIcon,
+  WalletIcon,
+  PackageIcon,
   DownloadIcon,
   BarChart3,
   LineChart as LineChartIcon,
+  UsersIcon,
 } from "lucide-react"
 import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis } from "recharts"
 import {
@@ -57,20 +59,47 @@ const itemVariants = {
 const MONTH_KEYS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 export interface AnalyticsData {
-  daily: { date: string; revenue: number; cogs: number; orders: number }[]
-  dailyShops: { date: string; shopId: string; shopName: string; revenue: number; orders: number }[]
-  dailyProducts: { date: string; name: string; revenue: number }[]
+  daily: { date: string; revenue: number; cost: number; profit: number; orders: number; units: number }[]
+  dailyShops: {
+    date: string
+    shopId: string
+    shopName: string
+    revenue: number
+    cost: number
+    profit: number
+    orders: number
+    units: number
+  }[]
+  dailyEmployees: {
+    date: string
+    employeeId: string
+    name: string
+    shopName: string
+    revenue: number
+    profit: number
+    orders: number
+    units: number
+  }[]
+  dailyProducts: { date: string; name: string; revenue: number; profit: number; units: number }[]
   /** Earliest date key covered by the server query (for growth range checks). */
   dataStart: string
 }
 
 export type Granularity = "daily" | "weekly" | "monthly" | "yearly"
 
+type TopMetric = "revenue" | "profit" | "units"
+
 const GRANULARITY_OPTIONS: { value: Granularity; labelKey: string }[] = [
   { value: "daily", labelKey: "granularityDaily" },
   { value: "weekly", labelKey: "granularityWeekly" },
   { value: "monthly", labelKey: "granularityMonthly" },
   { value: "yearly", labelKey: "granularityYearly" },
+]
+
+const TOP_METRIC_OPTIONS: { value: TopMetric; labelKey: string }[] = [
+  { value: "revenue", labelKey: "topByRevenue" },
+  { value: "profit", labelKey: "topByProfit" },
+  { value: "units", labelKey: "topByUnits" },
 ]
 
 const PERIOD_KEYS: Record<Granularity, string> = {
@@ -146,8 +175,10 @@ function getWindowKeys(granularity: Granularity) {
 interface DayPoint {
   date: string
   revenue: number
-  cogs: number
+  cost: number
+  profit: number
   orders: number
+  units: number
 }
 
 /**
@@ -163,7 +194,7 @@ function bucketDaily(daily: DayPoint[], granularity: Granularity) {
     return d.getFullYear() === currentYear ? base : `${base} ${d.getFullYear()}`
   }
 
-  const out: { label: string; revenue: number; cogs: number; orders: number }[] = []
+  const out: { label: string; revenue: number; cost: number; profit: number; orders: number; units: number }[] = []
 
   if (granularity === "daily") {
     // Last 30 days.
@@ -173,8 +204,10 @@ function bucketDaily(daily: DayPoint[], granularity: Granularity) {
       out.push({
         label: shortLabel(d),
         revenue: pt?.revenue ?? 0,
-        cogs: pt?.cogs ?? 0,
+        cost: pt?.cost ?? 0,
+        profit: pt?.profit ?? 0,
         orders: pt?.orders ?? 0,
+        units: pt?.units ?? 0,
       })
     }
   } else if (granularity === "weekly") {
@@ -183,40 +216,38 @@ function bucketDaily(daily: DayPoint[], granularity: Granularity) {
     for (let i = 11; i >= 0; i--) {
       const ws = addDays(weekStart, -i * 7)
       const we = addDays(ws, 7)
-      let revenue = 0
-      let cogs = 0
-      let orders = 0
+      const acc = { revenue: 0, cost: 0, profit: 0, orders: 0, units: 0 }
       for (const [key, pt] of map) {
         const [y, m, day] = key.split("-").map(Number)
         const date = new Date(y, m - 1, day)
         if (date >= ws && date < we) {
-          revenue += pt.revenue
-          cogs += pt.cogs
-          orders += pt.orders
+          acc.revenue += pt.revenue
+          acc.cost += pt.cost
+          acc.profit += pt.profit
+          acc.orders += pt.orders
+          acc.units += pt.units
         }
       }
-      out.push({ label: shortLabel(ws), revenue, cogs, orders })
+      out.push({ label: shortLabel(ws), ...acc })
     }
   } else if (granularity === "monthly") {
     // Last 12 months.
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
       const prefix = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`
-      let revenue = 0
-      let cogs = 0
-      let orders = 0
+      const acc = { revenue: 0, cost: 0, profit: 0, orders: 0, units: 0 }
       for (const [key, pt] of map) {
         if (key.startsWith(prefix)) {
-          revenue += pt.revenue
-          cogs += pt.cogs
-          orders += pt.orders
+          acc.revenue += pt.revenue
+          acc.cost += pt.cost
+          acc.profit += pt.profit
+          acc.orders += pt.orders
+          acc.units += pt.units
         }
       }
       out.push({
         label: `${MONTH_KEYS[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`,
-        revenue,
-        cogs,
-        orders,
+        ...acc,
       })
     }
   } else {
@@ -224,17 +255,17 @@ function bucketDaily(daily: DayPoint[], granularity: Granularity) {
     for (let i = 4; i >= 0; i--) {
       const year = now.getFullYear() - i
       const prefix = `${year}-`
-      let revenue = 0
-      let cogs = 0
-      let orders = 0
+      const acc = { revenue: 0, cost: 0, profit: 0, orders: 0, units: 0 }
       for (const [key, pt] of map) {
         if (key.startsWith(prefix)) {
-          revenue += pt.revenue
-          cogs += pt.cogs
-          orders += pt.orders
+          acc.revenue += pt.revenue
+          acc.cost += pt.cost
+          acc.profit += pt.profit
+          acc.orders += pt.orders
+          acc.units += pt.units
         }
       }
-      out.push({ label: String(year), revenue, cogs, orders })
+      out.push({ label: String(year), ...acc })
     }
   }
 
@@ -244,6 +275,9 @@ function bucketDaily(daily: DayPoint[], granularity: Granularity) {
 interface ShopRow {
   name: string
   revenue: number
+  cost: number
+  profit: number
+  units: number
   orders: number
   growth: number | null
 }
@@ -262,6 +296,19 @@ function ShopTable({ shops }: { shops: ShopRow[] }) {
       header: t("colRevenue"),
       cell: ({ getValue }) => <span className="font-medium">{formatMoney(getValue() as number)}</span>,
     }),
+    shopHelper.accessor("cost", {
+      header: t("colCost"),
+      cell: ({ getValue }) => <span className="text-muted-foreground">{formatMoney(getValue() as number)}</span>,
+    }),
+    shopHelper.accessor("profit", {
+      header: t("colProfit"),
+      cell: ({ getValue }) => (
+        <span className={getValue() as number >= 0 ? "font-medium" : "font-medium text-destructive"}>
+          {formatMoney(getValue() as number)}
+        </span>
+      ),
+    }),
+    shopHelper.accessor("units", { header: t("colUnits"), cell: ({ getValue }) => getValue() as number }),
     shopHelper.accessor("orders", { header: t("colOrders"), cell: ({ getValue }) => getValue() as number }),
     shopHelper.accessor("growth", {
       header: t("colGrowth"),
@@ -290,6 +337,51 @@ function ShopTable({ shops }: { shops: ShopRow[] }) {
   )
 }
 
+interface EmployeeRow {
+  name: string
+  shopName: string
+  revenue: number
+  profit: number
+  units: number
+  orders: number
+}
+
+const employeeHelper = createAppColumnHelper<EmployeeRow>()
+
+function EmployeePerformanceTable({ employees }: { employees: EmployeeRow[] }) {
+  const t = useTranslations("analytics")
+  const tc = useTranslations("common")
+  const columns = employeeHelper.columns([
+    employeeHelper.accessor("name", {
+      header: t("colEmployee"),
+      cell: ({ getValue }) => <span className="font-medium">{getValue() as string}</span>,
+    }),
+    employeeHelper.accessor("shopName", { header: t("colShop"), cell: ({ getValue }) => getValue() as string }),
+    employeeHelper.accessor("orders", { header: t("colSalesCount"), cell: ({ getValue }) => getValue() as number }),
+    employeeHelper.accessor("units", { header: t("colUnits"), cell: ({ getValue }) => getValue() as number }),
+    employeeHelper.accessor("revenue", {
+      header: t("colRevenue"),
+      cell: ({ getValue }) => <span className="font-medium">{formatMoney(getValue() as number)}</span>,
+    }),
+    employeeHelper.accessor("profit", {
+      header: t("colProfit"),
+      cell: ({ getValue }) => (
+        <span className={getValue() as number >= 0 ? "font-medium" : "font-medium text-destructive"}>
+          {formatMoney(getValue() as number)}
+        </span>
+      ),
+    }),
+  ])
+  return (
+    <DataTable
+      data={employees}
+      columns={columns}
+      getRowId={(row) => row.name}
+      empty={tc("noData")}
+    />
+  )
+}
+
 type ChartMode = "bar" | "line"
 
 export function AnalyticsContent({
@@ -304,6 +396,7 @@ export function AnalyticsContent({
   const tc = useTranslations("common")
   const [granularity, setGranularity] = useState<Granularity>(initialView)
   const [chartMode, setChartMode] = useState<ChartMode>("bar")
+  const [topMetric, setTopMetric] = useState<TopMetric>("revenue")
 
   function changeGranularity(v: Granularity) {
     setGranularity(v)
@@ -314,15 +407,7 @@ export function AnalyticsContent({
     window.history.replaceState(null, "", url)
   }
 
-  const chartData = useMemo(
-    () =>
-      bucketDaily(data.daily, granularity).map((b) => ({
-        ...b,
-        // Floor profit only after bucketing, never on individual days.
-        profit: Math.max(0, b.revenue - b.cogs),
-      })),
-    [data.daily, granularity]
-  )
+  const chartData = useMemo(() => bucketDaily(data.daily, granularity), [data.daily, granularity])
 
   // Every section below shares the selected window (and the preceding window
   // for growth), so the whole page shifts together when granularity changes.
@@ -331,36 +416,52 @@ export function AnalyticsContent({
 
   const summary = useMemo(() => {
     const windowRevenue = chartData.reduce((sum, b) => sum + b.revenue, 0)
+    const windowCost = chartData.reduce((sum, b) => sum + b.cost, 0)
+    const windowProfit = chartData.reduce((sum, b) => sum + b.profit, 0)
+    const windowUnits = chartData.reduce((sum, b) => sum + b.units, 0)
     const windowOrders = chartData.reduce((sum, b) => sum + b.orders, 0)
 
-    // Top Products for the window.
-    const prodAgg = new Map<string, number>()
+    // Top Products for the window (revenue/profit/units all aggregated, the
+    // active metric only decides ranking + display).
+    const prodAgg = new Map<string, { revenue: number; profit: number; units: number }>()
     for (const p of data.dailyProducts) {
       if (p.date >= startKey && p.date <= endKey) {
-        prodAgg.set(p.name, (prodAgg.get(p.name) ?? 0) + p.revenue)
+        const entry = prodAgg.get(p.name) ?? { revenue: 0, profit: 0, units: 0 }
+        entry.revenue += p.revenue
+        entry.profit += p.profit
+        entry.units += p.units
+        prodAgg.set(p.name, entry)
       }
     }
-    const sortedProducts = [...prodAgg.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5)
-    const maxProductRevenue = sortedProducts[0]?.[1] ?? 1
-    const topProducts = sortedProducts.map(([name, revenue]) => ({
+    const sortedProducts = [...prodAgg.entries()].sort((a, b) => b[1][topMetric] - a[1][topMetric]).slice(0, 5)
+    const maxProductValue = sortedProducts[0]?.[1][topMetric] ?? 1
+    const topProducts = sortedProducts.map(([name, v]) => ({
       name,
-      revenue,
-      percentage: Math.max(2, Math.round((revenue / maxProductRevenue) * 100)),
+      revenue: v.revenue,
+      profit: v.profit,
+      units: v.units,
+      metricValue: v[topMetric],
+      percentage: Math.max(2, Math.round((v[topMetric] / maxProductValue) * 100)),
     }))
 
     // Sales by Shop for the window, with growth vs the preceding window.
     const shopAgg = new Map<
       string,
-      { name: string; revenue: number; orders: number; prevRevenue: number }
+      { name: string; revenue: number; cost: number; profit: number; units: number; orders: number; prevRevenue: number }
     >()
     for (const s of data.dailyShops) {
       if (s.date >= startKey && s.date <= endKey) {
-        const entry = shopAgg.get(s.shopId) ?? { name: s.shopName, revenue: 0, orders: 0, prevRevenue: 0 }
+        const entry =
+          shopAgg.get(s.shopId) ??
+          { name: s.shopName, revenue: 0, cost: 0, profit: 0, units: 0, orders: 0, prevRevenue: 0 }
         entry.revenue += s.revenue
+        entry.cost += s.cost
+        entry.profit += s.profit
+        entry.units += s.units
         entry.orders += s.orders
         shopAgg.set(s.shopId, entry)
       } else if (s.date >= prevStartKey && s.date <= prevEndKey) {
-        const entry = shopAgg.get(s.shopId) ?? { name: s.shopName, revenue: 0, orders: 0, prevRevenue: 0 }
+        const entry = shopAgg.get(s.shopId) ?? { name: s.shopName, revenue: 0, cost: 0, profit: 0, units: 0, orders: 0, prevRevenue: 0 }
         entry.prevRevenue += s.revenue
         shopAgg.set(s.shopId, entry)
       }
@@ -371,6 +472,9 @@ export function AnalyticsContent({
       .map((s) => ({
         name: s.name,
         revenue: s.revenue,
+        cost: s.cost,
+        profit: s.profit,
+        units: s.units,
         orders: s.orders,
         growth:
           growthUnknown
@@ -380,23 +484,45 @@ export function AnalyticsContent({
             : 0,
       }))
 
+    // Employee performance for the window.
+    const empAgg = new Map<
+      string,
+      { name: string; shopName: string; revenue: number; profit: number; units: number; orders: number }
+    >()
+    for (const e of data.dailyEmployees) {
+      if (e.date >= startKey && e.date <= endKey) {
+        const entry =
+          empAgg.get(e.employeeId) ??
+          { name: e.name, shopName: e.shopName, revenue: 0, profit: 0, units: 0, orders: 0 }
+        entry.revenue += e.revenue
+        entry.profit += e.profit
+        entry.units += e.units
+        entry.orders += e.orders
+        empAgg.set(e.employeeId, entry)
+      }
+    }
+    const employeeRows: EmployeeRow[] = [...empAgg.values()]
+      .filter((e) => e.revenue > 0 || e.orders > 0)
+      .sort((a, b) => b.revenue - a.revenue)
+
     return {
       windowRevenue,
+      windowCost,
+      windowProfit,
+      windowUnits,
       windowOrders,
       topProducts,
       shopRows,
-      // Only name a top shop when the window actually has revenue.
-      topShop: windowRevenue > 0 ? (shopRows[0]?.name ?? "") : "",
+      employeeRows,
     }
-  }, [chartData, data.dailyProducts, data.dailyShops, startKey, endKey, prevStartKey, prevEndKey, growthUnknown])
-
-  const windowAvgOrder = summary.windowOrders > 0 ? summary.windowRevenue / summary.windowOrders : 0
+  }, [chartData, data.dailyProducts, data.dailyShops, data.dailyEmployees, startKey, endKey, prevStartKey, prevEndKey, growthUnknown, topMetric])
 
   const kpis = [
     { labelKey: "revenue", value: formatMoney(summary.windowRevenue), icon: DollarSignIcon },
+    { labelKey: "cost", value: formatMoney(summary.windowCost), icon: WalletIcon },
+    { labelKey: "profit", value: formatMoney(summary.windowProfit), icon: TrendingUpIcon },
+    { labelKey: "unitsSold", value: summary.windowUnits.toLocaleString(), icon: PackageIcon },
     { labelKey: "orders", value: summary.windowOrders.toLocaleString(), icon: ShoppingCartIcon },
-    { labelKey: "avgOrderValue", value: formatMoney(windowAvgOrder), icon: TargetIcon },
-    { labelKey: "topShop", value: summary.topShop || "—", icon: TrendingUpIcon },
   ]
 
   const chartConfig: ChartConfig = {
@@ -429,7 +555,7 @@ export function AnalyticsContent({
       </div>
 
       <motion.div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -545,10 +671,23 @@ export function AnalyticsContent({
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="col-span-1 lg:col-span-2">
+        <Card>
           <CardHeader>
             <CardTitle>{t("topProducts")}</CardTitle>
-            <CardDescription>{t("byRevenue")}</CardDescription>
+            <CardDescription>{t("topProductsDesc")}</CardDescription>
+            <div className="flex flex-wrap gap-1 pt-1">
+              {TOP_METRIC_OPTIONS.map((opt) => (
+                <AnimateButton
+                  key={opt.value}
+                  size="sm"
+                  variant={topMetric === opt.value ? "default" : "outline"}
+                  onClick={() => setTopMetric(opt.value)}
+                  aria-pressed={topMetric === opt.value}
+                >
+                  {t(opt.labelKey)}
+                </AnimateButton>
+              ))}
+            </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {summary.topProducts.length === 0 && (
@@ -563,7 +702,11 @@ export function AnalyticsContent({
               >
                 <div className="flex justify-between text-sm mb-1">
                   <span className="font-medium truncate">{i + 1}. {product.name}</span>
-                  <span className="text-muted-foreground">{formatMoney(product.revenue)}</span>
+                  <span className="text-muted-foreground">
+                    {topMetric === "units"
+                      ? `${product.metricValue.toLocaleString()} ${t("unitsShort")}`
+                      : formatMoney(product.metricValue)}
+                  </span>
                 </div>
                 <Progress value={product.percentage}>
                   <ProgressTrack>
@@ -575,7 +718,7 @@ export function AnalyticsContent({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>{t("salesByShop")}</CardTitle>
             <CardDescription>{t("revenueBreakdown")}</CardDescription>
@@ -585,6 +728,18 @@ export function AnalyticsContent({
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UsersIcon className="size-4 text-primary" /> {t("employeePerformance")}
+          </CardTitle>
+          <CardDescription>{t("employeePerformanceDesc")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <EmployeePerformanceTable employees={summary.employeeRows} />
+        </CardContent>
+      </Card>
 
       <div className="flex justify-end">
         <AnimateButton variant="outline">

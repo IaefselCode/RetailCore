@@ -3,22 +3,23 @@ import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
 import { getTranslations } from "next-intl/server"
-import { DollarSign, TrendingUp, CalendarDays, ShoppingCart } from "lucide-react"
+import { ShoppingCart } from "lucide-react"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatMoney } from "@/lib/money"
 import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonStat, TableRowsSkeleton } from "@/components/shared/skeleton-primitives"
+import { TableRowsSkeleton } from "@/components/shared/skeleton-primitives"
 import { ServerTable, createServerColumnHelper } from "@/components/shared/server-table"
+import { SalesOverview, type SalesPeriodData } from "@/components/admin/sales-overview"
 
 export const metadata = { title: "Sales | RetailCore" }
 
 const statusBadge: Record<string, "default" | "secondary" | "destructive"> = {
   COMPLETED: "default",
   PENDING: "secondary",
-  REFUNDED: "destructive",
+  VOIDED: "destructive",
   CANCELLED: "destructive",
 }
 
@@ -52,35 +53,38 @@ function startOfMonth(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), 1)
 }
 
-async function TodaySalesValue() {
-  const agg = await prisma.sale.aggregate({
-    where: { status: "COMPLETED", createdAt: { gte: startOfDay(new Date()) } },
-    _sum: { total: true },
-  })
-  return <>{formatMoney(agg._sum.total ?? 0)}</>
-}
+async function SalesOverviewData(): Promise<SalesPeriodData[]> {
+  const now = new Date()
+  const periods = [
+    { key: "today" as const, from: startOfDay(now) },
+    { key: "week" as const, from: startOfWeek(now) },
+    { key: "month" as const, from: startOfMonth(now) },
+    { key: "year" as const, from: new Date(now.getFullYear(), 0, 1) },
+  ]
 
-async function WeekSalesValue() {
-  const agg = await prisma.sale.aggregate({
-    where: { status: "COMPLETED", createdAt: { gte: startOfWeek(new Date()) } },
-    _sum: { total: true },
-  })
-  return <>{formatMoney(agg._sum.total ?? 0)}</>
-}
-
-async function MonthSalesValue() {
-  const agg = await prisma.sale.aggregate({
-    where: { status: "COMPLETED", createdAt: { gte: startOfMonth(new Date()) } },
-    _sum: { total: true },
-  })
-  return <>{formatMoney(agg._sum.total ?? 0)}</>
-}
-
-async function TransactionsTodayValue() {
-  const count = await prisma.sale.count({
-    where: { status: "COMPLETED", createdAt: { gte: startOfDay(new Date()) } },
-  })
-  return <>{count}</>
+  const out: SalesPeriodData[] = []
+  for (const period of periods) {
+    const [saleAgg, itemAgg] = await Promise.all([
+      prisma.sale.aggregate({
+        where: { status: "COMPLETED", createdAt: { gte: period.from } },
+        _sum: { subtotal: true, totalCost: true, totalProfit: true },
+        _count: true,
+      }),
+      prisma.saleItem.aggregate({
+        where: { sale: { status: "COMPLETED", createdAt: { gte: period.from } } },
+        _sum: { quantity: true },
+      }),
+    ])
+    out.push({
+      key: period.key,
+      revenue: Number(saleAgg._sum.subtotal ?? 0),
+      cost: Number(saleAgg._sum.totalCost ?? 0),
+      profit: Number(saleAgg._sum.totalProfit ?? 0),
+      units: itemAgg._sum.quantity ?? 0,
+      transactions: saleAgg._count,
+    })
+  }
+  return out
 }
 
 async function RecentTransactionsSection() {
@@ -259,43 +263,9 @@ export default async function SalesPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">{t("todaySales")}</CardTitle></CardHeader>
-          <CardContent className="flex items-center gap-2 text-2xl font-bold">
-            <DollarSign className="size-5 text-green-500" />
-            <Suspense fallback={<SkeletonStat />}>
-              <TodaySalesValue />
-            </Suspense>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">{t("thisWeek")}</CardTitle></CardHeader>
-          <CardContent className="flex items-center gap-2 text-2xl font-bold">
-            <TrendingUp className="size-5 text-blue-500" />
-            <Suspense fallback={<SkeletonStat />}>
-              <WeekSalesValue />
-            </Suspense>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">{t("thisMonth")}</CardTitle></CardHeader>
-          <CardContent className="flex items-center gap-2 text-2xl font-bold">
-            <CalendarDays className="size-5 text-purple-500" />
-            <Suspense fallback={<SkeletonStat />}>
-              <MonthSalesValue />
-            </Suspense>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">{t("transactionsToday")}</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-bold">
-            <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
-              <TransactionsTodayValue />
-            </Suspense>
-          </CardContent>
-        </Card>
-      </div>
+      <Suspense fallback={<Skeleton className="h-40 w-full" />}>
+        <SalesOverview data={await SalesOverviewData()} />
+      </Suspense>
 
       <RecentTransactionsSection />
     </div>

@@ -26,7 +26,7 @@ function startOfMonth(d: Date) {
 const statusBadge: Record<string, "default" | "secondary" | "destructive"> = {
   COMPLETED: "default",
   PENDING: "secondary",
-  REFUNDED: "destructive",
+  VOIDED: "destructive",
   CANCELLED: "destructive",
 }
 
@@ -45,9 +45,25 @@ const recentSaleHelper = createServerColumnHelper<RecentSaleRow>()
 async function TodaySalesValue() {
   const agg = await prisma.sale.aggregate({
     where: { status: "COMPLETED", createdAt: { gte: startOfDay(new Date()) } },
-    _sum: { total: true },
+    _sum: { subtotal: true },
   })
-  return <>{formatMoney(agg._sum.total ?? 0)}</>
+  return <>{formatMoney(agg._sum.subtotal ?? 0)}</>
+}
+
+async function TodayProfitValue() {
+  const agg = await prisma.sale.aggregate({
+    where: { status: "COMPLETED", createdAt: { gte: startOfDay(new Date()) } },
+    _sum: { totalProfit: true },
+  })
+  return <>{formatMoney(agg._sum.totalProfit ?? 0)}</>
+}
+
+async function UnitsTodayValue() {
+  const rows = await prisma.saleItem.aggregate({
+    where: { sale: { status: "COMPLETED", createdAt: { gte: startOfDay(new Date()) } } },
+    _sum: { quantity: true },
+  })
+  return <>{rows._sum.quantity ?? 0}</>
 }
 
 async function OrdersTodayValue() {
@@ -60,9 +76,23 @@ async function OrdersTodayValue() {
 async function MonthRevenueValue() {
   const agg = await prisma.sale.aggregate({
     where: { status: "COMPLETED", createdAt: { gte: startOfMonth(new Date()) } },
-    _sum: { total: true },
+    _sum: { subtotal: true },
   })
-  return <>{formatMoney(agg._sum.total ?? 0)}</>
+  return <>{formatMoney(agg._sum.subtotal ?? 0)}</>
+}
+
+async function InventoryValueValue() {
+  const rows = await prisma.inventory.findMany({
+    select: { quantity: true, product: { select: { cost: true } } },
+  })
+  const value = rows.reduce((sum, r) => sum + r.quantity * (Number(r.product.cost) || 0), 0)
+  return <>{formatMoney(value)}</>
+}
+
+async function LowStockCountValue() {
+  const rows = await prisma.inventory.findMany({ select: { quantity: true, minStock: true } })
+  const count = rows.filter((r) => r.quantity > 0 && r.quantity <= r.minStock).length
+  return <>{count}</>
 }
 
 async function ActiveProductsValue() {
@@ -163,16 +193,18 @@ async function AnalyticsSection() {
       status: "COMPLETED",
       createdAt: { gte: twelveMonthsAgo },
     },
-    select: { total: true, createdAt: true },
+    select: { subtotal: true, createdAt: true },
   })
 
-  // Bucket completed sales by month for the last 12 months.
+  // Bucket completed sales by month for the last 12 months. Revenue is the
+  // goods value (subtotal), consistent with the analytics module and the
+  // profit/loss definition (spec §40).
   const buckets = new Map<string, number>()
   let revenue = 0
   for (const sale of sales) {
-    revenue += Number(sale.total)
+    revenue += Number(sale.subtotal)
     const key = `${sale.createdAt.getFullYear()}-${sale.createdAt.getMonth()}`
-    buckets.set(key, (buckets.get(key) ?? 0) + Number(sale.total))
+    buckets.set(key, (buckets.get(key) ?? 0) + Number(sale.subtotal))
   }
 
   // Best month over the trailing 12 months.
@@ -267,6 +299,26 @@ export default async function AdminDashboardPage() {
         todaySales: (
           <Suspense fallback={<SkeletonStat />}>
             <TodaySalesValue />
+          </Suspense>
+        ),
+        todayProfit: (
+          <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
+            <TodayProfitValue />
+          </Suspense>
+        ),
+        unitsToday: (
+          <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
+            <UnitsTodayValue />
+          </Suspense>
+        ),
+        inventoryValue: (
+          <Suspense fallback={<SkeletonStat />}>
+            <InventoryValueValue />
+          </Suspense>
+        ),
+        lowStockCount: (
+          <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
+            <LowStockCountValue />
           </Suspense>
         ),
         ordersToday: (

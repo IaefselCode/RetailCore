@@ -13,6 +13,9 @@ import {
   Store,
   ShoppingBag,
   BarChart3,
+  Wallet,
+  Boxes,
+  PackageSearch,
 } from "lucide-react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
@@ -29,6 +32,10 @@ interface AdminDashboardProps {
   firstName: string | null
   kpiSlots: {
     todaySales: ReactNode
+    todayProfit: ReactNode
+    unitsToday: ReactNode
+    inventoryValue: ReactNode
+    lowStockCount: ReactNode
     ordersToday: ReactNode
     monthRevenue: ReactNode
     productCount: ReactNode
@@ -56,6 +63,30 @@ export function AdminDashboard({
       hint: t("todaySalesHint"),
     },
     {
+      label: t("todayProfit"),
+      value: kpiSlots.todayProfit,
+      icon: TrendingUp,
+      hint: t("todayProfitHint"),
+    },
+    {
+      label: t("unitsToday"),
+      value: kpiSlots.unitsToday,
+      icon: Boxes,
+      hint: t("unitsTodayHint"),
+    },
+    {
+      label: t("inventoryValue"),
+      value: kpiSlots.inventoryValue,
+      icon: Wallet,
+      hint: t("inventoryValueHint"),
+    },
+    {
+      label: t("lowStockCount"),
+      value: kpiSlots.lowStockCount,
+      icon: PackageSearch,
+      hint: t("lowStockCountHint"),
+    },
+    {
       label: t("ordersToday"),
       value: kpiSlots.ordersToday,
       icon: ShoppingCart,
@@ -64,7 +95,7 @@ export function AdminDashboard({
     {
       label: t("monthRevenue"),
       value: kpiSlots.monthRevenue,
-      icon: TrendingUp,
+      icon: BarChart3,
       hint: t("monthRevenueHint"),
     },
     {

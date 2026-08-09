@@ -71,7 +71,7 @@ export async function purchaseStock(formData: FormData): Promise<ActionResult> {
 
         await tx.stockTransaction.create({
           data: {
-            type: "PURCHASE",
+            type: "STOCK_IN",
             productId: item.productId,
             shopId,
             quantity: item.quantity,
@@ -136,11 +136,27 @@ export async function distributeStock(formData: FormData): Promise<ActionResult>
     if (!source || source.quantity < totalOut) {
       return fail("Insufficient stock at source shop.")
     }
+    // NOTE: the authoritative guard repeats inside the transaction, so a
+    // concurrent transfer cannot push the source below zero.
 
     await prisma.$transaction(async (tx) => {
-      await tx.inventory.update({
-        where: { productId_shopId: { productId, shopId: fromShopId } },
+      // Check-and-decrement: reject if a concurrent operation consumed stock.
+      const guard = await tx.inventory.updateMany({
+        where: { productId, shopId: fromShopId, quantity: { gte: totalOut } },
         data: { quantity: { decrement: totalOut } },
+      })
+      if (guard.count === 0) throw new Error("insufficient_stock")
+
+      // Source movement (spec §20: TRANSFER_OUT on source, TRANSFER_IN on dest).
+      await tx.stockTransaction.create({
+        data: {
+          type: "TRANSFER_OUT",
+          productId,
+          shopId: fromShopId,
+          quantity: -totalOut,
+          reference: distributions.map((d) => d.toShopId).join(","),
+          notes,
+        },
       })
 
       for (const dist of distributions) {
@@ -155,7 +171,7 @@ export async function distributeStock(formData: FormData): Promise<ActionResult>
 
         await tx.stockTransaction.create({
           data: {
-            type: "TRANSFER",
+            type: "TRANSFER_IN",
             productId,
             shopId: dist.toShopId,
             quantity: dist.quantity,
@@ -183,6 +199,9 @@ export async function distributeStock(formData: FormData): Promise<ActionResult>
     console.error("distributeStock failed:", err)
     if (err instanceof Error && err.message === "same_shop") {
       return fail("Source and destination shops must differ.")
+    }
+    if (err instanceof Error && err.message === "insufficient_stock") {
+      return fail("Insufficient stock at source shop.")
     }
     return fail("Something went wrong. Please try again.")
   }
