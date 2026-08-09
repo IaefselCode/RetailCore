@@ -122,7 +122,11 @@ export function DataTable<T extends RowData>({
     columns,
     getRowId,
     initialState: {
-      sorting: initialSorting,
+      // Always initialize sorting to an array — the feature default `[]` is
+      // overwritten when `initialSorting` is undefined, and TanStack v9's
+      // toggleSorting updater does `old.findIndex(...)` and crashes on
+      // undefined ("Cannot read properties of undefined (reading 'findIndex')").
+      sorting: initialSorting ?? [],
       globalFilter: initialGlobalFilter,
       // Always initialize columnFilters to an array — TanStack v9's
       // setFilterValue does `old.find(...)` and crashes when it's undefined.
