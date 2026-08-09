@@ -4,7 +4,7 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import Link from "next/link"
-import { ArrowLeft, Loader2, Save } from "lucide-react"
+import { ArrowLeft, Loader2, Save, Store } from "lucide-react"
 import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,12 +18,21 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ImageUpload } from "@/components/ui/image-upload"
+import { Checkbox } from "@/components/ui/checkbox"
 import { AnimateButton } from "@/components/ui/animate-button"
 import { updateProduct } from "@/lib/products-actions"
+import { cn } from "@/lib/utils"
 
 interface Category {
   id: string
   name: string
+}
+
+interface Shop {
+  id: string
+  name: string
+  address: string | null
+  city: string | null
 }
 
 export interface EditProductData {
@@ -40,9 +49,13 @@ export interface EditProductData {
 export function EditProductForm({
   product,
   categories,
+  shops,
+  assignedShopIds,
 }: {
   product: EditProductData
   categories: Category[]
+  shops: Shop[]
+  assignedShopIds: string[]
 }) {
   const router = useRouter()
   const t = useTranslations("editProduct")
@@ -58,7 +71,16 @@ export function EditProductForm({
     categoryId: product.categoryId ?? "",
     newCategory: "",
     imageUrl: product.imageUrl,
+    shopIds: assignedShopIds.length > 0 ? assignedShopIds : shops.map((s) => s.id),
   })
+
+  const toggleShop = (shopId: string) =>
+    setForm((prev) => ({
+      ...prev,
+      shopIds: prev.shopIds.includes(shopId)
+        ? prev.shopIds.filter((id) => id !== shopId)
+        : [...prev.shopIds, shopId],
+    }))
 
   const update = (field: string, value: string | null) =>
     setForm((prev) => ({ ...prev, [field]: value ?? "" }))
@@ -75,6 +97,7 @@ export function EditProductForm({
     fd.append("categoryId", form.categoryId)
     fd.append("newCategory", form.newCategory)
     if (form.imageUrl) fd.append("imageUrl", form.imageUrl)
+    for (const shopId of form.shopIds) fd.append("shopIds", shopId)
 
     startTransition(async () => {
       const result = await updateProduct(fd)
@@ -153,6 +176,49 @@ export function EditProductForm({
             <div className="space-y-2">
               <Label>{tp("productImage")}</Label>
               <ImageUpload value={form.imageUrl} onChange={(url) => update("imageUrl", url)} />
+            </div>
+            <div className="space-y-2">
+              <Label>{t("assignShops")} <span className="text-destructive">*</span></Label>
+              <p className="text-xs text-muted-foreground">{t("assignShopsHint")}</p>
+              {shops.length === 0 ? (
+                <p className="py-2 text-sm text-muted-foreground">{tp("noShops")}</p>
+              ) : (
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {shops.map((shop) => {
+                    const checked = form.shopIds.includes(shop.id)
+                    return (
+                      <label
+                        key={shop.id}
+                        className={cn(
+                          "flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors",
+                          checked && "border-primary/60 bg-primary/5"
+                        )}
+                      >
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={() => toggleShop(shop.id)}
+                          aria-label={shop.name}
+                          className="mt-0.5"
+                        />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium flex items-center gap-1.5">
+                            <Store className="size-3.5 text-muted-foreground" />
+                            {shop.name}
+                          </p>
+                          {shop.city || shop.address ? (
+                            <p className="truncate text-xs text-muted-foreground">
+                              {[shop.city, shop.address].filter(Boolean).join(", ")}
+                            </p>
+                          ) : null}
+                        </div>
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {tp("selectedCount", { count: form.shopIds.length })}
+              </p>
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <AnimateButton type="button" variant="outline" asChild>

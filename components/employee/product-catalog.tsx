@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useTranslations } from "next-intl"
-import { Search, Grid3X3, List, Eye } from "lucide-react"
+import { Search, Grid3X3, List, Eye, Package } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select"
 import { AnimateButton } from "@/components/ui/animate-button"
 import { formatMoney } from "@/lib/money"
+import { cn } from "@/lib/utils"
 
 export interface EmployeeProductRow {
   id: string
@@ -32,6 +33,7 @@ export interface EmployeeProductRow {
   stock: number
   categoryName: string | null
   description: string | null
+  imageUrl: string | null
 }
 
 export function EmployeeProductCatalog({ products }: { products: EmployeeProductRow[] }) {
@@ -55,6 +57,22 @@ export function EmployeeProductCatalog({ products }: { products: EmployeeProduct
     return { label: String(stock), variant: "default" as const }
   }
 
+  function ProductImage({ product, className }: { product: EmployeeProductRow; className?: string }) {
+    if (product.imageUrl) {
+      return (
+        <div className={cn("overflow-hidden bg-muted", className)}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={product.imageUrl} alt={product.name} className="size-full object-cover" />
+        </div>
+      )
+    }
+    return (
+      <div className={cn("flex items-center justify-center bg-muted", className)}>
+        <Package className="size-10 text-muted-foreground/50" />
+      </div>
+    )
+  }
+
   function ProductDialog({ product }: { product: EmployeeProductRow }) {
     const badge = stockBadge(product.stock)
     return (
@@ -64,6 +82,7 @@ export function EmployeeProductCatalog({ products }: { products: EmployeeProduct
           <DialogDescription>SKU: {product.sku}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
+          <ProductImage product={product} className="h-48 w-full rounded-lg border" />
           {product.description && <p className="text-sm text-muted-foreground">{product.description}</p>}
           <div className="flex items-center justify-between rounded-lg border p-3">
             <span className="text-sm font-medium">{t("price")}</span>
@@ -125,7 +144,8 @@ export function EmployeeProductCatalog({ products }: { products: EmployeeProduct
             return (
               <Dialog key={product.id}>
                 <DialogTrigger asChild>
-                  <Card className="cursor-pointer transition-shadow hover:shadow-md">
+                  <Card className="cursor-pointer overflow-hidden transition-shadow hover:shadow-md">
+                    <ProductImage product={product} className="h-40 w-full" />
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { type ReactNode } from "react"
+import { Fragment, type ReactNode } from "react"
 import {
   createTableHook,
   tableFeatures,
@@ -85,6 +85,12 @@ export interface DataTableProps<T extends RowData> {
   initialSorting?: SortingState
   initialGlobalFilter?: string
   initialColumnFilters?: { id: string; value: unknown }[]
+  /** When set, the caller can switch between table and card rendering. */
+  viewMode?: "table" | "cards"
+  /** Renders one card per row (used when viewMode === "cards"). */
+  renderCard?: (row: T) => ReactNode
+  /** Grid classes for the card layout (defaults to a responsive 4-col grid). */
+  cardGridClassName?: string
   className?: string
 }
 
@@ -106,6 +112,9 @@ export function DataTable<T extends RowData>({
   initialSorting,
   initialGlobalFilter,
   initialColumnFilters,
+  viewMode = "table",
+  renderCard,
+  cardGridClassName,
   className,
 }: DataTableProps<T>) {
   const table = useAppTable({
@@ -144,66 +153,83 @@ export function DataTable<T extends RowData>({
         </div>
       )}
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((group) => (
-                  <TableRow key={group.id}>
-                    {group.headers.map((header) => {
-                      const canSort = header.column.getCanSort()
-                      const sorted = header.column.getIsSorted()
-                      return (
-                        <TableHead
-                          key={header.id}
-                          onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-                          className={cn(canSort && "cursor-pointer select-none")}
-                        >
-                          {header.isPlaceholder ? null : (
-                            <div className="flex items-center gap-1.5">
-                              <table.FlexRender header={header} />
-                              {canSort &&
-                                (sorted === "asc" ? (
-                                  <ArrowUp className="size-3.5" />
-                                ) : sorted === "desc" ? (
-                                  <ArrowDown className="size-3.5" />
-                                ) : (
-                                  <ArrowUpDown className="size-3.5 opacity-50" />
-                                ))}
-                            </div>
-                          )}
-                        </TableHead>
-                      )
-                    })}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {rows.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="py-8 text-center text-sm text-muted-foreground"
-                    >
-                      {empty}
-                    </TableCell>
-                  </TableRow>
-                )}
-                {rows.map((row) => (
-                  <TableRow key={row.id} className="transition-colors hover:bg-muted/50">
-                    {row.getAllCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        <table.FlexRender cell={cell} />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+      {viewMode === "cards" && renderCard ? (
+        rows.length === 0 ? (
+          <p className="py-8 text-center text-sm text-muted-foreground">{empty}</p>
+        ) : (
+          <div
+            className={cn(
+              "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+              cardGridClassName
+            )}
+          >
+            {rows.map((row) => (
+              <Fragment key={row.id}>{renderCard(row.original)}</Fragment>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        )
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  {table.getHeaderGroups().map((group) => (
+                    <TableRow key={group.id}>
+                      {group.headers.map((header) => {
+                        const canSort = header.column.getCanSort()
+                        const sorted = header.column.getIsSorted()
+                        return (
+                          <TableHead
+                            key={header.id}
+                            onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                            className={cn(canSort && "cursor-pointer select-none")}
+                          >
+                            {header.isPlaceholder ? null : (
+                              <div className="flex items-center gap-1.5">
+                                <table.FlexRender header={header} />
+                                {canSort &&
+                                  (sorted === "asc" ? (
+                                    <ArrowUp className="size-3.5" />
+                                  ) : sorted === "desc" ? (
+                                    <ArrowDown className="size-3.5" />
+                                  ) : (
+                                    <ArrowUpDown className="size-3.5 opacity-50" />
+                                  ))}
+                              </div>
+                            )}
+                          </TableHead>
+                        )
+                      })}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody>
+                  {rows.length === 0 && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className="py-8 text-center text-sm text-muted-foreground"
+                      >
+                        {empty}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {rows.map((row) => (
+                    <TableRow key={row.id} className="transition-colors hover:bg-muted/50">
+                      {row.getAllCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          <table.FlexRender cell={cell} />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {pagination && rows.length > 0 && (
         <div className="flex items-center justify-between">

@@ -4,12 +4,13 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { motion, AnimatePresence } from "motion/react"
-import { ChevronLeft, ChevronRight, Save, Loader2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Save, Loader2, Store } from "lucide-react"
 import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Select,
@@ -21,10 +22,18 @@ import {
 import { ImageUpload } from "@/components/ui/image-upload"
 import { AnimateButton } from "@/components/ui/animate-button"
 import { createProduct } from "@/lib/products-actions"
+import { cn } from "@/lib/utils"
 
 interface Category {
   id: string
   name: string
+}
+
+interface Shop {
+  id: string
+  name: string
+  address: string | null
+  city: string | null
 }
 
 const stepVariants = {
@@ -33,10 +42,16 @@ const stepVariants = {
   exit: { opacity: 0, x: -20 },
 }
 
-export function AddProductWizard({ categories }: { categories: Category[] }) {
+export function AddProductWizard({
+  categories,
+  shops,
+}: {
+  categories: Category[]
+  shops: Shop[]
+}) {
   const router = useRouter()
   const t = useTranslations("addProduct")
-  const steps = [t("step1"), t("step2"), t("step3")]
+  const steps = [t("step1"), t("step2"), t("step3"), t("step4")]
   const [step, setStep] = useState(0)
   const [pending, startTransition] = useTransition()
   const [form, setForm] = useState({
@@ -48,16 +63,26 @@ export function AddProductWizard({ categories }: { categories: Category[] }) {
     cost: "",
     sku: "",
     imageUrl: "" as string | null,
+    shopIds: shops.map((s) => s.id),
   })
 
   const update = (field: string, value: string | null) =>
     setForm((prev) => ({ ...prev, [field]: value ?? "" }))
+
+  const toggleShop = (shopId: string) =>
+    setForm((prev) => ({
+      ...prev,
+      shopIds: prev.shopIds.includes(shopId)
+        ? prev.shopIds.filter((id) => id !== shopId)
+        : [...prev.shopIds, shopId],
+    }))
 
   const nextStep = () => setStep((s) => Math.min(s + 1, steps.length - 1))
   const prevStep = () => setStep((s) => Math.max(s - 1, 0))
 
   const canNext0 = form.name.trim().length >= 2
   const canNext1 = form.sku.trim().length >= 2 && form.price.trim() !== ""
+  const canNext2 = form.shopIds.length > 0
 
   function handleSave() {
     const fd = new FormData()
@@ -69,6 +94,7 @@ export function AddProductWizard({ categories }: { categories: Category[] }) {
     fd.append("cost", form.cost)
     fd.append("sku", form.sku)
     fd.append("imageUrl", form.imageUrl ?? "")
+    for (const shopId of form.shopIds) fd.append("shopIds", shopId)
 
     startTransition(async () => {
       const result = await createProduct(fd)
@@ -82,6 +108,7 @@ export function AddProductWizard({ categories }: { categories: Category[] }) {
   }
 
   const progress = ((step + 1) / steps.length) * 100
+  const selectedShops = shops.filter((s) => form.shopIds.includes(s.id))
 
   return (
     <div className="space-y-6">
@@ -209,6 +236,51 @@ export function AddProductWizard({ categories }: { categories: Category[] }) {
               {step === 2 && (
                 <>
                   <div className="space-y-2">
+                    <Label>{t("assignShops")} <span className="text-destructive">*</span></Label>
+                    <p className="text-xs text-muted-foreground">{t("assignShopsHint")}</p>
+                  </div>
+                  {shops.length === 0 ? (
+                    <p className="py-4 text-sm text-muted-foreground">{t("noShops")}</p>
+                  ) : (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {shops.map((shop) => {
+                        const checked = form.shopIds.includes(shop.id)
+                        return (
+                          <label
+                            key={shop.id}
+                            className={cn(
+                              "flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors",
+                              checked && "border-primary/60 bg-primary/5"
+                            )}
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={() => toggleShop(shop.id)}
+                              aria-label={shop.name}
+                              className="mt-0.5"
+                            />
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium">{shop.name}</p>
+                              {shop.city || shop.address ? (
+                                <p className="truncate text-xs text-muted-foreground">
+                                  {[shop.city, shop.address].filter(Boolean).join(", ")}
+                                </p>
+                              ) : null}
+                            </div>
+                          </label>
+                        )
+                      })}
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {t("selectedCount", { count: form.shopIds.length })}
+                  </p>
+                </>
+              )}
+
+              {step === 3 && (
+                <>
+                  <div className="space-y-2">
                     <Label>{t("productImage")}</Label>
                     <ImageUpload
                       value={form.imageUrl}
@@ -232,6 +304,17 @@ export function AddProductWizard({ categories }: { categories: Category[] }) {
                       <span>{form.price ? `${form.price}` : "—"}</span>
                       <span className="text-muted-foreground">{t("cost")}:</span>
                       <span>{form.cost || "—"}</span>
+                      <span className="text-muted-foreground">{t("assignShops")}:</span>
+                      <span className="flex flex-wrap gap-1">
+                        {selectedShops.length === 0
+                          ? "—"
+                          : selectedShops.map((s) => (
+                              <Badge key={s.id} variant="secondary" className="text-xs">
+                                <Store className="size-3" />
+                                {s.name}
+                              </Badge>
+                            ))}
+                      </span>
                     </div>
                   </div>
                 </>
@@ -249,7 +332,7 @@ export function AddProductWizard({ categories }: { categories: Category[] }) {
         {step < steps.length - 1 ? (
           <AnimateButton
             onClick={nextStep}
-            disabled={step === 0 ? !canNext0 : step === 1 ? !canNext1 : false}
+            disabled={step === 0 ? !canNext0 : step === 1 ? !canNext1 : !canNext2}
           >
             {t("next")}
             <ChevronRight className="size-4" />

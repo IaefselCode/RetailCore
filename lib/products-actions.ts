@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { getSignedInRole } from "@/lib/auth-utils"
 import { getRequestMeta, type ActionResult } from "@/lib/actions"
 import { logAuditEvent } from "@/lib/audit-log"
+import { deleteImage } from "@/lib/images-server"
 
 function fail(message: string): ActionResult {
   return { success: false, message }
@@ -12,6 +13,22 @@ function fail(message: string): ActionResult {
 
 function str(value: FormDataEntryValue | null): string {
   return String(value ?? "").trim()
+}
+
+/** Collects shop ids from repeated `shopIds` form entries (and a comma-separated fallback). */
+function shopIdsFromForm(formData: FormData): string[] {
+  const all = formData.getAll("shopIds")
+  const ids = new Set<string>()
+  for (const entry of all) {
+    const v = String(entry).trim()
+    if (!v) continue
+    if (v.includes(",")) {
+      for (const part of v.split(",")) if (part.trim()) ids.add(part.trim())
+    } else {
+      ids.add(v)
+    }
+  }
+  return [...ids]
 }
 
 async function requireAdmin() {
@@ -55,6 +72,9 @@ export async function createProduct(formData: FormData): Promise<ActionResult> {
     const existing = await prisma.product.findUnique({ where: { sku } })
     if (existing) return fail("A product with that SKU already exists.")
 
+    const shopIds = shopIdsFromForm(formData)
+    if (shopIds.length === 0) return fail("Assign the product to at least one shop.")
+
     const product = await prisma.product.create({
       data: {
         name,
@@ -65,6 +85,9 @@ export async function createProduct(formData: FormData): Promise<ActionResult> {
         categoryId,
         imageUrl,
         isActive: true,
+        inventory: {
+          create: shopIds.map((shopId) => ({ shopId, quantity: 0, minStock: 0 })),
+        },
       },
     })
 
@@ -119,10 +142,61 @@ export async function updateProduct(formData: FormData): Promise<ActionResult> {
     const skuTaken = await prisma.product.findFirst({ where: { sku, NOT: { id } } })
     if (skuTaken) return fail("A product with that SKU already exists.")
 
+    const existingImage = await prisma.product.findUnique({
+      where: { id },
+      select: { imageUrl: true },
+    })
+
+    const shopIds = shopIdsFromForm(formData)
+    if (shopIds.length === 0) return fail("Assign the product to at least one shop.")
+
+    // Reconcile shop assignments. Removing a shop that still holds stock would
+    // silently discard that stock, so block it until the stock is moved out.
+    const currentRows = await prisma.inventory.findMany({
+      where: { productId: id },
+      include: { shop: { select: { name: true } } },
+    })
+    const removedWithStock = currentRows.filter(
+      (row) => row.quantity > 0 && !shopIds.includes(row.shopId)
+    )
+    if (removedWithStock.length > 0) {
+      return fail(
+        `Cannot remove ${removedWithStock
+          .map((r) => r.shop.name)
+          .join(", ")} — this product still has stock there. Move the stock out first.`
+      )
+    }
+
     const product = await prisma.product.update({
       where: { id },
       data: { name, sku, description, price, cost, categoryId, imageUrl },
     })
+
+    const currentShopIds = currentRows.map((r) => r.shopId)
+    const toAdd = shopIds.filter((sid) => !currentShopIds.includes(sid))
+    const toRemove = currentRows.filter(
+      (row) => !shopIds.includes(row.shopId) && row.quantity === 0
+    )
+    if (toAdd.length > 0) {
+      await prisma.inventory.createMany({
+        data: toAdd.map((shopId) => ({
+          productId: id,
+          shopId,
+          quantity: 0,
+          minStock: 0,
+        })),
+      })
+    }
+    if (toRemove.length > 0) {
+      await prisma.inventory.deleteMany({
+        where: { productId: id, shopId: { in: toRemove.map((r) => r.shopId) } },
+      })
+    }
+
+    // Remove the previous image file if it was replaced with a new one.
+    if (existingImage?.imageUrl && existingImage.imageUrl !== imageUrl) {
+      await deleteImage(existingImage.imageUrl)
+    }
 
     const meta = await getRequestMeta()
     await logAuditEvent("product_updated", {
@@ -191,6 +265,11 @@ export async function deleteProduct(formData: FormData): Promise<ActionResult> {
     }
 
     await prisma.product.delete({ where: { id } })
+
+    // Remove the product's image file from storage.
+    if (product.imageUrl) {
+      await deleteImage(product.imageUrl)
+    }
 
     const meta = await getRequestMeta()
     await logAuditEvent("product_deleted", {

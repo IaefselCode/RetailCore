@@ -4,10 +4,17 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
-import { ChevronRight, Trash2, AlertTriangle } from "lucide-react"
+import { ChevronRight, Trash2, AlertTriangle, Grid3X3, List, Package } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +52,7 @@ export interface ProductRow {
   imageUrl: string | null
   isActive: boolean
   totalStock: number
+  shops: { id: string; name: string }[]
 }
 
 interface Category {
@@ -71,6 +79,7 @@ export function ProductsTable({
   const t = useTranslations("products")
   const tc = useTranslations("common")
   const [deleteTarget, setDeleteTarget] = useState<ProductRow | null>(null)
+  const [viewMode, setViewMode] = useState<"table" | "cards">("table")
   const [pending, startTransition] = useTransition()
 
   function confirmDelete() {
@@ -105,6 +114,75 @@ export function ProductsTable({
     })
   }
 
+  function ProductCard({ product }: { product: ProductRow }) {
+    return (
+      <Card className="flex h-full flex-col overflow-hidden">
+        {product.imageUrl ? (
+          <div className="h-40 w-full bg-muted">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={product.imageUrl} alt={product.name} className="size-full object-cover" />
+          </div>
+        ) : (
+          <div className="flex h-40 w-full items-center justify-center bg-muted">
+            <Package className="size-12 text-muted-foreground/50" />
+          </div>
+        )}
+        <CardHeader>
+          <div className="flex items-start justify-between gap-2">
+            <Link href={`/admin/products/${product.id}`} className="min-w-0">
+              <CardTitle className="truncate text-sm hover:underline">{product.name}</CardTitle>
+              <CardDescription className="truncate">{product.categoryName ?? "—"}</CardDescription>
+            </Link>
+            <Badge variant={product.isActive ? "default" : "secondary"} className="shrink-0">
+              {product.isActive ? t("active") : t("inactive")}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="flex flex-1 flex-col justify-between gap-3">
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-mono text-xs text-muted-foreground">{product.sku}</span>
+            <span className="text-lg font-bold">{formatMoney(product.price)}</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-1">
+            {product.shops.length > 0 &&
+              product.shops.map((shop) => (
+                <Badge key={shop.id} variant="outline" className="text-xs">
+                  {shop.name}
+                </Badge>
+              ))}
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm text-muted-foreground">
+              {t("colStock")}: {product.totalStock}
+            </span>
+            <div className="flex items-center gap-1">
+              <AnimateButton size="icon-sm" variant="ghost" asChild>
+                <Link href={`/admin/products/${product.id}`} aria-label={t("view")}>
+                  <ChevronRight className="size-4" />
+                </Link>
+              </AnimateButton>
+              <AnimateButton
+                size="icon-sm"
+                variant="ghost"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => setDeleteTarget(product)}
+                disabled={pending}
+                aria-label={t("deleteConfirmTitle")}
+              >
+                <Trash2 className="size-4" />
+              </AnimateButton>
+              <Switch
+                checked={product.isActive}
+                onCheckedChange={() => toggle(product)}
+                disabled={pending}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   const columns = helper.columns([
     helper.accessor("name", {
       header: t("colProduct"),
@@ -125,6 +203,23 @@ export function ProductsTable({
       header: t("colCategory"),
       filterFn: "equalsString",
       cell: ({ row }) => row.original.categoryName ?? "—",
+    }),
+    helper.accessor("shops", {
+      id: "shops",
+      header: t("colShops"),
+      cell: ({ getValue }) => {
+        const shops = getValue() as { id: string; name: string }[]
+        if (shops.length === 0) return <span className="text-muted-foreground">—</span>
+        return (
+          <div className="flex max-w-56 flex-wrap gap-1">
+            {shops.map((shop) => (
+              <Badge key={shop.id} variant="outline" className="text-xs">
+                {shop.name}
+              </Badge>
+            ))}
+          </div>
+        )
+      },
     }),
     helper.accessor("price", {
       header: t("colPrice"),
@@ -226,6 +321,26 @@ export function ProductsTable({
               <SelectItem value="inactive">{t("inactive")}</SelectItem>
             </SelectContent>
           </Select>
+          <div className="flex items-center rounded-lg border p-0.5">
+            <AnimateButton
+              variant={viewMode === "table" ? "secondary" : "ghost"}
+              size="icon-sm"
+              onClick={() => setViewMode("table")}
+              aria-label={t("viewTable")}
+              aria-pressed={viewMode === "table"}
+            >
+              <List className="size-4" />
+            </AnimateButton>
+            <AnimateButton
+              variant={viewMode === "cards" ? "secondary" : "ghost"}
+              size="icon-sm"
+              onClick={() => setViewMode("cards")}
+              aria-label={t("viewGrid")}
+              aria-pressed={viewMode === "cards"}
+            >
+              <Grid3X3 className="size-4" />
+            </AnimateButton>
+          </div>
         </>
       )}
       initialGlobalFilter={initialSearch}
@@ -241,6 +356,8 @@ export function ProductsTable({
       ]}
       empty={t("empty")}
       className="mt-4"
+      viewMode={viewMode}
+      renderCard={(product) => <ProductCard product={product} />}
     />
 
     <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>

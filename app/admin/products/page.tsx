@@ -64,7 +64,7 @@ async function ProductsContent({ searchParams }: { searchParams: SearchParams })
       orderBy: { createdAt: "desc" },
       include: {
         category: { select: { id: true, name: true } },
-        inventory: { select: { quantity: true } },
+        inventory: { select: { quantity: true, shop: { select: { id: true, name: true } } } },
       },
     }),
     prisma.category.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
@@ -85,6 +85,7 @@ async function ProductsContent({ searchParams }: { searchParams: SearchParams })
     imageUrl: p.imageUrl,
     isActive: p.isActive,
     totalStock: p.inventory.reduce((sum, inv) => sum + inv.quantity, 0),
+    shops: p.inventory.map((inv) => ({ id: inv.shop.id, name: inv.shop.name })),
   }))
 
   return (
@@ -155,13 +156,14 @@ function ProductsSkeleton() {
         <SearchBarSkeleton className="flex-1 sm:max-w-sm" />
         <Skeleton className="h-9 w-full rounded-md sm:w-40" />
         <Skeleton className="h-9 w-full rounded-md sm:w-32" />
+        <Skeleton className="h-9 w-16 rounded-lg" />
       </div>
 
       {/* Products table (data area) */}
       <SkeletonTable
         rows={6}
-        columns={["w-40", "w-20", "w-20", "w-16", "w-10", "w-16", "w-40"]}
-        headers={["Product", "SKU", "Category", "Price", "Stock", "Status", "Actions"]}
+        columns={["w-40", "w-20", "w-20", "w-28", "w-16", "w-10", "w-16", "w-40"]}
+        headers={["Product", "SKU", "Category", "Shops", "Price", "Stock", "Status", "Actions"]}
       />
     </>
   )

@@ -33,7 +33,7 @@ export default async function RecordSalePage() {
 
 async function RecordSaleContent({ shopId, shopName }: { shopId: string; shopName: string }) {
   const products = await prisma.product.findMany({
-    where: { isActive: true },
+    where: { isActive: true, inventory: { some: { shopId } } },
     orderBy: { name: "asc" },
     include: {
       inventory: { where: { shopId }, select: { quantity: true } },

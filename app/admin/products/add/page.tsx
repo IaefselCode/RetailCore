@@ -29,7 +29,7 @@ export default async function AddProductPage() {
         <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
 
-      <Suspense fallback={<WizardSkeleton steps={3} />}>
+      <Suspense fallback={<WizardSkeleton steps={4} />}>
         <AddProductContent />
       </Suspense>
     </div>
@@ -37,10 +37,16 @@ export default async function AddProductPage() {
 }
 
 async function AddProductContent() {
-  const categories = await prisma.category.findMany({
-    orderBy: { name: "asc" },
-    select: { id: true, name: true },
-  })
+  const [categories, shops] = await Promise.all([
+    prisma.category.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+    prisma.shop.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, address: true, city: true },
+    }),
+  ])
 
-  return <AddProductWizard categories={categories} />
+  return <AddProductWizard categories={categories} shops={shops} />
 }
