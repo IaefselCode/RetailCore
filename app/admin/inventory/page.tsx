@@ -11,8 +11,15 @@ import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components
 import { Skeleton } from "@/components/ui/skeleton"
 import { SkeletonStat, TableRowsSkeleton } from "@/components/shared/skeleton-primitives"
 import { ServerTable, createServerColumnHelper } from "@/components/shared/server-table"
+import { InventoryFilters } from "@/components/admin/inventory-filters"
 
 export const metadata = { title: "Inventory | RetailCore" }
+
+interface SearchParams {
+  q?: string
+  shopId?: string
+  status?: string
+}
 
 function stockStatus(quantity: number, minStock: number) {
   if (quantity <= 0) return { key: "statusOut", variant: "destructive" as const }
@@ -33,31 +40,39 @@ interface InventoryRow {
 
 const inventoryHelper = createServerColumnHelper<InventoryRow>()
 
-async function TotalUnitsValue() {
-  const rows = await prisma.inventory.findMany({ select: { quantity: true } })
+async function TotalUnitsValue({ where }: { where: Record<string, unknown> }) {
+  const rows = await prisma.inventory.findMany({ where, select: { quantity: true } })
   const total = rows.reduce((sum, r) => sum + r.quantity, 0)
   return <>{total.toLocaleString()}</>
 }
 
-async function LowStockCountValue() {
-  const rows = await prisma.inventory.findMany({ select: { quantity: true, minStock: true } })
+async function LowStockCountValue({ where }: { where: Record<string, unknown> }) {
+  const rows = await prisma.inventory.findMany({ where, select: { quantity: true, minStock: true } })
   const count = rows.filter((r) => r.quantity > 0 && r.quantity <= r.minStock).length
   return <>{count}</>
 }
 
-async function OutOfStockCountValue() {
-  const rows = await prisma.inventory.findMany({ select: { quantity: true } })
+async function OutOfStockCountValue({ where }: { where: Record<string, unknown> }) {
+  const rows = await prisma.inventory.findMany({ where, select: { quantity: true } })
   const count = rows.filter((r) => r.quantity <= 0).length
   return <>{count}</>
 }
 
-async function OverstockedCountValue() {
-  const rows = await prisma.inventory.findMany({ select: { quantity: true } })
+async function OverstockedCountValue({ where }: { where: Record<string, unknown> }) {
+  const rows = await prisma.inventory.findMany({ where, select: { quantity: true } })
   const count = rows.filter((r) => r.quantity > 100).length
   return <>{count}</>
 }
 
-async function InventoryTableSection() {
+async function InventoryTableSection({
+  where,
+  status,
+  hasFilters,
+}: {
+  where: Record<string, unknown>
+  status?: string
+  hasFilters: boolean
+}) {
   const t = await getTranslations("inventory")
   return (
     <Card>
@@ -104,15 +119,26 @@ async function InventoryTableSection() {
             </>
           }
         >
-          <InventoryTable t={t} />
+          <InventoryTable t={t} where={where} status={status} hasFilters={hasFilters} />
         </Suspense>
       </CardContent>
     </Card>
   )
 }
 
-async function InventoryTable({ t }: { t: (key: string) => string }) {
+async function InventoryTable({
+  t,
+  where,
+  status,
+  hasFilters,
+}: {
+  t: (key: string) => string
+  where: Record<string, unknown>
+  status?: string
+  hasFilters: boolean
+}) {
   const inv = await prisma.inventory.findMany({
+    where,
     orderBy: [{ shop: { name: "asc" } }, { product: { name: "asc" } }],
     include: {
       product: { select: { name: true, sku: true } },
@@ -120,8 +146,8 @@ async function InventoryTable({ t }: { t: (key: string) => string }) {
     },
   })
 
-  const rows: InventoryRow[] = inv.map((row) => {
-    const status = stockStatus(row.quantity, row.minStock)
+  const allRows: InventoryRow[] = inv.map((row) => {
+    const st = stockStatus(row.quantity, row.minStock)
     return {
       id: row.id,
       productName: row.product.name,
@@ -129,10 +155,21 @@ async function InventoryTable({ t }: { t: (key: string) => string }) {
       shopName: row.shop.name,
       quantity: row.quantity,
       minStock: row.minStock,
-      statusKey: status.key,
-      statusVariant: status.variant,
+      statusKey: st.key,
+      statusVariant: st.variant,
     }
   })
+
+  // Status is computed (quantity vs minStock), so it can't be expressed in the
+  // Prisma where — apply it here over the query-filtered rows.
+  const rows =
+    status === "in"
+      ? allRows.filter((r) => r.quantity > r.minStock)
+      : status === "low"
+        ? allRows.filter((r) => r.quantity > 0 && r.quantity <= r.minStock)
+        : status === "out"
+          ? allRows.filter((r) => r.quantity <= 0)
+          : allRows
 
   const columns = inventoryHelper.columns([
     inventoryHelper.accessor("productName", {
@@ -164,14 +201,16 @@ async function InventoryTable({ t }: { t: (key: string) => string }) {
           columns={columns}
           getRowId={(row) => row.id}
           numbered
-          empty={t("empty")}
+          empty={rows.length === 0 && hasFilters ? t("noResults") : t("empty")}
         />
       </div>
 
       {/* Mobile: stacked cards */}
       <div className="divide-y md:hidden">
         {rows.length === 0 && (
-          <p className="py-8 text-center text-sm text-muted-foreground">{t("empty")}</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            {hasFilters ? t("noResults") : t("empty")}
+          </p>
         )}
         {rows.map((row) => (
           <div key={row.id} className="flex items-center justify-between gap-3 px-4 py-3">
@@ -192,10 +231,36 @@ async function InventoryTable({ t }: { t: (key: string) => string }) {
   )
 }
 
-export default async function InventoryPage() {
+export default async function InventoryPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>
+}) {
   await requireRole("ADMIN")
   const t = await getTranslations("inventory")
   const tc = await getTranslations("common")
+  const params = await searchParams
+
+  const q = params.q?.trim() ?? ""
+  const shopId = params.shopId ?? "all"
+  const status = params.status ?? "all"
+
+  // Text + shop filters run in the database; status is applied in JS.
+  const where: Record<string, unknown> = {}
+  if (q) {
+    where.OR = [
+      { product: { name: { contains: q, mode: "insensitive" } } },
+      { product: { sku: { contains: q, mode: "insensitive" } } },
+    ]
+  }
+  if (shopId && shopId !== "all") where.shopId = shopId
+
+  const shops = await prisma.shop.findMany({
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  })
+
+  const hasFilters = q !== "" || shopId !== "all" || status !== "all"
 
   return (
     <div className="space-y-6">
@@ -233,7 +298,7 @@ export default async function InventoryPage() {
           <CardContent className="flex items-center gap-2 text-2xl font-bold">
             <Package className="size-5 text-muted-foreground" />
             <Suspense fallback={<SkeletonStat />}>
-              <TotalUnitsValue />
+              <TotalUnitsValue where={where} />
             </Suspense>
           </CardContent>
         </Card>
@@ -242,7 +307,7 @@ export default async function InventoryPage() {
           <CardContent className="flex items-center gap-2 text-2xl font-bold text-yellow-600">
             <AlertTriangle className="size-5" />
             <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
-              <LowStockCountValue />
+              <LowStockCountValue where={where} />
             </Suspense>
           </CardContent>
         </Card>
@@ -251,7 +316,7 @@ export default async function InventoryPage() {
           <CardContent className="flex items-center gap-2 text-2xl font-bold text-red-600">
             <XCircle className="size-5" />
             <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
-              <OutOfStockCountValue />
+              <OutOfStockCountValue where={where} />
             </Suspense>
           </CardContent>
         </Card>
@@ -259,13 +324,18 @@ export default async function InventoryPage() {
           <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">{t("overstocked")}</CardTitle></CardHeader>
           <CardContent className="text-2xl font-bold text-blue-600">
             <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
-              <OverstockedCountValue />
+              <OverstockedCountValue where={where} />
             </Suspense>
           </CardContent>
         </Card>
       </div>
 
-      <InventoryTableSection />
+      <InventoryFilters
+        shops={shops}
+        initial={{ q, shopId, status }}
+      />
+
+      <InventoryTableSection where={where} status={status} hasFilters={hasFilters} />
     </div>
   )
 }
