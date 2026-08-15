@@ -1,8 +1,9 @@
 "use client"
 
+import { useTransition } from "react"
 import { useTranslations } from "next-intl"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { ArrowDownToLine, ArrowUpFromLine, ChevronLeft, ChevronRight, History } from "lucide-react"
+import { ArrowDownToLine, ArrowUpFromLine, ChevronLeft, ChevronRight, History, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -78,6 +79,8 @@ export function MovementsTable({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const t = useTranslations("inventory")
+  const tc = useTranslations("common")
+  const [isPending, startTransition] = useTransition()
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
@@ -88,7 +91,11 @@ export function MovementsTable({
       else params.delete(key)
     }
     if (!updates.page) params.delete("page")
-    router.push(`${pathname}?${params.toString()}`)
+    // Mark the navigation as a transition so the search field can show a
+    // pending spinner while the server re-filters the (possibly large) table.
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`)
+    })
   }
 
   return (
@@ -143,12 +150,18 @@ export function MovementsTable({
 
       <Card>
         <CardContent className="flex flex-wrap gap-3 pt-6">
-          <Input
-            defaultValue={initialFilters.product}
-            placeholder={t("filterProduct")}
-            className="w-full sm:w-48"
-            onChange={(e) => updateParams({ product: e.target.value, page: "1" })}
-          />
+          <div className="relative w-full sm:w-48">
+            <Input
+              defaultValue={initialFilters.product}
+              placeholder={t("filterProduct")}
+              className="pr-8"
+              onChange={(e) => updateParams({ product: e.target.value, page: "1" })}
+              aria-busy={isPending}
+            />
+            {isPending && (
+              <Loader2 className="absolute right-2.5 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+            )}
+          </div>
           <Input
             type="date"
             defaultValue={initialFilters.dateFrom}
@@ -193,6 +206,7 @@ export function MovementsTable({
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">{tc("no")}</TableHead>
                 <TableHead>{t("colDate")}</TableHead>
                 <TableHead>{t("colProduct")}</TableHead>
                 <TableHead>{t("colSku")}</TableHead>
@@ -206,13 +220,16 @@ export function MovementsTable({
             <TableBody>
               {rows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={9} className="py-8 text-center text-sm text-muted-foreground">
                     {t("emptyMovements")}
                   </TableCell>
                 </TableRow>
               )}
-              {rows.map((row) => (
+              {rows.map((row, index) => (
                 <TableRow key={row.id} className="transition-colors hover:bg-muted/50">
+                  <TableCell className="text-muted-foreground tabular-nums">
+                    {(initialFilters.page - 1) * pageSize + index + 1}
+                  </TableCell>
                   <TableCell className="whitespace-nowrap text-muted-foreground">
                     {new Date(row.createdAt).toLocaleString()}
                   </TableCell>

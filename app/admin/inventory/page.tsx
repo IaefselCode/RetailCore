@@ -163,6 +163,7 @@ async function InventoryTable({ t }: { t: (key: string) => string }) {
           data={rows}
           columns={columns}
           getRowId={(row) => row.id}
+          numbered
           empty={t("empty")}
         />
       </div>

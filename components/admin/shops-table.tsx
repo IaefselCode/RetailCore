@@ -131,6 +131,8 @@ export function ShopsTable({ shops }: { shops: ShopRow[] }) {
         getRowId={(row) => row.id}
         searchable
         searchPlaceholder={t("searchPlaceholder")}
+        numbered
+        pagination
         empty={t("noResults")}
       />
 

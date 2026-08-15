@@ -1,6 +1,7 @@
 "use client"
 
-import { Fragment, type ReactNode } from "react"
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react"
+import { useTranslations } from "next-intl"
 import {
   createTableHook,
   tableFeatures,
@@ -22,7 +23,7 @@ import {
   type SortingState,
 } from "@tanstack/react-table"
 import type { Table as CoreTable } from "@tanstack/table-core"
-import { Search, ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react"
+import { Search, ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { AnimateButton } from "@/components/ui/animate-button"
@@ -74,6 +75,8 @@ export interface DataTableProps<T extends RowData> {
   /** Show a global search input bound to the table's global filter. */
   searchable?: boolean
   searchPlaceholder?: string
+  /** Prepend a "#" column numbering the visible rows (continuous across pages). */
+  numbered?: boolean
   /** Extra toolbar controls rendered next to the search input (filters etc).
    * Receives the table instance so filters can call `table.getColumn(id)`. */
   toolbar?: ReactNode | ((table: CoreTable<DataFeatures, T>) => ReactNode)
@@ -99,12 +102,31 @@ export interface DataTableProps<T extends RowData> {
  * pagination, and the shadcn table chrome. Table state lives entirely in
  * TanStack via `useAppTable`.
  */
+const SEARCH_DEBOUNCE_MS = 250
+/** Minimum time the "searching…" spinner stays visible so it is perceptible. */
+const SEARCH_MIN_VISIBLE_MS = 350
+
+/** Page indexes around the current page, with "…" for gaps (max 7 entries). */
+function getPageItems(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i)
+  const items: (number | "…")[] = []
+  const start = Math.max(0, Math.min(current - 2, total - 5))
+  const end = Math.min(total - 1, start + 4)
+  if (start > 0) items.push(0)
+  if (start > 1) items.push("…")
+  for (let i = start; i <= end; i++) items.push(i)
+  if (end < total - 2) items.push("…")
+  if (end < total - 1) items.push(total - 1)
+  return items
+}
+
 export function DataTable<T extends RowData>({
   data,
   columns,
   getRowId,
   searchable = false,
   searchPlaceholder,
+  numbered = false,
   toolbar,
   empty,
   pagination = false,
@@ -117,9 +139,46 @@ export function DataTable<T extends RowData>({
   cardGridClassName,
   className,
 }: DataTableProps<T>) {
+  const t = useTranslations("common")
+  const [searchValue, setSearchValue] = useState((initialGlobalFilter as string) ?? "")
+  const [isSearching, setIsSearching] = useState(false)
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const searchMinTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(
+    () => () => {
+      if (searchTimer.current) clearTimeout(searchTimer.current)
+      if (searchMinTimer.current) clearTimeout(searchMinTimer.current)
+    },
+    []
+  )
+
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value)
+    setIsSearching(true)
+    if (searchTimer.current) clearTimeout(searchTimer.current)
+    if (searchMinTimer.current) clearTimeout(searchMinTimer.current)
+    // Re-run the filter after the debounce; keep the spinner up long enough
+    // to be noticeable when filtering a large dataset takes a moment.
+    searchMinTimer.current = setTimeout(() => setIsSearching(false), SEARCH_MIN_VISIBLE_MS)
+    searchTimer.current = setTimeout(() => {
+      table.setGlobalFilter(value)
+    }, SEARCH_DEBOUNCE_MS)
+  }
+
+  const numberColumn: AppColumnDef<T> = {
+    id: "__index",
+    header: t("no"),
+    cell: ({ row }) => (
+      <span className="text-muted-foreground tabular-nums">{row.index + 1}</span>
+    ),
+  }
+
+  const displayColumns = numbered ? [numberColumn, ...columns] : columns
+
   const table = useAppTable({
     data,
-    columns,
+    columns: displayColumns,
     getRowId,
     initialState: {
       // Always initialize sorting to an array — the feature default `[]` is
@@ -133,7 +192,8 @@ export function DataTable<T extends RowData>({
       columnFilters: initialColumnFilters ?? [],
       pagination: { pageIndex: 0, pageSize },
     },
-    getColumnCanGlobalFilter: (column) => column.id !== "actions",
+    getColumnCanGlobalFilter: (column) =>
+      column.id !== "actions" && column.id !== "__index",
   })
 
   const rows = table.getRowModel().rows
@@ -147,10 +207,14 @@ export function DataTable<T extends RowData>({
               <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder={searchPlaceholder}
-                className="pl-8"
-                value={(table.state.globalFilter as string) ?? ""}
-                onChange={(e) => table.setGlobalFilter(e.target.value)}
+                className="pl-8 pr-8"
+                value={searchValue}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                aria-busy={isSearching}
               />
+              {isSearching && (
+                <Loader2 className="absolute right-2.5 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+              )}
             </div>
           )}
           {typeof toolbar === "function" ? toolbar(table) : toolbar}
@@ -212,7 +276,7 @@ export function DataTable<T extends RowData>({
                   {rows.length === 0 && (
                     <TableRow>
                       <TableCell
-                        colSpan={columns.length}
+                        colSpan={displayColumns.length}
                         className="py-8 text-center text-sm text-muted-foreground"
                       >
                         {empty}
@@ -235,8 +299,8 @@ export function DataTable<T extends RowData>({
         </Card>
       )}
 
-      {pagination && rows.length > 0 && (
-        <div className="flex items-center justify-between">
+      {pagination && table.getRowCount() > pageSize && (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
             {table.state.pagination.pageIndex * pageSize + 1}–
             {Math.min(
@@ -245,20 +309,43 @@ export function DataTable<T extends RowData>({
             )}{" "}
             / {table.getRowCount()}
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-1">
             <AnimateButton
               variant="outline"
-              size="sm"
+              size="icon-sm"
               disabled={!table.getCanPreviousPage()}
               onClick={() => table.previousPage()}
+              aria-label="Previous page"
             >
               <ChevronLeft className="size-4" />
             </AnimateButton>
+            {getPageItems(
+              table.state.pagination.pageIndex,
+              table.getPageCount()
+            ).map((page, i) =>
+              page === "…" ? (
+                <span key={`ellipsis-${i}`} className="px-1 text-sm text-muted-foreground">
+                  …
+                </span>
+              ) : (
+                <AnimateButton
+                  key={page}
+                  variant={page === table.state.pagination.pageIndex ? "default" : "ghost"}
+                  size="icon-sm"
+                  onClick={() => table.setPageIndex(page)}
+                  aria-label={`Page ${page + 1}`}
+                  aria-current={page === table.state.pagination.pageIndex ? "page" : undefined}
+                >
+                  {page + 1}
+                </AnimateButton>
+              )
+            )}
             <AnimateButton
               variant="outline"
-              size="sm"
+              size="icon-sm"
               disabled={!table.getCanNextPage()}
               onClick={() => table.nextPage()}
+              aria-label="Next page"
             >
               <ChevronRight className="size-4" />
             </AnimateButton>

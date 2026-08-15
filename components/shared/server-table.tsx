@@ -1,4 +1,5 @@
 import { type ReactNode } from "react"
+import { getTranslations } from "next-intl/server"
 import {
   constructTable,
   createColumnHelper,
@@ -39,6 +40,8 @@ export interface ServerTableProps<T extends RowData> {
   getRowId?: (row: T) => string
   /** Message shown when there are no rows. */
   empty?: ReactNode
+  /** Prepend a "#" column numbering the rows. */
+  numbered?: boolean
   /**
    * Render only the `<TableRow>`s (no table chrome). Use when the page
    * already provides its own `<Table>`/`<TableHeader>`/`<TableBody>` and
@@ -52,17 +55,32 @@ export interface ServerTableProps<T extends RowData> {
  * Server-component table built on TanStack Table v9 (`constructTable`).
  * Use for read-only tables rendered by RSC pages.
  */
-export function ServerTable<T extends RowData>({
+export async function ServerTable<T extends RowData>({
   data,
   columns,
   getRowId,
   empty,
+  numbered = false,
   bodyOnly = false,
   className,
 }: ServerTableProps<T>) {
+  // Server components can't call the client useTranslations hook, so resolve
+  // the header label from the request scope instead (only when needed).
+  const t = numbered ? await getTranslations("common") : null
+
+  const numberColumn: ColumnDef<ServerFeatures, T> = {
+    id: "__index",
+    header: t?.("no") ?? "No.",
+    cell: ({ row }) => (
+      <span className="text-muted-foreground tabular-nums">{row.index + 1}</span>
+    ),
+  }
+
+  const displayColumns = numbered ? [numberColumn, ...columns] : columns
+
   const table = constructTable<ServerFeatures, T>({
     features: serverFeatures,
-    columns,
+    columns: displayColumns,
     data,
     getRowId,
   })
@@ -74,7 +92,7 @@ export function ServerTable<T extends RowData>({
     rows.length === 0 ? (
       <TableRow>
         <TableCell
-          colSpan={columns.length}
+          colSpan={displayColumns.length}
           className="py-8 text-center text-sm text-muted-foreground"
         >
           {empty}

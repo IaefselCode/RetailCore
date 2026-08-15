@@ -142,6 +142,7 @@ export default async function AdminUsersPage() {
             data={users}
             columns={columns}
             getRowId={(row) => row.id}
+            numbered
             empty={t("empty")}
           />
         </CardContent>

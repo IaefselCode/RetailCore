@@ -144,6 +144,8 @@ export function EmployeesTable({
         getRowId={(row) => row.id}
         searchable
         searchPlaceholder={t("searchPlaceholder")}
+        numbered
+        pagination
         toolbar={(table) => (
           <Select
             value={String((table.getColumn("shop")?.getFilterValue() as string) ?? "all")}

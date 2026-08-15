@@ -278,6 +278,8 @@ export function ProductsTable({
       getRowId={(row) => row.id}
       searchable
       searchPlaceholder={t("searchPlaceholder")}
+      numbered
+      pagination
       toolbar={(table) => (
         <>
           <Select

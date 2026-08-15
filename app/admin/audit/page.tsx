@@ -129,6 +129,7 @@ async function AuditTableBody() {
       data={logs}
       columns={columns}
       getRowId={(row) => row.id}
+      numbered
       empty={t("empty")}
     />
   )

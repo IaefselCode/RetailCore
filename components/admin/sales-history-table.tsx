@@ -129,6 +129,15 @@ export function SalesHistoryTable({
   const table = useAppTable({
     data: sales,
     columns: helper.columns([
+      helper.display({
+        id: "no",
+        header: tc("no"),
+        cell: ({ row }) => (
+          <span className="text-muted-foreground tabular-nums">
+            {(initialFilters.page - 1) * PAGE_SIZE + row.index + 1}
+          </span>
+        ),
+      }),
       helper.accessor("invoiceNo", {
         header: t("colInvoice"),
         cell: ({ getValue }) => <span className="font-mono text-xs">{getValue() as string}</span>,
@@ -270,7 +279,7 @@ export function SalesHistoryTable({
             <TableBody>
               {rows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="py-8 text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={10} className="py-8 text-center text-sm text-muted-foreground">
                     {t("empty")}
                   </TableCell>
                 </TableRow>

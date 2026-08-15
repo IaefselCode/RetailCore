@@ -47,6 +47,7 @@ async function SalesTableSection({
   initialDate: string
 }) {
   const t = await getTranslations("employeeSalesHistory")
+  const tc = await getTranslations("common")
   const where: Record<string, unknown> = { shopId, employeeId }
   if (initialDate) {
     where.createdAt = {
@@ -64,6 +65,7 @@ async function SalesTableSection({
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">{tc("no")}</TableHead>
                 <TableHead>{t("colInvoice")}</TableHead>
                 <TableHead>{t("colCustomer")}</TableHead>
                 <TableHead>{t("colItems")}</TableHead>
@@ -77,7 +79,7 @@ async function SalesTableSection({
                 fallback={
                   <TableRowsSkeleton
                     rows={8}
-                    columns={["w-24", "w-20", "w-8", "w-16", "w-24", "w-20"]}
+                    columns={["w-8", "w-24", "w-20", "w-8", "w-16", "w-24", "w-20"]}
                   />
                 }
               >
@@ -145,6 +147,7 @@ async function SalesBodyRows({ where }: { where: Record<string, unknown> }) {
       data={rows}
       columns={columns}
       getRowId={(row) => row.id}
+      numbered
       empty={t("empty")}
       bodyOnly
     />

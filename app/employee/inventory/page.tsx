@@ -38,12 +38,14 @@ const invHelper = createServerColumnHelper<EmpInventoryRow>()
 
 async function InventoryTableSection({ shopId }: { shopId: string }) {
   const t = await getTranslations("employeeInventory")
+  const tc = await getTranslations("common")
   return (
     <div className="rounded-lg border">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10">{tc("no")}</TableHead>
               <TableHead>{t("colProduct")}</TableHead>
               <TableHead>{t("colSku")}</TableHead>
               <TableHead>{t("colShopStock")}</TableHead>
@@ -56,7 +58,7 @@ async function InventoryTableSection({ shopId }: { shopId: string }) {
               fallback={
                 <TableRowsSkeleton
                   rows={10}
-                  columns={["w-32", "w-20", "w-10", "w-16", "w-20"]}
+                  columns={["w-8", "w-32", "w-20", "w-10", "w-16", "w-20"]}
                 />
               }
             >
@@ -121,6 +123,7 @@ async function InventoryRows({ shopId }: { shopId: string }) {
       data={rows}
       columns={columns}
       getRowId={(row) => row.id}
+      numbered
       empty={t("empty")}
       bodyOnly
     />
