@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { useTheme } from "next-themes"
 
 import { buttonVariants } from "@/components/ui/animate-button"
@@ -8,7 +9,17 @@ import { cn } from "@/lib/utils"
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
-  const isDark = resolvedTheme === "dark"
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // resolvedTheme is undefined during SSR and only resolves (from
+  // localStorage / system preference) on the client. Rendering it before
+  // mount would make the server HTML (light) mismatch the client (dark),
+  // so hold the light render until hydration finishes.
+  const isDark = mounted && resolvedTheme === "dark"
 
   return (
     <AnimatedThemeToggler
