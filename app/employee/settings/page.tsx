@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useTranslations } from "next-intl"
 import { motion } from "motion/react"
 import { toast } from "sonner"
-import { Sun, Moon, Bell, Mail, ShoppingCart, Shield } from "lucide-react"
+import { Bell, Mail, ShoppingCart, Shield } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
@@ -12,15 +12,7 @@ import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select"
 import { AnimateButton } from "@/components/ui/animate-button"
-import { AdaptiveSlider } from "@/components/ui/adaptive-slider"
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 16 },
@@ -32,12 +24,9 @@ export default function EmployeeSettingsPage() {
   const [notifyShift, setNotifyShift] = useState(true)
   const [notifyStock, setNotifyStock] = useState(true)
   const [notifySales, setNotifySales] = useState(false)
-  const [language, setLanguage] = useState("en")
-  const [theme, setTheme] = useState<"light" | "dark">("light")
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [notificationVolume, setNotificationVolume] = useState(50)
 
   const saveChanges = () => {
     toast.success(t("saved"))
@@ -121,75 +110,6 @@ export default function EmployeeSettingsPage() {
         initial="hidden"
         animate="visible"
         transition={{ delay: 0.1 }}
-      >
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("preferences")}</CardTitle>
-            <CardDescription>{t("preferencesDesc")}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1.5">
-              <Label>{t("language")}</Label>
-              <Select value={language} onValueChange={(v) => v && setLanguage(v)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="es">Spanish</SelectItem>
-                  <SelectItem value="fr">French</SelectItem>
-                  <SelectItem value="de">German</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {theme === "light" ? <Sun className="size-4 text-muted-foreground" /> : <Moon className="size-4 text-muted-foreground" />}
-                <div>
-                  <p className="text-sm font-medium">{t("theme")}</p>
-                  <p className="text-xs text-muted-foreground">{t("themeDesc")}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 rounded-lg border p-0.5">
-                <Button
-                  variant={theme === "light" ? "secondary" : "ghost"}
-                  size="icon-sm"
-                  onClick={() => setTheme("light")}
-                >
-                  <Sun className="size-4" />
-                </Button>
-                <Button
-                  variant={theme === "dark" ? "secondary" : "ghost"}
-                  size="icon-sm"
-                  onClick={() => setTheme("dark")}
-                >
-                  <Moon className="size-4" />
-                </Button>
-              </div>
-            </div>
-            <Separator />
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">{t("notificationVolume")}</Label>
-                <span className="text-sm text-muted-foreground">{notificationVolume}%</span>
-              </div>
-              <AdaptiveSlider
-                value={notificationVolume}
-                onChange={setNotificationVolume}
-                min={0}
-                max={100}
-                step={1}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      <motion.div
-        variants={sectionVariants}
-        initial="hidden"
-        animate="visible"
-        transition={{ delay: 0.15 }}
       >
         <Card>
           <CardHeader>

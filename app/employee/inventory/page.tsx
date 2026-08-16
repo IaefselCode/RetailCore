@@ -7,22 +7,9 @@ import { formatMoney } from "@/lib/money"
 import { Table, TableHeader, TableBody, TableHead, TableRow } from "@/components/ui/table"
 import { TableRowsSkeleton } from "@/components/shared/skeleton-primitives"
 import { ServerTable, createServerColumnHelper } from "@/components/shared/server-table"
+import { stockStatusKey, stockStatusVariant } from "@/lib/stock-status"
 
 export const metadata = { title: "Inventory | RetailCore" }
-
-function stockStatusKey(quantity: number, minStock: number) {
-  if (quantity <= 0) return "statusOut"
-  if (quantity <= minStock) return "statusLow"
-  if (quantity <= minStock * 2) return "statusCritical"
-  return "statusIn"
-}
-
-function statusVariant(key: string): "outline" | "secondary" | "destructive" | "default" {
-  if (key === "statusOut") return "outline"
-  if (key === "statusLow") return "secondary"
-  if (key === "statusCritical") return "destructive"
-  return "default"
-}
 
 interface EmpInventoryRow {
   id: string
@@ -31,7 +18,7 @@ interface EmpInventoryRow {
   quantity: number
   price: number
   statusKey: string
-  statusVariant: "outline" | "secondary" | "destructive" | "default"
+  statusVariant: "destructive" | "secondary" | "outline" | "default"
 }
 
 const invHelper = createServerColumnHelper<EmpInventoryRow>()
@@ -86,7 +73,7 @@ async function InventoryRows({ shopId }: { shopId: string }) {
   const activeItems = inventory.filter((i) => i.product.isActive)
 
   const rows: EmpInventoryRow[] = activeItems.map((item) => {
-    const statusKey = stockStatusKey(item.quantity, item.minStock)
+    const statusKey = stockStatusKey(item.quantity, item.minStock, item.maxStock)
     return {
       id: item.id,
       productName: item.product.name,
@@ -94,7 +81,7 @@ async function InventoryRows({ shopId }: { shopId: string }) {
       quantity: item.quantity,
       price: Number(item.product.price),
       statusKey,
-      statusVariant: statusVariant(statusKey),
+      statusVariant: stockStatusVariant(statusKey),
     }
   })
 
@@ -114,7 +101,14 @@ async function InventoryRows({ shopId }: { shopId: string }) {
     }),
     invHelper.accessor("statusKey", {
       header: t("colStatus"),
-      cell: ({ row }) => <Badge variant={row.original.statusVariant}>{t(row.original.statusKey)}</Badge>,
+      cell: ({ row }) => (
+        <Badge
+          variant={row.original.statusVariant}
+          className={row.original.statusKey === "statusOver" ? "text-blue-600" : undefined}
+        >
+          {t(row.original.statusKey)}
+        </Badge>
+      ),
     }),
   ])
 

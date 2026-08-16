@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
-import { Package, AlertTriangle, XCircle, ShoppingCart, ArrowRightLeft, History } from "lucide-react"
+import { Package, AlertTriangle, XCircle, ShoppingCart, ArrowRightLeft, History, Activity } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { SkeletonStat, TableRowsSkeleton } from "@/components/shared/skeleton-primitives"
 import { ServerTable, createServerColumnHelper } from "@/components/shared/server-table"
 import { InventoryFilters } from "@/components/admin/inventory-filters"
+import { stockStatusKey, stockStatusVariant, isLowStock, isOverstocked } from "@/lib/stock-status"
 
 export const metadata = { title: "Inventory | RetailCore" }
 
@@ -21,12 +22,6 @@ interface SearchParams {
   status?: string
 }
 
-function stockStatus(quantity: number, minStock: number) {
-  if (quantity <= 0) return { key: "statusOut", variant: "destructive" as const }
-  if (quantity <= minStock) return { key: "statusLow", variant: "secondary" as const }
-  return { key: "statusIn", variant: "default" as const }
-}
-
 interface InventoryRow {
   id: string
   productName: string
@@ -34,8 +29,9 @@ interface InventoryRow {
   shopName: string
   quantity: number
   minStock: number
+  maxStock: number
   statusKey: string
-  statusVariant: "default" | "secondary" | "destructive"
+  statusVariant: "default" | "secondary" | "destructive" | "outline"
 }
 
 const inventoryHelper = createServerColumnHelper<InventoryRow>()
@@ -48,7 +44,7 @@ async function TotalUnitsValue({ where }: { where: Record<string, unknown> }) {
 
 async function LowStockCountValue({ where }: { where: Record<string, unknown> }) {
   const rows = await prisma.inventory.findMany({ where, select: { quantity: true, minStock: true } })
-  const count = rows.filter((r) => r.quantity > 0 && r.quantity <= r.minStock).length
+  const count = rows.filter((r) => isLowStock(r.quantity, r.minStock)).length
   return <>{count}</>
 }
 
@@ -59,8 +55,8 @@ async function OutOfStockCountValue({ where }: { where: Record<string, unknown> 
 }
 
 async function OverstockedCountValue({ where }: { where: Record<string, unknown> }) {
-  const rows = await prisma.inventory.findMany({ where, select: { quantity: true } })
-  const count = rows.filter((r) => r.quantity > 100).length
+  const rows = await prisma.inventory.findMany({ where, select: { quantity: true, maxStock: true } })
+  const count = rows.filter((r) => isOverstocked(r.quantity, r.maxStock)).length
   return <>{count}</>
 }
 
@@ -147,7 +143,7 @@ async function InventoryTable({
   })
 
   const allRows: InventoryRow[] = inv.map((row) => {
-    const st = stockStatus(row.quantity, row.minStock)
+    const key = stockStatusKey(row.quantity, row.minStock, row.maxStock)
     return {
       id: row.id,
       productName: row.product.name,
@@ -155,21 +151,24 @@ async function InventoryTable({
       shopName: row.shop.name,
       quantity: row.quantity,
       minStock: row.minStock,
-      statusKey: st.key,
-      statusVariant: st.variant,
+      maxStock: row.maxStock,
+      statusKey: key,
+      statusVariant: stockStatusVariant(key),
     }
   })
 
-  // Status is computed (quantity vs minStock), so it can't be expressed in the
-  // Prisma where — apply it here over the query-filtered rows.
+  // Status is computed (quantity vs minStock/maxStock), so it can't be
+  // expressed in the Prisma where — apply it here over the query-filtered rows.
   const rows =
     status === "in"
-      ? allRows.filter((r) => r.quantity > r.minStock)
+      ? allRows.filter((r) => stockStatusKey(r.quantity, r.minStock, r.maxStock) === "statusIn")
       : status === "low"
-        ? allRows.filter((r) => r.quantity > 0 && r.quantity <= r.minStock)
-        : status === "out"
-          ? allRows.filter((r) => r.quantity <= 0)
-          : allRows
+        ? allRows.filter((r) => stockStatusKey(r.quantity, r.minStock, r.maxStock) === "statusLow")
+        : status === "over"
+          ? allRows.filter((r) => stockStatusKey(r.quantity, r.minStock, r.maxStock) === "statusOver")
+          : status === "out"
+            ? allRows.filter((r) => stockStatusKey(r.quantity, r.minStock, r.maxStock) === "statusOut")
+            : allRows
 
   const columns = inventoryHelper.columns([
     inventoryHelper.accessor("productName", {
@@ -188,7 +187,14 @@ async function InventoryTable({
     inventoryHelper.accessor("minStock", { header: t("colMinStock"), cell: ({ getValue }) => getValue() as number }),
     inventoryHelper.accessor("statusKey", {
       header: t("colStatus"),
-      cell: ({ row }) => <Badge variant={row.original.statusVariant}>{t(row.original.statusKey)}</Badge>,
+      cell: ({ row }) => (
+        <Badge
+          variant={row.original.statusVariant}
+          className={row.original.statusKey === "statusOver" ? "text-blue-600" : undefined}
+        >
+          {t(row.original.statusKey)}
+        </Badge>
+      ),
     }),
   ])
 
@@ -222,7 +228,12 @@ async function InventoryTable({
             </div>
             <div className="shrink-0 text-right">
               <p className="text-sm font-semibold">{row.quantity}</p>
-              <Badge variant={row.statusVariant}>{t(row.statusKey)}</Badge>
+              <Badge
+                variant={row.statusVariant}
+                className={row.statusKey === "statusOver" ? "text-blue-600" : undefined}
+              >
+                {t(row.statusKey)}
+              </Badge>
             </div>
           </div>
         ))}
@@ -271,6 +282,12 @@ export default async function InventoryPage({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">{t("title")}</h1>
         <div className="flex flex-wrap gap-2">
+          <Link href="/admin/inventory/stock-health">
+            <AnimateButton variant="outline">
+              <Activity className="size-4" />
+              {t("stockHealth")}
+            </AnimateButton>
+          </Link>
           <Link href="/admin/inventory/movements">
             <AnimateButton variant="outline">
               <History className="size-4" />

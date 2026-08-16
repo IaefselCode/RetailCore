@@ -19,8 +19,8 @@ for (const p of products.rows) {
   for (const s of shops.rows) {
     if (existingKeys.has(`${p.id}|${s.id}`)) continue
     await pool.query(
-      `INSERT INTO "Inventory" (id, "productId", "shopId", quantity, "minStock", "createdAt", "updatedAt")
-       VALUES (gen_random_uuid(), $1, $2, 0, 0, now(), now())`,
+      `INSERT INTO "Inventory" (id, "productId", "shopId", quantity, "minStock", "maxStock", "createdAt", "updatedAt")
+       VALUES (gen_random_uuid(), $1, $2, 0, 0, 0, now(), now())`,
       [p.id, s.id],
     )
     created++

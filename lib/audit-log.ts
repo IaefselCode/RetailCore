@@ -18,8 +18,10 @@ export type AuditEvent =
   | "product_deleted"
   | "stock_purchased"
   | "stock_distributed"
+  | "stock_levels_updated"
   | "sale_recorded"
   | "sale_voided"
+  | "settings_updated"
 
 export async function logAuditEvent(
   event: AuditEvent,

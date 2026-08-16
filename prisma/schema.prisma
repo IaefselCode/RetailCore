@@ -107,6 +107,7 @@ model Inventory {
   shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
   quantity  Int      @default(0)
   minStock  Int      @default(0)
+  maxStock  Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -203,6 +204,11 @@ model StockTransaction {
   reference   String?
   notes       String?
   createdAt   DateTime @default(now())
+}
+
+model SystemSetting {
+  key   String @id
+  value String
 }
 
 model AuditLog {

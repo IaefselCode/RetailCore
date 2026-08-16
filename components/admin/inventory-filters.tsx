@@ -86,6 +86,7 @@ export function InventoryFilters({
             <SelectItem value="in">{t("statusIn")}</SelectItem>
             <SelectItem value="low">{t("statusLow")}</SelectItem>
             <SelectItem value="out">{t("statusOut")}</SelectItem>
+            <SelectItem value="over">{t("statusOver")}</SelectItem>
           </SelectContent>
         </Select>
       </CardContent>

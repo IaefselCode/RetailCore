@@ -155,7 +155,20 @@
     "viewAnalytics": "Angalia uchambuzi kamili",
     "analyticsRevenue": "Mapato ya Miezi 12",
     "analyticsOrders": "Maagizo (Miezi 12)",
-    "analyticsBestMonth": "Mwezi Bora"
+    "analyticsBestMonth": "Mwezi Bora",
+    "stockHealth": "Afya ya Hisa",
+    "stockHealthDesc": "Bidhaa kwa hali katika kila duka",
+    "colOut": "Imeisha",
+    "colLow": "Hisa Kidogo",
+    "colOver": "Zaidi ya Kawaida",
+    "colHealthy": "Ipo",
+    "colTotal": "Jumla",
+    "stockHealthEmpty": "Hakuna data ya hisa bado",
+    "overstockedItems": "Bidhaa za Zaidi ya Kawaida",
+    "overstockedItemsDesc": "Zilizozidi kiwango cha juu cha duka",
+    "overstockedCount": "{count} bidhaa zilizozidi kiwango cha juu",
+    "noOverstocked": "Hakuna bidhaa za ziada",
+    "viewStockHealth": "Angalia Afya ya Hisa"
   },
   "employeeDashboard": {
     "today": "Leo",
@@ -277,6 +290,7 @@
     "lowStock": "Hisa Kidogo",
     "outOfStock": "Imeisha",
     "overstocked": "Zaidi ya Kawaida",
+    "stockHealth": "Afya ya Hisa",
     "colProduct": "Bidhaa",
     "colSku": "SKU",
     "colShop": "Duka",
@@ -286,6 +300,7 @@
     "statusOut": "Imeisha",
     "statusLow": "Hisa Kidogo",
     "statusIn": "Ipo",
+    "statusOver": "Zaidi ya Kawaida",
     "empty": "Hakuna rekodi za hisa bado",
     "noResults": "Hakuna rekodi za hisa zinazolingana na utaftaji wako.",
     "movementHistory": "Historia ya Mienendo",
@@ -449,6 +464,7 @@
     "statusLow": "Hisa Kidogo",
     "statusCritical": "Muhimu",
     "statusIn": "Ipo",
+    "statusOver": "Zaidi ya Kawaida",
     "empty": "Hakuna hisa katika duka hili"
   },
   "employeeProducts": {
@@ -598,9 +614,12 @@
     "description": "Maelezo",
     "stockByShop": "Hisa kwa Duka",
     "units": "{count} vitengo",
-    "unitsMin": "{count} vitengo (kiwango cha chini: {min})",
     "shop": "Duka",
-    "minStock": "Kiwango cha Chini"
+    "minStock": "Kiwango cha Chini",
+    "maxStock": "Kiwango cha Juu",
+    "save": "Hifadhi",
+    "stockLevelsHint": "Arifa za hisa ya chini zinawashwa hisa inaposhuka hadi kiwango cha chini au chini ya hapo. Hisa ya ziada inahesabiwa ikizidi kiwango cha juu — weka juu 0 kama hakuna kikomo.",
+    "invalidLevels": "Weka nambari nzima kwa kiwango cha chini na cha juu."
   },
   "employeeDetail": {
     "breadcrumb": "Wafanyakazi",
@@ -804,8 +823,6 @@
     "general": "Jumla",
     "notifications": "Arifa",
     "security": "Usalama",
-    "preferences": "Mapendeleo",
-    "preferencesDesc": "Mipangilio ya lugha na muonekano",
     "generalSettings": "Mipangilio ya Jumla",
     "generalSettingsDesc": "Dhibiti taarifa za msingi za duka lako",
     "shopName": "Jina la Duka",
@@ -828,10 +845,6 @@
     "twoFactor": "Uthibitishaji wa Sababu Mbili",
     "twoFactorDesc": "Ongeza safu ya ziada ya usalama",
     "sessionTimeout": "Muda wa Kikao",
-    "language": "Lugha",
-    "darkMode": "Hali ya Giza",
-    "darkModeDesc": "Badilisha kati ya mandhari ya mwanga na giza",
-    "uiScale": "Ukubwa wa Interface",
     "saveChanges": "Hifadhi Mabadiliko",
     "saved": "Mipangilio imehifadhiwa kwa mafanikio"
   },
@@ -858,12 +871,6 @@
     "stockAlertsDesc": "Arifa za hisa kidogo na kumalizika",
     "salesReports": "Ripoti za Mauzo",
     "salesReportsDesc": "Muhtasari wa mauzo wa kila wiki kwa barua pepe",
-    "preferences": "Mapendeleo",
-    "preferencesDesc": "Mipangilio ya lugha na muonekano",
-    "language": "Lugha",
-    "theme": "Mandhari",
-    "themeDesc": "Badilisha kati ya hali ya mwanga na giza",
-    "notificationVolume": "Kiwango cha Arifa",
     "changePassword": "Badilisha Nenosiri",
     "changePasswordDesc": "Sasisha nenosiri la akaunti yako",
     "currentPassword": "Nenosiri la Sasa",
@@ -969,5 +976,27 @@
   "lowStock": {
     "inStock": "{count} zipo",
     "reorderAt": "Kusanya tena katika {amount}"
+  },
+  "stockHealth": {
+    "title": "Afya ya Hisa",
+    "breadcrumb": "Afya ya Hisa",
+    "desc": "Hisa zimegawanywa kwa hali katika maduka yote",
+    "outOfStock": "Imeisha",
+    "lowStock": "Hisa Kidogo",
+    "overstocked": "Zaidi ya Kawaida",
+    "healthy": "Ipo",
+    "itemsLabel": "Bidhaa",
+    "perShopTitle": "Kwa Duka",
+    "perShopDesc": "Idadi ya bidhaa kwa hali katika kila duka",
+    "colShop": "Duka",
+    "colOut": "Imeisha",
+    "colLow": "Kidogo",
+    "colOver": "Zaidi",
+    "colHealthy": "Ipo",
+    "colTotal": "Jumla",
+    "attentionTitle": "Bidhaa Zinazohitaji Uangalizi",
+    "attentionDesc": "Bidhaa zilizoisha, hisa kidogo na zaidi ya kawaida katika maduka yote",
+    "attentionEmpty": "Viwango vyote vya hisa ni sawa",
+    "empty": "Hakuna data ya hisa bado"
   }
 }

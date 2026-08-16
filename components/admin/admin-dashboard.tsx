@@ -42,7 +42,9 @@ interface AdminDashboardProps {
   }
   recentSalesContent: ReactNode
   lowStockItems: ReactNode
+  overstockedItems: ReactNode
   analyticsSection: ReactNode
+  stockHealthContent: ReactNode
 }
 
 export function AdminDashboard({
@@ -50,7 +52,9 @@ export function AdminDashboard({
   kpiSlots,
   recentSalesContent,
   lowStockItems,
+  overstockedItems,
   analyticsSection,
+  stockHealthContent,
 }: AdminDashboardProps) {
   const t = useTranslations("dashboard")
   const greeting = t(getGreetingKey(new Date().getHours()))
@@ -169,6 +173,23 @@ export function AdminDashboard({
         <CardContent>{analyticsSection}</CardContent>
       </Card>
 
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-3">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Boxes className="size-4 text-primary" /> {t("stockHealth")}
+            </CardTitle>
+            <CardDescription>{t("stockHealthDesc")}</CardDescription>
+          </div>
+          <AnimateButton asChild variant="ghost" size="sm">
+            <Link href="/admin/inventory/stock-health">
+              {t("viewAll")} <ArrowRight className="size-4" />
+            </Link>
+          </AnimateButton>
+        </CardHeader>
+        <CardContent className="p-0">{stockHealthContent}</CardContent>
+      </Card>
+
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
@@ -189,24 +210,45 @@ export function AdminDashboard({
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="size-4 text-amber-500" /> {t("lowStockAlerts")}
-            </CardTitle>
-            <CardDescription>{t("productsBelowReorderLevel")}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {lowStockItems}
-            <div className="pt-2">
-              <AnimateButton asChild variant="outline" size="sm" className="w-full">
-                <Link href="/admin/inventory">
-                  <Store className="size-4" /> {t("manageInventory")}
-                </Link>
-              </AnimateButton>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="size-4 text-amber-500" /> {t("lowStockAlerts")}
+              </CardTitle>
+              <CardDescription>{t("productsBelowReorderLevel")}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {lowStockItems}
+              <div className="pt-2">
+                <AnimateButton asChild variant="outline" size="sm" className="w-full">
+                  <Link href="/admin/inventory">
+                    <Store className="size-4" /> {t("manageInventory")}
+                  </Link>
+                </AnimateButton>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="size-4 text-blue-600" /> {t("overstockedItems")}
+              </CardTitle>
+              <CardDescription>{t("overstockedItemsDesc")}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {overstockedItems}
+              <div className="pt-2">
+                <AnimateButton asChild variant="outline" size="sm" className="w-full">
+                  <Link href="/admin/inventory/stock-health">
+                    <Store className="size-4" /> {t("viewStockHealth")}
+                  </Link>
+                </AnimateButton>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )

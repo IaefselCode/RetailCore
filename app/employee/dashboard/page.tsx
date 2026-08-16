@@ -6,6 +6,7 @@ import { EmployeeDashboard } from "@/components/employee/employee-dashboard"
 import { ShoppingCart } from "lucide-react"
 import { formatMoney } from "@/lib/money"
 import { SkeletonStat, ListSkeleton } from "@/components/shared/skeleton-primitives"
+import { isLowOrOut } from "@/lib/stock-status"
 
 export const metadata = { title: "Dashboard | RetailCore" }
 
@@ -50,7 +51,7 @@ async function LowStockCountValue({ shopId }: { shopId: string }) {
     where: { shopId },
     select: { quantity: true, minStock: true },
   })
-  const count = inventory.filter((inv) => inv.quantity <= inv.minStock).length
+  const count = inventory.filter((inv) => isLowOrOut(inv.quantity, inv.minStock)).length
   return <>{count}</>
 }
 
@@ -123,7 +124,7 @@ async function LowStockItems({ shopId }: { shopId: string }) {
     orderBy: { quantity: "asc" },
   })
 
-  const lowStock = inventory.filter((inv) => inv.quantity <= inv.minStock).slice(0, 5)
+  const lowStock = inventory.filter((inv) => isLowOrOut(inv.quantity, inv.minStock)).slice(0, 5)
 
   if (lowStock.length === 0) {
     return <p className="py-4 text-center text-sm text-muted-foreground">{t("healthyStock")}</p>

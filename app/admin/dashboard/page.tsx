@@ -5,11 +5,13 @@ import { auth } from "@/lib/auth"
 import { getTranslations } from "next-intl/server"
 import { AdminDashboard } from "@/components/admin/admin-dashboard"
 import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatMoney } from "@/lib/money"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SkeletonStat, TableRowsSkeleton, ListSkeleton } from "@/components/shared/skeleton-primitives"
 import { ServerTable, createServerColumnHelper } from "@/components/shared/server-table"
+import { isLowStock, isLowOrOut, isOutOfStock, isOverstocked } from "@/lib/stock-status"
+import { buildStockHealth } from "@/lib/stock-health"
 
 export const metadata = { title: "Dashboard | RetailCore" }
 
@@ -91,7 +93,7 @@ async function InventoryValueValue() {
 
 async function LowStockCountValue() {
   const rows = await prisma.inventory.findMany({ select: { quantity: true, minStock: true } })
-  const count = rows.filter((r) => r.quantity > 0 && r.quantity <= r.minStock).length
+  const count = rows.filter((r) => isLowStock(r.quantity, r.minStock)).length
   return <>{count}</>
 }
 
@@ -239,6 +241,97 @@ async function AnalyticsSection() {
   )
 }
 
+async function StockHealthOverview() {
+  const t = await getTranslations("dashboard")
+  const inventory = await prisma.inventory.findMany({
+    include: {
+      product: { select: { name: true, sku: true } },
+      shop: { select: { id: true, name: true } },
+    },
+  })
+
+  const { perShop, totals } = buildStockHealth(inventory)
+
+  if (perShop.length === 0) {
+    return <p className="py-8 text-center text-sm text-muted-foreground">{t("stockHealthEmpty")}</p>
+  }
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>{t("colShop")}</TableHead>
+          <TableHead className="text-right">{t("colOut")}</TableHead>
+          <TableHead className="text-right">{t("colLow")}</TableHead>
+          <TableHead className="text-right">{t("colOver")}</TableHead>
+          <TableHead className="text-right">{t("colHealthy")}</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {perShop.map((r) => (
+          <TableRow key={r.shopId}>
+            <TableCell className="font-medium">{r.shopName}</TableCell>
+            <TableCell className="text-right tabular-nums text-red-600">{r.out}</TableCell>
+            <TableCell className="text-right tabular-nums text-yellow-600">{r.low}</TableCell>
+            <TableCell className="text-right tabular-nums text-blue-600">{r.over}</TableCell>
+            <TableCell className="text-right tabular-nums text-green-600">{r.healthy}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+      <TableFooter>
+        <TableRow>
+          <TableCell className="font-medium">{t("colTotal")}</TableCell>
+          <TableCell className="text-right tabular-nums text-red-600">{totals.out}</TableCell>
+          <TableCell className="text-right tabular-nums text-yellow-600">{totals.low}</TableCell>
+          <TableCell className="text-right tabular-nums text-blue-600">{totals.over}</TableCell>
+          <TableCell className="text-right tabular-nums text-green-600">{totals.healthy}</TableCell>
+        </TableRow>
+      </TableFooter>
+    </Table>
+  )
+}
+
+async function OverstockedItems() {
+  const t = await getTranslations("dashboard")
+  const inventory = await prisma.inventory.findMany({
+    include: {
+      product: { select: { name: true, sku: true } },
+      shop: { select: { name: true } },
+    },
+    orderBy: { quantity: "desc" },
+  })
+
+  const overstocked = inventory.filter((inv) => isOverstocked(inv.quantity, inv.maxStock))
+  const count = overstocked.length
+  const top = overstocked.slice(0, 5)
+
+  if (top.length === 0) {
+    return <p className="py-6 text-center text-sm text-muted-foreground">{t("noOverstocked")}</p>
+  }
+
+  return (
+    <>
+      <p className="text-sm text-muted-foreground">{t("overstockedCount", { count })}</p>
+      {top.map((item) => (
+        <div
+          key={`${item.product.sku}-${item.shop.name}`}
+          className="flex items-center justify-between gap-3"
+        >
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">{item.product.name}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {item.shop.name} · {item.product.sku}
+            </p>
+          </div>
+          <Badge variant="outline" className="shrink-0 text-blue-600">
+            {item.quantity} / {item.maxStock}
+          </Badge>
+        </div>
+      ))}
+    </>
+  )
+}
+
 async function LowStockItems() {
   const t = await getTranslations("dashboard")
   const inventory = await prisma.inventory.findMany({
@@ -249,7 +342,7 @@ async function LowStockItems() {
     orderBy: { quantity: "asc" },
   })
 
-  const lowStock = inventory.filter((inv) => inv.quantity <= inv.minStock).slice(0, 5)
+  const lowStock = inventory.filter((inv) => isLowOrOut(inv.quantity, inv.minStock)).slice(0, 5)
 
   if (lowStock.length === 0) {
     return <p className="py-6 text-center text-sm text-muted-foreground">{t("healthyStock")}</p>
@@ -269,7 +362,7 @@ async function LowStockItems() {
             </p>
           </div>
           <Badge
-            variant={item.quantity <= 0 ? "destructive" : "secondary"}
+            variant={isOutOfStock(item.quantity) ? "destructive" : "secondary"}
             className="shrink-0"
           >
             {item.quantity} / {item.minStock}
@@ -386,6 +479,16 @@ export default async function AdminDashboardPage() {
       lowStockItems={
         <Suspense fallback={<ListSkeleton rows={5} />}>
           <LowStockItems />
+        </Suspense>
+      }
+      stockHealthContent={
+        <Suspense fallback={<ListSkeleton rows={5} />}>
+          <StockHealthOverview />
+        </Suspense>
+      }
+      overstockedItems={
+        <Suspense fallback={<ListSkeleton rows={5} />}>
+          <OverstockedItems />
         </Suspense>
       }
       analyticsSection={

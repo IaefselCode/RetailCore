@@ -51,9 +51,12 @@ async function ProductDetailContent({ id }: { id: string }) {
     isActive: product.isActive,
     totalStock: product.inventory.reduce((sum, inv) => sum + inv.quantity, 0),
     shopStock: product.inventory.map((inv) => ({
+      id: inv.id,
+      shopId: inv.shopId,
       shopName: inv.shop.name,
       quantity: inv.quantity,
       minStock: inv.minStock,
+      maxStock: inv.maxStock,
     })),
   }
 
@@ -92,7 +95,7 @@ function ProductDetailSkeleton() {
           <Table>
             <TableHeader>
               <TableRow>
-                {["Shop", "Stock", "Min Stock"].map((h) => (
+                {["Shop", "Stock", "Min Stock", "Max Stock"].map((h) => (
                   <TableHead key={h}>
                     <Skeleton className="h-4 w-16" />
                   </TableHead>

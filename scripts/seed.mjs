@@ -128,14 +128,16 @@ for (const s of shops) {
   for (const p of products) {
     const qty = 8 + Math.floor(rnd() * 90)
     const min = 5 + Math.floor(rnd() * 15)
+    const max = min * 3
     await pool.query(
-      `INSERT INTO "Inventory" (id, "productId", "shopId", quantity, "minStock", "createdAt", "updatedAt")
-       VALUES ($1, $2, $3, $4, $5, now(), now())
+      `INSERT INTO "Inventory" (id, "productId", "shopId", quantity, "minStock", "maxStock", "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, $5, $6, now(), now())
        ON CONFLICT ("productId", "shopId") DO UPDATE SET
          quantity = EXCLUDED.quantity,
          "minStock" = EXCLUDED."minStock",
+         "maxStock" = EXCLUDED."maxStock",
          "updatedAt" = now()`,
-      [randomUUID(), productIds[p.sku], shopIds[s.name], qty, min],
+      [randomUUID(), productIds[p.sku], shopIds[s.name], qty, min, max],
     )
   }
 }

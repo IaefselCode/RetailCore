@@ -86,7 +86,7 @@ export async function createProduct(formData: FormData): Promise<ActionResult> {
         imageUrl,
         isActive: true,
         inventory: {
-          create: shopIds.map((shopId) => ({ shopId, quantity: 0, minStock: 0 })),
+          create: shopIds.map((shopId) => ({ shopId, quantity: 0, minStock: 0, maxStock: 0 })),
         },
       },
     })
@@ -184,6 +184,7 @@ export async function updateProduct(formData: FormData): Promise<ActionResult> {
           shopId,
           quantity: 0,
           minStock: 0,
+          maxStock: 0,
         })),
       })
     }
@@ -284,6 +285,52 @@ export async function deleteProduct(formData: FormData): Promise<ActionResult> {
     return { success: true, message: "Product deleted." }
   } catch (err) {
     console.error("deleteProduct failed:", err)
+    return fail("Something went wrong. Please try again.")
+  }
+}
+
+export async function updateStockLevels(formData: FormData): Promise<ActionResult> {
+  const actorId = await requireAdmin()
+  if (!actorId) return fail("You do not have permission to do that.")
+
+  try {
+    const inventoryId = str(formData.get("inventoryId"))
+    if (!inventoryId) return fail("Missing inventory row.")
+
+    const minStock = Number(str(formData.get("minStock")))
+    const maxStock = Number(str(formData.get("maxStock")))
+    if (!Number.isInteger(minStock) || minStock < 0) return fail("Enter a whole number for min stock.")
+    if (!Number.isInteger(maxStock) || maxStock < 0) return fail("Enter a whole number for max stock.")
+
+    const row = await prisma.inventory.findUnique({
+      where: { id: inventoryId },
+      include: {
+        product: { select: { name: true } },
+        shop: { select: { name: true } },
+      },
+    })
+    if (!row) return fail("Inventory row not found.")
+
+    await prisma.inventory.update({
+      where: { id: inventoryId },
+      data: { minStock, maxStock },
+    })
+
+    const meta = await getRequestMeta()
+    await logAuditEvent("stock_levels_updated", {
+      actorId,
+      entityType: "Product",
+      entityId: row.productId,
+      detail: `${row.product.name} @ ${row.shop.name} (min: ${minStock}, max: ${maxStock})`,
+      ip: meta.ip,
+    })
+    revalidatePath(`/admin/products/${row.productId}`)
+    revalidatePath("/admin/inventory")
+    revalidatePath("/employee/inventory")
+    revalidatePath("/admin/products")
+    return { success: true, message: "Stock levels updated." }
+  } catch (err) {
+    console.error("updateStockLevels failed:", err)
     return fail("Something went wrong. Please try again.")
   }
 }
