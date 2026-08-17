@@ -47,4 +47,7 @@ next-env.d.ts
 
 /lib/generated/prisma
 
-/.freebuff
+.freebuff/
+BUSINESS PLATFORM.md
+AGENTS.md
+CLAUDE.md
