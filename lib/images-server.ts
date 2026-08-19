@@ -35,6 +35,7 @@ export const LOCAL_UPLOADS_DIR = path.join(process.cwd(), "public", "uploads")
 // ---------------------------------------------------------------------------
 
 let client: SupabaseClient | null | undefined
+let bucketEnsured = false
 
 function getAdminClient(): SupabaseClient | null {
   if (client !== undefined) return client
@@ -44,9 +45,28 @@ function getAdminClient(): SupabaseClient | null {
   return client
 }
 
-function getStorage() {
+async function ensureBucket(): Promise<void> {
+  if (bucketEnsured) return
   const c = getAdminClient()
-  return c ? c.storage.from(STORAGE_BUCKET) : null
+  if (!c) return
+  const { data: buckets } = await c.storage.listBuckets()
+  if (buckets?.some((b) => b.name === STORAGE_BUCKET)) {
+    bucketEnsured = true
+    return
+  }
+  await c.storage.createBucket(STORAGE_BUCKET, {
+    public: true,
+    fileSizeLimit: 10 * 1024 * 1024,
+    allowedMimeTypes: ["image/jpeg", "image/png", "image/webp", "image/gif"],
+  })
+  bucketEnsured = true
+}
+
+async function getStorage() {
+  const c = getAdminClient()
+  if (!c) return null
+  await ensureBucket()
+  return c.storage.from(STORAGE_BUCKET)
 }
 
 /** Extracts the bucket key from a Supabase public URL. */
@@ -133,7 +153,7 @@ export async function uploadImage(opts: {
     return { url }
   }
 
-  const storage = getStorage()
+  const storage = await getStorage()
   if (!storage) {
     return {
       error:
@@ -158,7 +178,7 @@ export async function deleteImage(value: string): Promise<void> {
     return
   }
 
-  const storage = getStorage()
+  const storage = await getStorage()
   if (!storage) return
   const key = extractStorageKey(value)
   if (!key) return
