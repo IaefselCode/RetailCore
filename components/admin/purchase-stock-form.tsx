@@ -164,7 +164,7 @@ export function PurchaseStockForm({
     ])
     setNewProductId("")
     setNewQty("")
-    setNewCost("")
+    // Don't clear cost — keep it for the next item (likely same cost)
   }
 
   function removeLineItem(index: number) {
@@ -253,7 +253,13 @@ export function PurchaseStockForm({
         <CardHeader><CardTitle>{t("lineItems")}</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            <Select value={newProductId} onValueChange={(v) => v && setNewProductId(v)}>
+            <Select value={newProductId} onValueChange={(v) => {
+              if (v) {
+                setNewProductId(v)
+                const p = products.find((p) => p.id === v)
+                if (p?.cost != null) setNewCost(String(p.cost))
+              }
+            }}>
               <SelectTrigger className="w-full sm:w-64"><SelectValue placeholder={t("product")} /></SelectTrigger>
               <SelectContent>
                 {products.map((p) => (
