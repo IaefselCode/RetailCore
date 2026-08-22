@@ -392,6 +392,7 @@
   },
   "salesHistory": {
     "title": "Historia ya Mauzo",
+    "breadcrumb": "Mauzo",
     "history": "Historia",
     "exportCsv": "Hamisha CSV",
     "exportFailed": "Uhamisho umeshindikana",
@@ -749,7 +750,9 @@
     "colEmployee": "Mfanyakazi",
     "colSalesCount": "Mauzo",
     "employeePerformance": "Utendaji wa Wafanyakazi",
-    "employeePerformanceDesc": "Mapato na faida zinazozalishwa na kila mfanyakazi katika kipindi kilichochaguliwa"
+    "employeePerformanceDesc": "Mapato na faida zinazozalishwa na kila mfanyakazi katika kipindi kilichochaguliwa",
+    "csvExported": "Ripoti ya uchambuzi imehamishwa",
+    "exportFailed": "Uhamisho umeshindikana"
   },
   "reports": {
     "breadcrumb": "Ripoti",

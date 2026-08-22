@@ -45,6 +45,7 @@ import {
   createAppColumnHelper,
 } from "@/components/shared/data-table"
 import { formatMoney } from "@/lib/money"
+import { toast } from "sonner"
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -398,6 +399,66 @@ export function AnalyticsContent({
   const [chartMode, setChartMode] = useState<ChartMode>("bar")
   const [topMetric, setTopMetric] = useState<TopMetric>("revenue")
 
+  function exportReport() {
+    const rows: string[][] = []
+    const push = (...cols: string[]) => rows.push(cols)
+
+    // --- KPIs ---
+    push(t("title"))
+    push(t("revenue"), t("cost"), t("profit"), t("unitsSold"), t("orders"))
+    push(
+      String(summary.windowRevenue),
+      String(summary.windowCost),
+      String(summary.windowProfit),
+      String(summary.windowUnits),
+      String(summary.windowOrders),
+    )
+    push("")
+
+    // --- Trend Data ---
+    push(t("revenueOverTime"), `(${t(`granularity${granularity.charAt(0).toUpperCase() + granularity.slice(1)}`)})`)
+    push(t("label") || "Period", t("revenue"), t("cost"), t("profit"), t("orders"), t("unitsSold"))
+    for (const b of chartData) {
+      push(b.label, String(b.revenue), String(b.cost), String(b.profit), String(b.orders), String(b.units))
+    }
+    push("")
+
+    // --- Top Products ---
+    push(t("topProducts"))
+    push("#", tc("name") || "Product", t("revenue"), t("profit"), t("unitsSold"))
+    for (let i = 0; i < summary.topProducts.length; i++) {
+      const p = summary.topProducts[i]
+      push(String(i + 1), p.name, String(p.revenue), String(p.profit), String(p.units))
+    }
+    push("")
+
+    // --- Sales by Shop ---
+    push(t("salesByShop"))
+    push(t("colShop"), t("colRevenue"), t("colCost"), t("colProfit"), t("colUnits"), t("colOrders"), t("colGrowth"))
+    for (const s of summary.shopRows) {
+      push(s.name, String(s.revenue), String(s.cost), String(s.profit), String(s.units), String(s.orders), s.growth !== null ? `${s.growth.toFixed(1)}%` : "—")
+    }
+    push("")
+
+    // --- Employee Performance ---
+    push(t("employeePerformance"))
+    push(t("colEmployee"), t("colShop"), t("colSalesCount"), t("colUnits"), t("colRevenue"), t("colProfit"))
+    for (const e of summary.employeeRows) {
+      push(e.name, e.shopName, String(e.orders), String(e.units), String(e.revenue), String(e.profit))
+    }
+
+    // Build CSV
+    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n")
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `analytics-report-${granularity}-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success(t("csvExported") || "Report exported")
+  }
+
   function changeGranularity(v: Granularity) {
     setGranularity(v)
     // Silently keep the URL in sync (?view=weekly) so a refreshed or shared
@@ -742,7 +803,7 @@ export function AnalyticsContent({
       </Card>
 
       <div className="flex justify-end">
-        <AnimateButton variant="outline">
+        <AnimateButton variant="outline" onClick={exportReport}>
           <DownloadIcon />
           {t("exportReport")}
         </AnimateButton>
