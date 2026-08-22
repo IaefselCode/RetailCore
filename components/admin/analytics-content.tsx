@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import { motion } from "motion/react"
 import {
   TrendingUpIcon,
@@ -44,6 +44,7 @@ import {
   DataTable,
   createAppColumnHelper,
 } from "@/components/shared/data-table"
+import ExcelJS from "exceljs"
 import { formatMoney } from "@/lib/money"
 import { toast } from "sonner"
 
@@ -399,61 +400,191 @@ export function AnalyticsContent({
   const [chartMode, setChartMode] = useState<ChartMode>("bar")
   const [topMetric, setTopMetric] = useState<TopMetric>("revenue")
 
-  function exportReport() {
-    const rows: string[][] = []
-    const push = (...cols: string[]) => rows.push(cols)
+  const locale = useLocale()
 
-    // --- KPIs ---
-    push(t("title"))
-    push(t("revenue"), t("cost"), t("profit"), t("unitsSold"), t("orders"))
-    push(
-      String(summary.windowRevenue),
-      String(summary.windowCost),
-      String(summary.windowProfit),
-      String(summary.windowUnits),
-      String(summary.windowOrders),
+  async function exportReport() {
+    const wb = new ExcelJS.Workbook()
+    wb.creator = "RetailCore"
+    wb.created = new Date()
+
+    const ws = wb.addWorksheet(t("title"), {
+      views: [{ state: "frozen", ySplit: 1 }],
+    })
+
+    // Theme colors
+    const BRAND_PRIMARY = "4F46E5"   // Indigo-600
+    const BRAND_ACCENT  = "059669"   // Emerald-600
+    const BRAND_WARM    = "D97706"   // Amber-600
+    const BRAND_INFO    = "2563EB"   // Blue-600
+    const WHITE         = "FFFFFF"
+    const LIGHT_BG      = "F1F5F9"   // Slate-100
+
+    const sectionHeaderFill = (color: string): ExcelJS.Fill => ({
+      type: "pattern", pattern: "solid",
+      fgColor: { argb: `FF${color}` },
+    })
+
+    const headerFill = sectionHeaderFill(BRAND_PRIMARY)
+    const sectionFill = sectionHeaderFill(BRAND_ACCENT)
+    const altRowFill: ExcelJS.Fill = {
+      type: "pattern", pattern: "solid",
+      fgColor: { argb: `FF${LIGHT_BG}` },
+    }
+
+    const headerFont = { bold: true, color: { argb: `FF${WHITE}` }, size: 11 } as ExcelJS.Font
+    const sectionFont = { bold: true, color: { argb: `FF${WHITE}` }, size: 12 } as ExcelJS.Font
+    const titleFont = { bold: true, size: 16, color: { argb: `FF${BRAND_PRIMARY}` } } as ExcelJS.Font
+    const subtitleFont = { italic: true, color: { argb: "FF64748B" }, size: 10 } as ExcelJS.Font
+
+    const thinBorder = {
+      top: { style: "thin" as const, color: { argb: "FFCBD5E1" } },
+      left: { style: "thin" as const, color: { argb: "FFCBD5E1" } },
+      bottom: { style: "thin" as const, color: { argb: "FFCBD5E1" } },
+      right: { style: "thin" as const, color: { argb: "FFCBD5E1" } },
+    }
+
+    let row = 1
+
+    // ---------- Helper: write a section title row ----------
+    function sectionTitle(title: string) {
+      row++
+      ws.mergeCells(row, 1, row, 8)
+      const cell = ws.getCell(row, 1)
+      cell.value = title
+      cell.font = sectionFont
+      cell.fill = sectionFill
+      cell.alignment = { vertical: "middle" }
+      cell.border = thinBorder
+      ws.getRow(row).height = 28
+      row++
+    }
+
+    // ---------- Helper: write column headers ----------
+    function headers(cols: string[]) {
+      cols.forEach((h, ci) => {
+        const cell = ws.getCell(row, ci + 1)
+        cell.value = h
+        cell.font = headerFont
+        cell.fill = headerFill
+        cell.border = thinBorder
+        cell.alignment = { horizontal: "center", vertical: "middle" }
+      })
+      ws.getRow(row).height = 22
+      row++
+    }
+
+    // ---------- Helper: write a data row ----------
+    function dataRow(values: (string | number)[], opts?: { bold?: boolean; altBg?: boolean }) {
+      values.forEach((v, ci) => {
+        const cell = ws.getCell(row, ci + 1)
+        cell.value = v
+        cell.border = thinBorder
+        cell.alignment = { horizontal: ci === 0 ? "left" : "right", vertical: "middle" }
+        if (opts?.bold) cell.font = { bold: true }
+        if (opts?.altBg) cell.fill = altRowFill
+      })
+      row++
+    }
+
+    // ======================== REPORT CONTENT ========================
+    // Title
+    ws.mergeCells(row, 1, row, 8)
+    const titleCell = ws.getCell(row, 1)
+    titleCell.value = `${t("title")} — ${new Date().toLocaleDateString(locale === "sw" ? "sw-TZ" : "en-US", { year: "numeric", month: "long", day: "numeric" })}`
+    titleCell.font = titleFont
+    titleCell.alignment = { vertical: "middle" }
+    ws.getRow(row).height = 36
+    row++
+
+    // Subtitle
+    ws.mergeCells(row, 1, row, 8)
+    const subCell = ws.getCell(row, 1)
+    const granLabel = t(`granularity${granularity.charAt(0).toUpperCase() + granularity.slice(1)}`)
+    subCell.value = `${t("revenueOverTime")} • ${granLabel}`
+    subCell.font = subtitleFont
+    subCell.alignment = { vertical: "middle" }
+    ws.getRow(row).height = 20
+    row++
+
+    // ---- KPI Summary ----
+    sectionTitle(t("title"))
+    headers([t("revenue"), t("cost"), t("profit"), t("unitsSold"), t("orders")])
+    dataRow(
+      [summary.windowRevenue, summary.windowCost, summary.windowProfit, summary.windowUnits, summary.windowOrders],
+      { bold: true },
     )
-    push("")
-
-    // --- Trend Data ---
-    push(t("revenueOverTime"), `(${t(`granularity${granularity.charAt(0).toUpperCase() + granularity.slice(1)}`)})`)
-    push(t("label") || "Period", t("revenue"), t("cost"), t("profit"), t("orders"), t("unitsSold"))
-    for (const b of chartData) {
-      push(b.label, String(b.revenue), String(b.cost), String(b.profit), String(b.orders), String(b.units))
-    }
-    push("")
-
-    // --- Top Products ---
-    push(t("topProducts"))
-    push("#", tc("name") || "Product", t("revenue"), t("profit"), t("unitsSold"))
-    for (let i = 0; i < summary.topProducts.length; i++) {
-      const p = summary.topProducts[i]
-      push(String(i + 1), p.name, String(p.revenue), String(p.profit), String(p.units))
-    }
-    push("")
-
-    // --- Sales by Shop ---
-    push(t("salesByShop"))
-    push(t("colShop"), t("colRevenue"), t("colCost"), t("colProfit"), t("colUnits"), t("colOrders"), t("colGrowth"))
-    for (const s of summary.shopRows) {
-      push(s.name, String(s.revenue), String(s.cost), String(s.profit), String(s.units), String(s.orders), s.growth !== null ? `${s.growth.toFixed(1)}%` : "—")
-    }
-    push("")
-
-    // --- Employee Performance ---
-    push(t("employeePerformance"))
-    push(t("colEmployee"), t("colShop"), t("colSalesCount"), t("colUnits"), t("colRevenue"), t("colProfit"))
-    for (const e of summary.employeeRows) {
-      push(e.name, e.shopName, String(e.orders), String(e.units), String(e.revenue), String(e.profit))
+    // Number format for currency cells
+    for (let c = 1; c <= 3; c++) {
+      ws.getCell(row - 1, c).numFmt = "#,##0"
     }
 
-    // Build CSV
-    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n")
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" })
+    // ---- Trend Data ----
+    sectionTitle(`${t("revenueOverTime")} (${granLabel})`)
+    headers(["Period", t("revenue"), t("cost"), t("profit"), t("orders"), t("unitsSold")])
+    chartData.forEach((b, i) => {
+      dataRow([b.label, b.revenue, b.cost, b.profit, b.orders, b.units], { altBg: i % 2 === 1 })
+    })
+    const trendEnd = row - 1
+    for (let r = row - chartData.length; r <= trendEnd; r++) {
+      for (let c = 2; c <= 6; c++) ws.getCell(r, c).numFmt = "#,##0"
+    }
+
+    // ---- Top Products ----
+    sectionTitle(t("topProducts"))
+    headers(["#", "Product", t("revenue"), t("profit"), t("unitsSold")])
+    summary.topProducts.forEach((p, i) => {
+      dataRow([i + 1, p.name, p.revenue, p.profit, p.units], { altBg: i % 2 === 1 })
+    })
+    const prodEnd = row - 1
+    for (let r = row - summary.topProducts.length; r <= prodEnd; r++) {
+      ws.getCell(r, 3).numFmt = "#,##0"
+      ws.getCell(r, 4).numFmt = "#,##0"
+    }
+
+    // ---- Sales by Shop ----
+    sectionTitle(t("salesByShop"))
+    headers([t("colShop"), t("colRevenue"), t("colCost"), t("colProfit"), t("colUnits"), t("colOrders"), t("colGrowth")])
+    summary.shopRows.forEach((s, i) => {
+      dataRow(
+        [s.name, s.revenue, s.cost, s.profit, s.units, s.orders, s.growth !== null ? `${s.growth.toFixed(1)}%` : "—"],
+        { altBg: i % 2 === 1 },
+      )
+    })
+    const shopEnd = row - 1
+    for (let r = row - summary.shopRows.length; r <= shopEnd; r++) {
+      for (let c = 2; c <= 5; c++) ws.getCell(r, c).numFmt = "#,##0"
+    }
+
+    // ---- Employee Performance ----
+    sectionTitle(t("employeePerformance"))
+    headers([t("colEmployee"), t("colShop"), t("colSalesCount"), t("colUnits"), t("colRevenue"), t("colProfit")])
+    summary.employeeRows.forEach((e, i) => {
+      dataRow([e.name, e.shopName, e.orders, e.units, e.revenue, e.profit], { altBg: i % 2 === 1 })
+    })
+    const empEnd = row - 1
+    for (let r = row - summary.employeeRows.length; r <= empEnd; r++) {
+      for (let c = 4; c <= 6; c++) ws.getCell(r, c).numFmt = "#,##0"
+    }
+
+    // ---------- Auto-fit column widths ----------
+    const colCount = ws.columnCount
+    for (let ci = 1; ci <= colCount; ci++) {
+      let maxLen = 12
+      const col = ws.getColumn(ci)
+      col.eachCell({ includeEmpty: false }, function (cell) {
+        const len = String(cell.value ?? "").length
+        if (len > maxLen) maxLen = len
+      })
+      col.width = Math.min(maxLen + 3, 40)
+    }
+
+    // ---------- Download ----------
+    const buf = await wb.xlsx.writeBuffer()
+    const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `analytics-report-${granularity}-${new Date().toISOString().slice(0, 10)}.csv`
+    a.download = `analytics-report-${granularity}-${new Date().toISOString().slice(0, 10)}.xlsx`
     a.click()
     URL.revokeObjectURL(url)
     toast.success(t("csvExported") || "Report exported")

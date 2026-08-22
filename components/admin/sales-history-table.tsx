@@ -3,7 +3,7 @@
 import { useTransition } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import { Download, ChevronLeft, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
@@ -104,23 +104,30 @@ export function SalesHistoryTable({
     })
   }
 
+  const locale = useLocale()
+
   async function exportCsv() {
-    const csv = await getCsvExport({
+    const base64 = await getCsvExport({
       dateFrom: initialFilters.dateFrom || undefined,
       dateTo: initialFilters.dateTo || undefined,
       paymentMethod: initialFilters.paymentMethod,
       status: initialFilters.status,
       shopId: initialFilters.shopId,
+      locale,
     })
-    if (!csv) {
+    if (!base64) {
       toast.error(t("exportFailed"))
       return
     }
-    const blob = new Blob([csv], { type: "text/csv" })
+    // Decode base64 to binary
+    const binaryStr = atob(base64)
+    const bytes = new Uint8Array(binaryStr.length)
+    for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i)
+    const blob = new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `sales-export-${new Date().toISOString().slice(0, 10)}.csv`
+    a.download = `sales-export-${new Date().toISOString().slice(0, 10)}.xlsx`
     a.click()
     URL.revokeObjectURL(url)
     toast.success(t("csvExported"))

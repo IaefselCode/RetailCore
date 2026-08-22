@@ -7,6 +7,7 @@ import { getRequestMeta, type ActionResult } from "@/lib/actions"
 import { logAuditEvent } from "@/lib/audit-log"
 import { nextInvoiceNo } from "@/lib/invoice"
 import { toDecimalString } from "@/lib/money"
+import ExcelJS from "exceljs"
 
 function fail(message: string): ActionResult {
   return { success: false, message }
@@ -267,9 +268,11 @@ export async function getCsvExport(filters: {
   paymentMethod?: string
   status?: string
   shopId?: string
+  locale?: string
 }): Promise<string> {
   const { userId, role } = await getSignedInRole()
   if (!userId || role !== "ADMIN") return ""
+  const locale = filters.locale || "en"
 
   const where: Record<string, unknown> = {}
   if (filters.dateFrom || filters.dateTo) {
@@ -298,15 +301,60 @@ export async function getCsvExport(filters: {
     },
   })
 
-  const header = "Invoice,Date,Shop,Employee,Customer,Items,Revenue,Cost,Profit,Tax,Discount,Total,Payment,Status"
-  const rows = sales.map((s) => {
-    const itemCount = s.items.reduce((sum, i) => sum + i.quantity, 0)
+  // Localized headers
+  const isSw = locale === "sw"
+  const headers = isSw
+    ? ["Ankara", "Tarehe", "Duka", "Mfanyakazi", "Mteja", "Vitu", "Mapato", "Gharama", "Faida", "Kodi", "Kiasi", "Jumla", "Malipo", "Hali"]
+    : ["Invoice", "Date", "Shop", "Employee", "Customer", "Items", "Revenue", "Cost", "Profit", "Tax", "Discount", "Total", "Payment", "Status"]
+
+  // Theme colors
+  const PRIMARY = "4F46E5"
+  const WHITE = "FFFFFF"
+  const LIGHT_BG = "F1F5F9"
+  const SECTION_BG = "059669"
+
+  const wb = new ExcelJS.Workbook()
+  wb.creator = "RetailCore"
+  wb.created = new Date()
+
+  const ws = wb.addWorksheet(isSw ? "Historia ya Mauzo" : "Sales History")
+
+  // Title row
+  const now = new Date()
+  const dateStr = now.toLocaleDateString(isSw ? "sw-TZ" : "en-US", { year: "numeric", month: "long", day: "numeric" })
+  ws.mergeCells(1, 1, 1, headers.length)
+  const titleCell = ws.getCell(1, 1)
+  titleCell.value = `${isSw ? "Historia ya Mauzo" : "Sales History"} — ${dateStr}`
+  titleCell.font = { bold: true, size: 14, color: { argb: `FF${PRIMARY}` } } as ExcelJS.Font
+  titleCell.alignment = { vertical: "middle" }
+  ws.getRow(1).height = 30
+
+  // Header row
+  headers.forEach((h, ci) => {
+    const cell = ws.getCell(2, ci + 1)
+    cell.value = h
+    cell.font = { bold: true, color: { argb: `FF${WHITE}` }, size: 11 } as ExcelJS.Font
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: `FF${PRIMARY}` } }
+    cell.alignment = { horizontal: "center", vertical: "middle" }
+    cell.border = {
+      top: { style: "thin" as const, color: { argb: "FFCBD5E1" } },
+      left: { style: "thin" as const, color: { argb: "FFCBD5E1" } },
+      bottom: { style: "thin" as const, color: { argb: "FFCBD5E1" } },
+      right: { style: "thin" as const, color: { argb: "FFCBD5E1" } },
+    }
+  })
+  ws.getRow(2).height = 24
+
+  // Data rows
+  sales.forEach((s, i) => {
+    const itemCount = s.items.reduce((sum, item) => sum + item.quantity, 0)
     const employee = s.employee
       ? `${s.employee.user.firstName ?? ""} ${s.employee.user.lastName ?? ""}`.trim()
       : ""
-    return [
+    const rowNum = i + 3
+    const rowValues = [
       s.invoiceNo,
-      s.createdAt.toISOString(),
+      s.createdAt.toISOString().slice(0, 10),
       s.shop.name,
       employee,
       s.customerName ?? "",
@@ -320,9 +368,39 @@ export async function getCsvExport(filters: {
       s.paymentMethod ?? "",
       s.status,
     ]
-      .map((v) => `"${String(v).replace(/"/g, '""')}"`)
-      .join(",")
+    rowValues.forEach((v, ci) => {
+      const cell = ws.getCell(rowNum, ci + 1)
+      cell.value = v
+      cell.border = {
+        top: { style: "thin" as const, color: { argb: "FFE2E8F0" } },
+        left: { style: "thin" as const, color: { argb: "FFE2E8F0" } },
+        bottom: { style: "thin" as const, color: { argb: "FFE2E8F0" } },
+        right: { style: "thin" as const, color: { argb: "FFE2E8F0" } },
+      }
+      // Alternate row shading
+      if (i % 2 === 1) {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: `FF${LIGHT_BG}` } }
+      }
+      // Right-align numeric columns (7-12)
+      if (ci >= 6 && ci <= 11) {
+        cell.numFmt = "#,##0"
+        cell.alignment = { horizontal: "right" }
+      }
+    })
   })
 
-  return [header, ...rows].join("\n")
+  // Auto-fit column widths
+  for (let ci = 1; ci <= headers.length; ci++) {
+    let maxLen = headers[ci - 1].length + 3
+    const col = ws.getColumn(ci)
+    col.eachCell({ includeEmpty: false }, function (cell) {
+      const len = String(cell.value ?? "").length
+      if (len > maxLen) maxLen = len
+    })
+    col.width = Math.min(maxLen + 3, 35)
+  }
+
+  // Return as base64
+  const buf = await wb.xlsx.writeBuffer()
+  return Buffer.from(buf).toString("base64")
 }
