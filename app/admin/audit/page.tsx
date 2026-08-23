@@ -5,8 +5,8 @@ import { getTranslations } from "next-intl/server"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ServerTable, createServerColumnHelper } from "@/components/shared/server-table"
-import { Skeleton } from "@/components/ui/skeleton"
 import { AuditToolbar, DeleteLogButton } from "@/components/admin/audit-actions"
+import { SkeletonTable } from "@/components/shared/skeleton-primitives"
 
 const EVENT_KEYS: Record<string, string> = {
   login_success: "login",
@@ -63,9 +63,11 @@ async function AuditTableSection() {
       <CardContent className="p-0">
         <Suspense
           fallback={
-            <div className="flex h-40 items-center justify-center">
-              <Skeleton className="h-24 w-full max-w-md" />
-            </div>
+            <SkeletonTable
+              rows={8}
+              columns={["w-32", "w-20", "w-40", "w-16", "w-60", "w-8"]}
+              headers={["#", t("colWhen"), t("colEvent"), t("colEmail"), t("colIp"), t("colUserAgent"), t("colActions")]}
+            />
           }
         >
           <AuditTableBody />
