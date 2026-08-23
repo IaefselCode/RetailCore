@@ -772,6 +772,12 @@
     "csvExported": "Analytics report exported",
     "exportFailed": "Export failed"
   },
+  "notFound": {
+    "title": "Page not found",
+    "description": "Sorry, we couldn't find the page you're looking for. It may have been moved or no longer exists.",
+    "goBack": "Go back",
+    "goHome": "Go home"
+  },
   "profile": {
     "breadcrumb": "Profile",
     "adminRole": "RMS Administrator",

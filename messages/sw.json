@@ -753,6 +753,12 @@
     "csvExported": "Ripoti ya uchambuzi imehamishwa",
     "exportFailed": "Uhamisho umeshindikana"
   },
+  "notFound": {
+    "title": "Kipenye hakitajulikani",
+    "description": "Pole, hatukuweza kupata ukurasa unaoutafuta. Inaweza kuwa umehamishwa au haupo tena.",
+    "goBack": "Rudi",
+    "goHome": "Nyumbani"
+  },
   "profile": {
     "breadcrumb": "Wasifu",
     "adminRole": "Msimamizi wa RMS",
