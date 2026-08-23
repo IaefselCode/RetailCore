@@ -12,7 +12,6 @@ import {
   Warehouse,
   CreditCard,
   BarChart3,
-  FileText,
   Settings,
   User,
   LogOut,
@@ -39,7 +38,6 @@ const navItems = [
   { labelKey: "inventory", href: "/admin/inventory", icon: Warehouse },
   { labelKey: "sales", href: "/admin/sales", icon: CreditCard },
   { labelKey: "analytics", href: "/admin/analytics", icon: BarChart3 },
-  { labelKey: "reports", href: "/admin/reports", icon: FileText },
   { labelKey: "auditLog", href: "/admin/audit", icon: ScrollText },
 ]
 
