@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, Table
 import { formatMoney } from "@/lib/money"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SkeletonStat, TableRowsSkeleton, ListSkeleton } from "@/components/shared/skeleton-primitives"
-import { ServerTable, createServerColumnHelper } from "@/components/shared/server-table"
+import { RecentSalesTable } from "@/components/admin/recent-sales-table"
 import { isLowStock, isLowOrOut, isOutOfStock, isOverstocked } from "@/lib/stock-status"
 import { buildStockHealth } from "@/lib/stock-health"
 
@@ -25,13 +25,6 @@ function startOfMonth(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), 1)
 }
 
-const statusBadge: Record<string, "default" | "secondary" | "destructive"> = {
-  COMPLETED: "default",
-  PENDING: "secondary",
-  VOIDED: "destructive",
-  CANCELLED: "destructive",
-}
-
 interface RecentSaleRow {
   id: string
   invoiceNo: string
@@ -41,8 +34,6 @@ interface RecentSaleRow {
   total: number
   status: string
 }
-
-const recentSaleHelper = createServerColumnHelper<RecentSaleRow>()
 
 async function TodaySalesValue() {
   const agg = await prisma.sale.aggregate({
@@ -102,8 +93,7 @@ async function ActiveProductsValue() {
   return <>{count}</>
 }
 
-async function RecentSalesContent({ page }: { page: number }) {
-  const t = await getTranslations("dashboard")
+async function RecentSalesContent() {
   const recentSales = await prisma.sale.findMany({
     orderBy: { createdAt: "desc" },
     take: 50,
@@ -123,68 +113,7 @@ async function RecentSalesContent({ page }: { page: number }) {
     status: sale.status,
   }))
 
-  const columns = recentSaleHelper.columns([
-    recentSaleHelper.accessor("invoiceNo", {
-      header: t("colInvoice"),
-      cell: ({ getValue }) => <span className="font-mono text-xs">{getValue() as string}</span>,
-    }),
-    recentSaleHelper.accessor("customerName", {
-      header: t("colCustomer"),
-      cell: ({ getValue }) => (getValue() as string | null) ?? "—",
-    }),
-    recentSaleHelper.accessor("shopName", { header: t("colShop"), cell: ({ getValue }) => getValue() as string }),
-    recentSaleHelper.accessor("itemCount", { header: t("colItems"), cell: ({ getValue }) => getValue() as number }),
-    recentSaleHelper.accessor("total", {
-      header: t("colAmount"),
-      cell: ({ getValue }) => <span className="font-medium">{formatMoney(getValue() as number)}</span>,
-    }),
-    recentSaleHelper.accessor("status", {
-      header: t("colStatus"),
-      cell: ({ getValue }) => (
-        <Badge variant={statusBadge[getValue() as string] ?? "default"}>{getValue() as string}</Badge>
-      ),
-    }),
-  ])
-
-  const totalRows = rows.length
-
-  return (
-    <>
-      {/* Desktop: table (TanStack) */}
-      <div className="hidden md:block">
-        <ServerTable
-          data={rows}
-          columns={columns}
-          getRowId={(row) => row.id}
-          empty={t("noSales")}
-          pageSize={10}
-          page={page}
-          total={totalRows}
-        />
-      </div>
-
-      {/* Mobile: stacked cards */}
-      <div className="divide-y md:hidden">
-        {totalRows === 0 && (
-          <p className="py-8 text-center text-sm text-muted-foreground">{t("noSales")}</p>
-        )}
-        {rows.slice(0, 10).map((sale) => (
-          <div key={sale.id} className="flex items-center justify-between gap-3 px-4 py-3">
-            <div className="min-w-0">
-              <p className="truncate font-mono text-xs">{sale.invoiceNo}</p>
-              <p className="truncate text-sm text-muted-foreground">
-                {sale.customerName ?? "—"} · {sale.shopName}
-              </p>
-            </div>
-            <div className="shrink-0 text-right">
-              <p className="text-sm font-semibold">{formatMoney(sale.total)}</p>
-              <Badge variant={statusBadge[sale.status] ?? "default"}>{sale.status}</Badge>
-            </div>
-          </div>
-        ))}
-      </div>
-    </>
-  )
+  return <RecentSalesTable rows={rows} />
 }
 
 const MONTH_KEYS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]

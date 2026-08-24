@@ -1,67 +1,17 @@
-import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { requireEmployeeContext } from "@/lib/auth-utils"
 import { getTranslations } from "next-intl/server"
-import { Badge } from "@/components/ui/badge"
-import { formatMoney } from "@/lib/money"
-import { Table, TableHeader, TableBody, TableHead, TableRow } from "@/components/ui/table"
-import { TableRowsSkeleton } from "@/components/shared/skeleton-primitives"
-import { ServerTable, createServerColumnHelper } from "@/components/shared/server-table"
-import { stockStatusKey, stockStatusVariant } from "@/lib/stock-status"
+import { EmployeeInventoryTable } from "@/components/employee/inventory-table"
+import { stockStatusKey } from "@/lib/stock-status"
 
 export const metadata = { title: "Inventory | RetailCore" }
 
-interface EmpInventoryRow {
-  id: string
-  productName: string
-  sku: string
-  quantity: number
-  price: number
-  statusKey: string
-  statusVariant: "destructive" | "secondary" | "outline" | "default"
-}
-
-const invHelper = createServerColumnHelper<EmpInventoryRow>()
-
-async function InventoryTableSection({ shopId }: { shopId: string }) {
+export default async function EmployeeInventoryPage() {
+  const ctx = await requireEmployeeContext()
   const t = await getTranslations("employeeInventory")
-  const tc = await getTranslations("common")
-  return (
-    <div className="rounded-lg border">
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-10">{tc("no")}</TableHead>
-              <TableHead>{t("colProduct")}</TableHead>
-              <TableHead>{t("colSku")}</TableHead>
-              <TableHead>{t("colShopStock")}</TableHead>
-              <TableHead>{t("colPrice")}</TableHead>
-              <TableHead>{t("colStatus")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <Suspense
-              fallback={
-                <TableRowsSkeleton
-                  rows={10}
-                  columns={["w-8", "w-32", "w-20", "w-10", "w-16", "w-20"]}
-                />
-              }
-            >
-              <InventoryRows shopId={shopId} />
-            </Suspense>
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  )
-}
 
-async function InventoryRows({ shopId }: { shopId: string }) {
-  const t = await getTranslations("employeeInventory")
   const inventory = await prisma.inventory.findMany({
-    where: { shopId },
+    where: { shopId: ctx.shopId },
     orderBy: { product: { name: "asc" } },
     include: {
       product: {
@@ -70,63 +20,16 @@ async function InventoryRows({ shopId }: { shopId: string }) {
     },
   })
 
-  const activeItems = inventory.filter((i) => i.product.isActive)
-
-  const rows: EmpInventoryRow[] = activeItems.map((item) => {
-    const statusKey = stockStatusKey(item.quantity, item.minStock, item.maxStock)
-    return {
+  const rows = inventory
+    .filter((i) => i.product.isActive)
+    .map((item) => ({
       id: item.id,
       productName: item.product.name,
       sku: item.product.sku,
       quantity: item.quantity,
       price: Number(item.product.price),
-      statusKey,
-      statusVariant: stockStatusVariant(statusKey),
-    }
-  })
-
-  const columns = invHelper.columns([
-    invHelper.accessor("productName", {
-      header: t("colProduct"),
-      cell: ({ getValue }) => <span className="font-medium">{getValue() as string}</span>,
-    }),
-    invHelper.accessor("sku", {
-      header: t("colSku"),
-      cell: ({ getValue }) => <span className="text-muted-foreground">{getValue() as string}</span>,
-    }),
-    invHelper.accessor("quantity", { header: t("colShopStock"), cell: ({ getValue }) => getValue() as number }),
-    invHelper.accessor("price", {
-      header: t("colPrice"),
-      cell: ({ getValue }) => formatMoney(getValue() as number),
-    }),
-    invHelper.accessor("statusKey", {
-      header: t("colStatus"),
-      cell: ({ row }) => (
-        <Badge
-          variant={row.original.statusVariant}
-          className={row.original.statusKey === "statusOver" ? "text-blue-600" : undefined}
-        >
-          {t(row.original.statusKey)}
-        </Badge>
-      ),
-    }),
-  ])
-
-  return (
-    <ServerTable
-      data={rows}
-      columns={columns}
-      getRowId={(row) => row.id}
-      numbered
-      empty={t("empty")}
-      bodyOnly
-    />
-  )
-}
-
-export default async function EmployeeInventoryPage() {
-  const ctx = await requireEmployeeContext()
-  const t = await getTranslations("employeeInventory")
+      statusKey: stockStatusKey(item.quantity, item.minStock, item.maxStock),
+    }))
 
   return (
     <div className="space-y-6">
@@ -136,7 +39,7 @@ export default async function EmployeeInventoryPage() {
         <p className="text-sm text-muted-foreground">{ctx.shopName}</p>
       </div>
 
-      <InventoryTableSection shopId={ctx.shopId} />
+      <EmployeeInventoryTable rows={rows} />
     </div>
   )
 }

@@ -9,7 +9,7 @@ import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { ServerTable, createServerColumnHelper } from "@/components/shared/server-table"
+import { EmployeeSalesTable } from "@/components/admin/employee-sales-table"
 import Link from "next/link"
 import { formatMoney } from "@/lib/money"
 
@@ -138,12 +138,12 @@ export default async function EmployeeDetailsPage({
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">{t("position")}</p>
-                  <p className="text-sm font-medium">{employee.position ?? "—"}</p>
+                  <p className="text-sm font-medium">{employee.position ?? "â€”"}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">{t("hireDate")}</p>
                   <p className="text-sm font-medium">
-                    {employee.hireDate ? new Date(employee.hireDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "—"}
+                    {employee.hireDate ? new Date(employee.hireDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "â€”"}
                   </p>
                 </div>
                 <div>
@@ -213,82 +213,22 @@ export default async function EmployeeDetailsPage({
               <CardTitle>{t("salesHistory")}</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <EmployeeSalesTable sales={sales} t={t} />
+              <EmployeeSalesTable
+                rows={sales.map((sale) => ({
+                  id: sale.id,
+                  invoiceNo: sale.invoiceNo,
+                  customerName: sale.customerName,
+                  items: sale._count.items,
+                  total: Number(sale.total),
+                  paymentMethod: sale.paymentMethod,
+                  createdAt: sale.createdAt,
+                  status: sale.status,
+                }))}
+              />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
     </div>
-  )
-}
-
-function EmployeeSalesTable({
-  sales,
-  t,
-}: {
-  sales: {
-    id: string
-    invoiceNo: string
-    customerName: string | null
-    total: number | { toString(): string }
-    paymentMethod: string | null
-    status: string
-    createdAt: Date
-    _count: { items: number }
-  }[]
-  t: (key: string) => string
-}) {
-  const rows: EmpSaleRow[] = sales.map((sale) => ({
-    id: sale.id,
-    invoiceNo: sale.invoiceNo,
-    customerName: sale.customerName,
-    items: sale._count.items,
-    total: Number(sale.total),
-    paymentMethod: sale.paymentMethod,
-    createdAt: sale.createdAt,
-    status: sale.status,
-  }))
-
-  const columns = empSaleHelper.columns([
-    empSaleHelper.accessor("invoiceNo", {
-      header: t("colInvoice"),
-      cell: ({ getValue }) => <span className="font-mono text-xs">{getValue() as string}</span>,
-    }),
-    empSaleHelper.accessor("customerName", {
-      header: t("colCustomer"),
-      cell: ({ getValue }) => (getValue() as string | null) ?? "—",
-    }),
-    empSaleHelper.accessor("items", { header: t("colItems"), cell: ({ getValue }) => getValue() as number }),
-    empSaleHelper.accessor("total", {
-      header: t("colAmount"),
-      cell: ({ getValue }) => <span className="font-medium">{formatMoney(getValue() as number)}</span>,
-    }),
-    empSaleHelper.accessor("paymentMethod", {
-      header: t("colPayment"),
-      cell: ({ getValue }) => (getValue() as string | null) ?? "—",
-    }),
-    empSaleHelper.accessor("createdAt", {
-      header: t("colDate"),
-      cell: ({ getValue }) => (
-        <span className="text-muted-foreground">{(getValue() as Date).toLocaleDateString()}</span>
-      ),
-    }),
-    empSaleHelper.accessor("status", {
-      header: t("colStatus"),
-      cell: ({ getValue }) => (
-        <Badge variant={statusVariant[getValue() as string] ?? "default"}>
-          {t(STATUS_KEYS[getValue() as string] ?? (getValue() as string))}
-        </Badge>
-      ),
-    }),
-  ])
-
-  return (
-    <ServerTable
-      data={rows}
-      columns={columns}
-      getRowId={(row) => row.id}
-      empty={t("noSales")}
-    />
   )
 }

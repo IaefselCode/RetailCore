@@ -11,17 +11,10 @@ import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components
 import { formatMoney } from "@/lib/money"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TableRowsSkeleton } from "@/components/shared/skeleton-primitives"
-import { ServerTable, createServerColumnHelper } from "@/components/shared/server-table"
 import { SalesOverview, type SalesPeriodData } from "@/components/admin/sales-overview"
+import { RecentTransactionsTable as RecentTransactionsTableClient } from "@/components/admin/recent-transactions-table"
 
 export const metadata = { title: "Sales | RetailCore" }
-
-const statusBadge: Record<string, "default" | "secondary" | "destructive"> = {
-  COMPLETED: "default",
-  PENDING: "secondary",
-  VOIDED: "destructive",
-  CANCELLED: "destructive",
-}
 
 interface RecentSaleRow {
   id: string
@@ -34,8 +27,6 @@ interface RecentSaleRow {
   createdAt: Date
   status: string
 }
-
-const saleHelper = createServerColumnHelper<RecentSaleRow>()
 
 function startOfDay(d: Date) {
   const x = new Date(d)
@@ -137,17 +128,17 @@ async function RecentTransactionsSection() {
             </>
           }
         >
-          <RecentTransactionsTable t={t} />
+          <RecentTransactionsTable />
         </Suspense>
       </CardContent>
     </Card>
   )
 }
 
-async function RecentTransactionsTable({ t }: { t: (key: string) => string }) {
+async function RecentTransactionsTable() {
   const recentSales = await prisma.sale.findMany({
     orderBy: { createdAt: "desc" },
-    take: 10,
+    take: 100,
     include: {
       shop: { select: { name: true } },
       items: { select: { quantity: true } },
@@ -166,75 +157,7 @@ async function RecentTransactionsTable({ t }: { t: (key: string) => string }) {
     status: sale.status,
   }))
 
-  const columns = saleHelper.columns([
-    saleHelper.accessor("invoiceNo", {
-      header: t("colInvoice"),
-      cell: ({ getValue }) => <span className="font-mono text-xs">{getValue() as string}</span>,
-    }),
-    saleHelper.accessor("customerName", {
-      header: t("colCustomer"),
-      cell: ({ getValue }) => (getValue() as string | null) ?? "—",
-    }),
-    saleHelper.accessor("shopName", { header: t("colShop"), cell: ({ getValue }) => getValue() as string }),
-    saleHelper.accessor("itemCount", { header: t("colItems"), cell: ({ getValue }) => getValue() as number }),
-    saleHelper.accessor("total", {
-      header: t("colAmount"),
-      cell: ({ getValue }) => <span className="font-medium">{formatMoney(getValue() as number)}</span>,
-    }),
-    saleHelper.accessor("paymentMethod", {
-      header: t("colPayment"),
-      cell: ({ getValue }) => (getValue() as string | null) ?? "—",
-    }),
-    saleHelper.accessor("createdAt", {
-      header: t("colDate"),
-      cell: ({ getValue }) => (
-        <span className="text-muted-foreground">{(getValue() as Date).toLocaleDateString()}</span>
-      ),
-    }),
-    saleHelper.accessor("status", {
-      header: t("colStatus"),
-      cell: ({ getValue }) => (
-        <Badge variant={statusBadge[getValue() as string] ?? "default"}>
-          {getValue() as string}
-        </Badge>
-      ),
-    }),
-  ])
-
-  return (
-    <>
-      {/* Desktop: table (TanStack) */}
-      <div className="hidden md:block">
-        <ServerTable
-          data={rows}
-          columns={columns}
-          getRowId={(row) => row.id}
-          empty={t("empty")}
-        />
-      </div>
-
-      {/* Mobile: stacked cards */}
-      <div className="divide-y md:hidden">
-        {rows.length === 0 && (
-          <p className="py-8 text-center text-sm text-muted-foreground">{t("empty")}</p>
-        )}
-        {rows.map((sale) => (
-          <div key={sale.id} className="flex items-center justify-between gap-3 px-4 py-3">
-            <div className="min-w-0">
-              <p className="truncate font-mono text-xs">{sale.invoiceNo}</p>
-              <p className="truncate text-sm text-muted-foreground">
-                {sale.customerName ?? "—"} · {sale.shopName} · {sale.itemCount} {t("colItems").toLowerCase()}
-              </p>
-            </div>
-            <div className="shrink-0 text-right">
-              <p className="text-sm font-semibold">{formatMoney(sale.total)}</p>
-              <Badge variant={statusBadge[sale.status] ?? "default"}>{sale.status}</Badge>
-            </div>
-          </div>
-        ))}
-      </div>
-    </>
-  )
+  return <RecentTransactionsTableClient rows={rows} />
 }
 
 export default async function SalesPage() {
