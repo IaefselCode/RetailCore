@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma"
 import { getSignedInRole } from "@/lib/auth-utils"
 import { getRequestMeta, type ActionResult } from "@/lib/actions"
 import { logAuditEvent } from "@/lib/audit-log"
+import { notifyAdmins } from "@/lib/notification-actions"
 
 export type EmployeeActionResult = ActionResult & { temporaryPassword?: string }
 
@@ -68,6 +69,7 @@ export async function createShop(formData: FormData): Promise<ActionResult> {
       ip: meta.ip,
     })
     revalidatePath("/admin/shops")
+    await notifyAdmins({ title: "New shop created", message: name + " has been added as a new location", type: "system" })
     return { success: true, message: "Shop created." }
   } catch (err) {
     console.error("createShop failed:", err)
@@ -249,6 +251,7 @@ export async function createEmployee(formData: FormData): Promise<EmployeeAction
       ip: meta.ip,
     })
     revalidatePath("/admin/employees")
+    await notifyAdmins({ title: "New employee onboarded", message: firstName + " " + lastName + " has been added to the team", type: "operational" })
     return {
       success: true,
       message: "Employee created.",

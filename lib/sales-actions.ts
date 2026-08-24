@@ -6,6 +6,7 @@ import { getEmployeeContext, getSignedInRole } from "@/lib/auth-utils"
 import { getRequestMeta, type ActionResult } from "@/lib/actions"
 import { logAuditEvent } from "@/lib/audit-log"
 import { nextInvoiceNo } from "@/lib/invoice"
+import { notifyAdmins, checkAndNotifyStockHealth } from "@/lib/notification-actions"
 import { toDecimalString } from "@/lib/money"
 import ExcelJS from "exceljs"
 
@@ -178,6 +179,28 @@ export async function recordSale(_prev: ActionResult | null, formData: FormData)
     revalidatePath("/admin/sales")
     revalidatePath("/admin/sales/history")
 
+    // --- Notification triggers ------------------------------------------------
+    // 1. Stock health: out of stock / low / overstocked
+    await checkAndNotifyStockHealth(ctx.shopId, lineItems.map((l) => l.productId))
+
+    // 2. Every sale → notify admin
+    const employeeName = (ctx.firstName + " " + ctx.lastName).trim()
+    await notifyAdmins({
+      title: "New sale recorded",
+      message: "Invoice " + invoiceNo + " — " + formatSaleTotal(total) + " at " + ctx.shopName + (employeeName ? " by " + employeeName : ""),
+      type: "sales",
+    })
+
+    // 3. High-value sale alert (>= 500,000 TZS)
+    if (total >= 500_000) {
+      await notifyAdmins({
+        title: "High-value sale",
+        message: "Invoice " + invoiceNo + " — " + formatSaleTotal(total) + " at " + ctx.shopName,
+        type: "sales",
+      })
+    }
+    // --------------------------------------------------------------------------
+
     return {
       success: true,
       message: `Sale completed! Invoice ${invoiceNo} — ${formatSaleTotal(total)}`,
@@ -202,7 +225,7 @@ export async function refundSale(formData: FormData): Promise<ActionResult> {
 
     const sale = await prisma.sale.findUnique({
       where: { id: saleId },
-      include: { items: true },
+      include: { items: true, shop: { select: { name: true } } },
     })
     if (!sale) return fail("Sale not found.")
     if (sale.status === "VOIDED") return fail("Sale is already voided.")
@@ -255,6 +278,14 @@ export async function refundSale(formData: FormData): Promise<ActionResult> {
     revalidatePath("/admin/sales/history")
     revalidatePath("/employee/sales-history")
     revalidatePath("/employee/inventory")
+
+    // Notify admins about the refund
+    await notifyAdmins({
+      title: "Sale refunded",
+      message: "Invoice " + sale.invoiceNo + " (" + formatSaleTotal(Number(sale.total)) + ") at " + sale.shop.name + " has been voided",
+      type: "operational",
+    })
+
     return { success: true, message: `Sale ${sale.invoiceNo} voided.` }
   } catch (err) {
     console.error("refundSale failed:", err)

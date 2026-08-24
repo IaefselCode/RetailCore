@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { getSignedInRole } from "@/lib/auth-utils"
 import { getRequestMeta, type ActionResult } from "@/lib/actions"
 import { logAuditEvent } from "@/lib/audit-log"
+import { notifyAdmins } from "@/lib/notification-actions"
 import { deleteImage } from "@/lib/images-server"
 
 function fail(message: string): ActionResult {
@@ -101,6 +102,7 @@ export async function createProduct(formData: FormData): Promise<ActionResult> {
     })
     revalidatePath("/admin/products")
     revalidatePath("/employee/products")
+    await notifyAdmins({ title: "New product added", message: name + " (" + sku + ") has been added to the catalog", type: "system" })
     return { success: true, message: "Product created." }
   } catch (err) {
     console.error("createProduct failed:", err)

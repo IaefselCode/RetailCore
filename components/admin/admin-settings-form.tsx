@@ -21,6 +21,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
 import { updateSystemSettings } from "@/lib/settings-actions"
+import { updateNotificationPreferences, type NotificationPreferenceData } from "@/lib/notification-actions"
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -38,6 +39,7 @@ export interface SystemSettingsData {
   currency: string
   dateFormat: string
   sessionTimeout: string
+  notificationPrefs?: NotificationPreferenceData
 }
 
 export function AdminSettingsForm({ initial }: { initial: SystemSettingsData }) {
@@ -46,9 +48,9 @@ export function AdminSettingsForm({ initial }: { initial: SystemSettingsData }) 
   const tc = useTranslations("common")
   const [pending, startTransition] = useTransition()
   const [showPassword, setShowPassword] = useState(false)
-  const [emailNotifications, setEmailNotifications] = useState(true)
+  const [emailNotifications, setEmailNotifications] = useState(initial.notificationPrefs?.emailEnabled ?? true)
   const [smsAlerts, setSmsAlerts] = useState(false)
-  const [pushNotifications, setPushNotifications] = useState(true)
+  const [pushNotifications, setPushNotifications] = useState(initial.notificationPrefs?.pushEnabled ?? true)
   const [twoFactor, setTwoFactor] = useState(false)
   const [form, setForm] = useState({
     shopName: initial.shopName,
@@ -71,6 +73,7 @@ export function AdminSettingsForm({ initial }: { initial: SystemSettingsData }) 
 
     startTransition(async () => {
       const result = await updateSystemSettings(fd)
+      await updateNotificationPreferences({ emailEnabled: emailNotifications, pushEnabled: pushNotifications })
       if (result.success) {
         toast.success(result.message)
         router.refresh()

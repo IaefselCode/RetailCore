@@ -5,36 +5,12 @@ import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 import { Package, AlertTriangle, XCircle, ShoppingCart, ArrowRightLeft, History, Activity } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonStat, TableRowsSkeleton } from "@/components/shared/skeleton-primitives"
-import { ServerTable, createServerColumnHelper } from "@/components/shared/server-table"
-import { InventoryFilters } from "@/components/admin/inventory-filters"
-import { stockStatusKey, stockStatusVariant, isLowStock, isOverstocked } from "@/lib/stock-status"
+import { SkeletonStat } from "@/components/shared/skeleton-primitives"
+import { InventoryTable, type InventoryRow } from "@/components/admin/inventory-table"
+import { stockStatusKey, isLowStock, isOverstocked } from "@/lib/stock-status"
 
 export const metadata = { title: "Inventory | RetailCore" }
-
-interface SearchParams {
-  q?: string
-  shopId?: string
-  status?: string
-}
-
-interface InventoryRow {
-  id: string
-  productName: string
-  sku: string
-  shopName: string
-  quantity: number
-  minStock: number
-  maxStock: number
-  statusKey: string
-  statusVariant: "default" | "secondary" | "destructive" | "outline"
-}
-
-const inventoryHelper = createServerColumnHelper<InventoryRow>()
 
 async function TotalUnitsValue({ where }: { where: Record<string, unknown> }) {
   const rows = await prisma.inventory.findMany({ where, select: { quantity: true } })
@@ -59,219 +35,37 @@ async function OverstockedCountValue({ where }: { where: Record<string, unknown>
   const count = rows.filter((r) => isOverstocked(r.quantity, r.maxStock)).length
   return <>{count}</>
 }
-
-async function InventoryTableSection({
-  where,
-  status,
-  hasFilters,
-}: {
-  where: Record<string, unknown>
-  status?: string
-  hasFilters: boolean
-}) {
-  const t = await getTranslations("inventory")
-  return (
-    <Card>
-      <CardContent className="p-0">
-        <Suspense
-          fallback={
-            <>
-              {/* Desktop: full table chrome so the fallback stays valid HTML */}
-              <div className="hidden overflow-x-auto md:block">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t("colProduct")}</TableHead>
-                      <TableHead>{t("colSku")}</TableHead>
-                      <TableHead>{t("colShop")}</TableHead>
-                      <TableHead>{t("colQuantity")}</TableHead>
-                      <TableHead>{t("colMinStock")}</TableHead>
-                      <TableHead>{t("colStatus")}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRowsSkeleton
-                      rows={8}
-                      columns={["w-32", "w-20", "w-24", "w-10", "w-8", "w-20"]}
-                    />
-                  </TableBody>
-                </Table>
-              </div>
-              {/* Mobile: stacked list skeleton */}
-              <div className="divide-y md:hidden">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between gap-3 px-4 py-3"
-                  >
-                    <div className="min-w-0 space-y-1.5">
-                      <Skeleton className="h-3 w-32" />
-                      <Skeleton className="h-3 w-24" />
-                    </div>
-                    <Skeleton className="h-4 w-16 shrink-0" />
-                  </div>
-                ))}
-              </div>
-            </>
-          }
-        >
-          <InventoryTable t={t} where={where} status={status} hasFilters={hasFilters} />
-        </Suspense>
-      </CardContent>
-    </Card>
-  )
-}
-
-async function InventoryTable({
-  t,
-  where,
-  status,
-  hasFilters,
-}: {
-  t: (key: string) => string
-  where: Record<string, unknown>
-  status?: string
-  hasFilters: boolean
-}) {
-  const inv = await prisma.inventory.findMany({
-    where,
-    orderBy: [{ shop: { name: "asc" } }, { product: { name: "asc" } }],
-    include: {
-      product: { select: { name: true, sku: true } },
-      shop: { select: { name: true } },
-    },
-  })
-
-  const allRows: InventoryRow[] = inv.map((row) => {
-    const key = stockStatusKey(row.quantity, row.minStock, row.maxStock)
-    return {
-      id: row.id,
-      productName: row.product.name,
-      sku: row.product.sku,
-      shopName: row.shop.name,
-      quantity: row.quantity,
-      minStock: row.minStock,
-      maxStock: row.maxStock,
-      statusKey: key,
-      statusVariant: stockStatusVariant(key),
-    }
-  })
-
-  // Status is computed (quantity vs minStock/maxStock), so it can't be
-  // expressed in the Prisma where — apply it here over the query-filtered rows.
-  const rows =
-    status === "in"
-      ? allRows.filter((r) => stockStatusKey(r.quantity, r.minStock, r.maxStock) === "statusIn")
-      : status === "low"
-        ? allRows.filter((r) => stockStatusKey(r.quantity, r.minStock, r.maxStock) === "statusLow")
-        : status === "over"
-          ? allRows.filter((r) => stockStatusKey(r.quantity, r.minStock, r.maxStock) === "statusOver")
-          : status === "out"
-            ? allRows.filter((r) => stockStatusKey(r.quantity, r.minStock, r.maxStock) === "statusOut")
-            : allRows
-
-  const columns = inventoryHelper.columns([
-    inventoryHelper.accessor("productName", {
-      header: t("colProduct"),
-      cell: ({ getValue }) => <span className="font-medium">{getValue() as string}</span>,
-    }),
-    inventoryHelper.accessor("sku", {
-      header: t("colSku"),
-      cell: ({ getValue }) => <span className="text-muted-foreground">{getValue() as string}</span>,
-    }),
-    inventoryHelper.accessor("shopName", { header: t("colShop"), cell: ({ getValue }) => getValue() as string }),
-    inventoryHelper.accessor("quantity", {
-      header: t("colQuantity"),
-      cell: ({ getValue }) => <span className="font-semibold">{getValue() as number}</span>,
-    }),
-    inventoryHelper.accessor("minStock", { header: t("colMinStock"), cell: ({ getValue }) => getValue() as number }),
-    inventoryHelper.accessor("statusKey", {
-      header: t("colStatus"),
-      cell: ({ row }) => (
-        <Badge
-          variant={row.original.statusVariant}
-          className={row.original.statusKey === "statusOver" ? "text-blue-600" : undefined}
-        >
-          {t(row.original.statusKey)}
-        </Badge>
-      ),
-    }),
-  ])
-
-  return (
-    <>
-      {/* Desktop: table (TanStack) */}
-      <div className="hidden md:block">
-        <ServerTable
-          data={rows}
-          columns={columns}
-          getRowId={(row) => row.id}
-          numbered
-          empty={rows.length === 0 && hasFilters ? t("noResults") : t("empty")}
-        />
-      </div>
-
-      {/* Mobile: stacked cards */}
-      <div className="divide-y md:hidden">
-        {rows.length === 0 && (
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            {hasFilters ? t("noResults") : t("empty")}
-          </p>
-        )}
-        {rows.map((row) => (
-          <div key={row.id} className="flex items-center justify-between gap-3 px-4 py-3">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium">{row.productName}</p>
-              <p className="truncate text-xs text-muted-foreground">
-                {row.shopName} · {row.sku}
-              </p>
-            </div>
-            <div className="shrink-0 text-right">
-              <p className="text-sm font-semibold">{row.quantity}</p>
-              <Badge
-                variant={row.statusVariant}
-                className={row.statusKey === "statusOver" ? "text-blue-600" : undefined}
-              >
-                {t(row.statusKey)}
-              </Badge>
-            </div>
-          </div>
-        ))}
-      </div>
-    </>
-  )
-}
-
-export default async function InventoryPage({
-  searchParams,
-}: {
-  searchParams: Promise<SearchParams>
-}) {
+export default async function InventoryPage() {
   await requireRole("ADMIN")
   const t = await getTranslations("inventory")
   const tc = await getTranslations("common")
-  const params = await searchParams
 
-  const q = params.q?.trim() ?? ""
-  const shopId = params.shopId ?? "all"
-  const status = params.status ?? "all"
+  // All inventory is fetched server-side; search/shop/status filtering and
+  // pagination are handled client-side by the TanStack DataTable.
+  const [inv, shops] = await Promise.all([
+    prisma.inventory.findMany({
+      orderBy: [{ shop: { name: "asc" } }, { product: { name: "asc" } }],
+      include: {
+        product: { select: { name: true, sku: true } },
+        shop: { select: { id: true, name: true } },
+      },
+    }),
+    prisma.shop.findMany({
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+  ])
 
-  // Text + shop filters run in the database; status is applied in JS.
-  const where: Record<string, unknown> = {}
-  if (q) {
-    where.OR = [
-      { product: { name: { contains: q, mode: "insensitive" } } },
-      { product: { sku: { contains: q, mode: "insensitive" } } },
-    ]
-  }
-  if (shopId && shopId !== "all") where.shopId = shopId
-
-  const shops = await prisma.shop.findMany({
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
-  })
-
-  const hasFilters = q !== "" || shopId !== "all" || status !== "all"
+  const rows: InventoryRow[] = inv.map((row) => ({
+    id: row.id,
+    productName: row.product.name,
+    sku: row.product.sku,
+    shopName: row.shop.name,
+    quantity: row.quantity,
+    minStock: row.minStock,
+    maxStock: row.maxStock,
+    statusKey: stockStatusKey(row.quantity, row.minStock, row.maxStock),
+  }))
 
   return (
     <div className="space-y-6">
@@ -315,7 +109,7 @@ export default async function InventoryPage({
           <CardContent className="flex items-center gap-2 text-2xl font-bold">
             <Package className="size-5 text-muted-foreground" />
             <Suspense fallback={<SkeletonStat />}>
-              <TotalUnitsValue where={where} />
+              <TotalUnitsValue where={{}} />
             </Suspense>
           </CardContent>
         </Card>
@@ -324,7 +118,7 @@ export default async function InventoryPage({
           <CardContent className="flex items-center gap-2 text-2xl font-bold text-yellow-600">
             <AlertTriangle className="size-5" />
             <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
-              <LowStockCountValue where={where} />
+              <LowStockCountValue where={{}} />
             </Suspense>
           </CardContent>
         </Card>
@@ -333,7 +127,7 @@ export default async function InventoryPage({
           <CardContent className="flex items-center gap-2 text-2xl font-bold text-red-600">
             <XCircle className="size-5" />
             <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
-              <OutOfStockCountValue where={where} />
+              <OutOfStockCountValue where={{}} />
             </Suspense>
           </CardContent>
         </Card>
@@ -341,18 +135,13 @@ export default async function InventoryPage({
           <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">{t("overstocked")}</CardTitle></CardHeader>
           <CardContent className="text-2xl font-bold text-blue-600">
             <Suspense fallback={<SkeletonStat className="h-7 w-12" />}>
-              <OverstockedCountValue where={where} />
+              <OverstockedCountValue where={{}} />
             </Suspense>
           </CardContent>
         </Card>
       </div>
 
-      <InventoryFilters
-        shops={shops}
-        initial={{ q, shopId, status }}
-      />
-
-      <InventoryTableSection where={where} status={status} hasFilters={hasFilters} />
+      <InventoryTable rows={rows} shops={shops} />
     </div>
   )
 }

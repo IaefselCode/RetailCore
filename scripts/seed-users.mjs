@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs"
 import { randomUUID } from "crypto"
 import pg from "pg"
 
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
+const pool = new pg.Pool({ connectionString: process.env.DIRECT_URL })
 
 const users = [
   {

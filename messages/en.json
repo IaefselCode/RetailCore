@@ -28,7 +28,8 @@
     "refresh": "Refresh",
     "done": "Done",
     "home": "Home",
-    "no": "No."
+    "no": "No.",
+    "of": "of"
   },
   "nav": {
     "group": "Menu",
@@ -722,7 +723,8 @@
     "today": "Today",
     "yesterday": "Yesterday",
     "thisWeek": "This Week",
-    "older": "Older"
+    "older": "Older",
+    "empty": "No notifications yet"
   },
   "analytics": {
     "breadcrumb": "Analytics",

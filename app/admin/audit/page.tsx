@@ -36,9 +36,15 @@ interface AuditLogData {
 
 const auditHelper = createServerColumnHelper<AuditRow>()
 
-export default async function AdminAuditPage() {
+export default async function AdminAuditPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[]>>
+}) {
   await requireRole("ADMIN")
   const t = await getTranslations("audit")
+  const params = await searchParams
+  const page = Math.max(1, Number(params.page ?? 1))
 
   return (
     <div className="space-y-4">
@@ -47,12 +53,12 @@ export default async function AdminAuditPage() {
         <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
 
-      <AuditTableSection />
+      <AuditTableSection page={page} />
     </div>
   )
 }
 
-async function AuditTableSection() {
+async function AuditTableSection({ page }: { page: number }) {
   const t = await getTranslations("audit")
   return (
     <Card>
@@ -70,14 +76,14 @@ async function AuditTableSection() {
             />
           }
         >
-          <AuditTableBody />
+          <AuditTableBody page={page} />
         </Suspense>
       </CardContent>
     </Card>
   )
 }
 
-async function AuditTableBody() {
+async function AuditTableBody({ page }: { page: number }) {
   const t = await getTranslations("audit")
   const logs = await prisma.authLog.findMany({
     orderBy: { createdAt: "desc" },
@@ -133,6 +139,9 @@ async function AuditTableBody() {
       getRowId={(row) => row.id}
       numbered
       empty={t("empty")}
+      pageSize={10}
+      page={page}
+      total={logs.length}
     />
   )
 }

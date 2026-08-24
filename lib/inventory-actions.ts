@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { getSignedInRole } from "@/lib/auth-utils"
 import { getRequestMeta, type ActionResult } from "@/lib/actions"
 import { logAuditEvent } from "@/lib/audit-log"
+import { notifyShopEmployees, checkAndNotifyStockHealth } from "@/lib/notification-actions"
 
 function fail(message: string): ActionResult {
   return { success: false, message }
@@ -95,6 +96,10 @@ export async function purchaseStock(formData: FormData): Promise<ActionResult> {
     revalidatePath("/employee/inventory")
     revalidatePath("/employee/products")
     revalidatePath("/admin/products")
+
+    // Check stock health for all purchased products at this shop
+    await checkAndNotifyStockHealth(shopId, items.map((i) => i.productId))
+
     return { success: true, message: "Stock purchased successfully." }
   } catch (err) {
     console.error("purchaseStock failed:", err)
@@ -194,6 +199,29 @@ export async function distributeStock(formData: FormData): Promise<ActionResult>
     revalidatePath("/admin/inventory")
     revalidatePath("/employee/inventory")
     revalidatePath("/employee/products")
+
+    // Notify destination shop employees about incoming stock
+    const product = await prisma.product.findUnique({ where: { id: productId }, select: { name: true } })
+    const productName = product?.name ?? "Product"
+    const fromShop = await prisma.shop.findUnique({ where: { id: fromShopId }, select: { name: true } })
+    const fromShopName = fromShop?.name ?? "source shop"
+    for (const dist of distributions) {
+      if (dist.quantity <= 0) continue
+      await notifyShopEmployees(dist.toShopId, {
+        title: "Stock received",
+        message: productName + " — " + dist.quantity + " units transferred from " + fromShopName,
+        type: "system",
+      })
+    }
+
+    // Stock health checks: source could go low/out, destinations could go over
+    await checkAndNotifyStockHealth(fromShopId, [productId])
+    for (const dist of distributions) {
+      if (dist.quantity > 0) {
+        await checkAndNotifyStockHealth(dist.toShopId, [productId])
+      }
+    }
+
     return { success: true, message: "Stock distributed successfully." }
   } catch (err) {
     console.error("distributeStock failed:", err)

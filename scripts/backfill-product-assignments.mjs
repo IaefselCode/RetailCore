@@ -7,7 +7,7 @@
 //   node scripts/backfill-product-assignments.mjs
 import pg from "pg"
 
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
+const pool = new pg.Pool({ connectionString: process.env.DIRECT_URL })
 
 const products = await pool.query(`SELECT id FROM "Product"`)
 const shops = await pool.query(`SELECT id FROM "Shop" WHERE "isActive" = true`)

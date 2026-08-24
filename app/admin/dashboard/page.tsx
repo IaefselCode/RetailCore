@@ -102,11 +102,11 @@ async function ActiveProductsValue() {
   return <>{count}</>
 }
 
-async function RecentSalesContent() {
+async function RecentSalesContent({ page }: { page: number }) {
   const t = await getTranslations("dashboard")
   const recentSales = await prisma.sale.findMany({
     orderBy: { createdAt: "desc" },
-    take: 5,
+    take: 50,
     include: {
       shop: { select: { name: true } },
       items: { select: { quantity: true } },
@@ -146,6 +146,8 @@ async function RecentSalesContent() {
     }),
   ])
 
+  const totalRows = rows.length
+
   return (
     <>
       {/* Desktop: table (TanStack) */}
@@ -155,15 +157,18 @@ async function RecentSalesContent() {
           columns={columns}
           getRowId={(row) => row.id}
           empty={t("noSales")}
+          pageSize={10}
+          page={page}
+          total={totalRows}
         />
       </div>
 
       {/* Mobile: stacked cards */}
       <div className="divide-y md:hidden">
-        {rows.length === 0 && (
+        {totalRows === 0 && (
           <p className="py-8 text-center text-sm text-muted-foreground">{t("noSales")}</p>
         )}
-        {rows.map((sale) => (
+        {rows.slice(0, 10).map((sale) => (
           <div key={sale.id} className="flex items-center justify-between gap-3 px-4 py-3">
             <div className="min-w-0">
               <p className="truncate font-mono text-xs">{sale.invoiceNo}</p>

@@ -28,7 +28,8 @@
     "refresh": "Onyesha upya",
     "done": "Imekamilika",
     "home": "Nyumbani",
-    "no": "Na."
+    "no": "Na.",
+    "of": "kati ya"
   },
   "nav": {
     "group": "Menyu",
@@ -703,7 +704,8 @@
     "today": "Leo",
     "yesterday": "Jana",
     "thisWeek": "Wiki Hii",
-    "older": "Zamani"
+    "older": "Zamani",
+    "empty": "Hakuna arifa bado"
   },
   "analytics": {
     "breadcrumb": "Uchambuzi",

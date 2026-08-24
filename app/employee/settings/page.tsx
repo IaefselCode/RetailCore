@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useTranslations } from "next-intl"
 import { motion } from "motion/react"
 import { toast } from "sonner"
+import { getNotificationPreferences, updateNotificationPreferences } from "@/lib/notification-actions"
 import { Bell, Mail, ShoppingCart, Shield } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -24,11 +25,27 @@ export default function EmployeeSettingsPage() {
   const [notifyShift, setNotifyShift] = useState(true)
   const [notifyStock, setNotifyStock] = useState(true)
   const [notifySales, setNotifySales] = useState(false)
+  const [prefsLoaded, setPrefsLoaded] = useState(false)
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
 
-  const saveChanges = () => {
+  // Load preferences on mount
+  useEffect(() => {
+    getNotificationPreferences().then((prefs) => {
+      setNotifyShift(prefs.shiftReminders)
+      setNotifyStock(prefs.stockAlerts)
+      setNotifySales(prefs.salesReports)
+      setPrefsLoaded(true)
+    })
+  }, [])
+
+  const saveChanges = async () => {
+    await updateNotificationPreferences({
+      shiftReminders: notifyShift,
+      stockAlerts: notifyStock,
+      salesReports: notifySales,
+    })
     toast.success(t("saved"))
   }
 

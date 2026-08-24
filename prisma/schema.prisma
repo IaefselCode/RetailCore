@@ -33,7 +33,8 @@ model User {
   updatedAt    DateTime  @updatedAt
 
   employee     Employee?
-  notifications Notification[]
+  notifications           Notification[]
+  notificationPreference  NotificationPreference?
 }
 
 model Shop {
@@ -209,6 +210,18 @@ model StockTransaction {
 model SystemSetting {
   key   String @id
   value String
+}
+
+
+model NotificationPreference {
+  id             String  @id @default(cuid())
+  userId         String  @unique
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailEnabled   Boolean @default(true)
+  pushEnabled    Boolean @default(true)
+  stockAlerts    Boolean @default(true)
+  shiftReminders Boolean @default(true)
+  salesReports   Boolean @default(false)
 }
 
 model AuditLog {

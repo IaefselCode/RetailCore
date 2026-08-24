@@ -11,16 +11,16 @@ const env = fs.readFileSync(
   path.join("D:\\PROGRAMMING\\WEBSITES\\Multi-Store-Sales-Management-System", "point-of-sales", ".env"),
   "utf8"
 )
-const DATABASE_URL = env
+const DIRECT_URL = env
   .split("\n")
-  .find((l) => l.startsWith("DATABASE_URL"))
+  .find((l) => l.startsWith("DIRECT_URL"))
   .split("=")
   .slice(1)
   .join("=")
   .trim()
   .replace(/^"|"$/g, "")
 
-const pool = new pg.Pool({ connectionString: DATABASE_URL })
+const pool = new pg.Pool({ connectionString: DIRECT_URL })
 
 await pool.query(`DELETE FROM "AuthLog" WHERE email = 'ratelimit-probe@retailcore.dev'`)
 await pool.query(`DELETE FROM "AuthLog" WHERE email = 'employee@retailcore.dev'`)
