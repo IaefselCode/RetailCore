@@ -6,14 +6,23 @@ import { useTranslations } from "next-intl"
 import { uploadImageAction } from "@/lib/image-actions"
 import { compressImage, MAX_UPLOAD_BYTES } from "@/lib/images"
 import { cn } from "@/lib/utils"
+import { CropDialog } from "@/components/ui/crop-dialog"
 
 type ImageUploadProps = {
   value?: string | null
   onChange: (url: string | null) => void
-  folder?: "products" | "avatars"
+  folder?: "products" | "avatars" | "profiles"
   maxDim?: number
   quality?: number
   className?: string
+  /** Hide the inline square preview — useful when an external Avatar shows the image */
+  hidePreview?: boolean
+  /** Enable crop dialog before upload (default: true for profiles/avatars) */
+  enableCrop?: boolean
+  /** Crop area aspect ratio (default: 1 for square/circle) */
+  cropAspect?: number
+  /** Use round crop overlay in the crop dialog */
+  roundCrop?: boolean
 }
 
 export function ImageUpload({
@@ -23,12 +32,21 @@ export function ImageUpload({
   maxDim = 800,
   quality = 0.72,
   className,
+  hidePreview = false,
+  enableCrop = false,
+  cropAspect = 1,
+  roundCrop = false,
 }: ImageUploadProps) {
   const t = useTranslations("imageUpload")
   const inputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState<string | null>(null)
+
+  // Crop state
+  const [cropOpen, setCropOpen] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [rawFile, setRawFile] = useState<File | null>(null)
 
   async function handleFile(file: File | undefined) {
     if (!file) return
@@ -40,6 +58,19 @@ export function ImageUpload({
       return
     }
 
+    if (enableCrop) {
+      // Show crop dialog instead of uploading directly
+      const url = URL.createObjectURL(file)
+      setPreviewUrl(url)
+      setRawFile(file)
+      setCropOpen(true)
+      return
+    }
+
+    await uploadCompressed(file)
+  }
+
+  async function uploadCompressed(file: File) {
     setBusy(true)
     try {
       const compressed = await compressImage(file, { maxDim, quality })
@@ -66,6 +97,25 @@ export function ImageUpload({
     }
   }
 
+  async function handleCropComplete(croppedFile: File) {
+    setCropOpen(false)
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl)
+      setPreviewUrl(null)
+    }
+    setRawFile(null)
+    await uploadCompressed(croppedFile)
+  }
+
+  function handleCropCancel() {
+    setCropOpen(false)
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl)
+      setPreviewUrl(null)
+    }
+    setRawFile(null)
+  }
+
   async function handleRemove() {
     if (!value) return
     onChange(null)
@@ -74,11 +124,12 @@ export function ImageUpload({
 
   return (
     <div className={cn("space-y-2", className)}>
-      {value ? (
+      {value && !hidePreview ? (
         <div className="flex items-center gap-3">
           <div className="relative size-24 overflow-hidden rounded-lg border">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={value} alt="" className="size-full object-cover" />            <button
+            <img src={value} alt="" className="size-full object-cover" />
+            <button
               type="button"
               onClick={handleRemove}
               className="absolute right-1 top-1 rounded-full bg-background/90 p-1 text-muted-foreground shadow hover:text-destructive"
@@ -99,6 +150,23 @@ export function ImageUpload({
             )}
           </div>
         </div>
+      ) : hidePreview && value ? (
+        <div className="flex items-center gap-2">
+          <ButtonFile
+            ref={inputRef}
+            busy={busy}
+            label={t("change")}
+            onPick={handleFile}
+          />
+          <button
+            type="button"
+            onClick={handleRemove}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-destructive/40 px-3 py-2 text-sm text-destructive transition-colors hover:border-destructive hover:bg-destructive/5"
+          >
+            <X className="size-4" />
+            {t("remove")}
+          </button>
+        </div>
       ) : (
         <ButtonFile
           ref={inputRef}
@@ -107,7 +175,19 @@ export function ImageUpload({
           onPick={handleFile}
         />
       )}
+
       {error && <p className="text-xs text-destructive">{error}</p>}
+
+      {previewUrl && (
+        <CropDialog
+          open={cropOpen}
+          imageUrl={previewUrl}
+          onCropComplete={handleCropComplete}
+          onCancel={handleCropCancel}
+          aspect={cropAspect}
+          roundCrop={roundCrop}
+        />
+      )}
     </div>
   )
 }

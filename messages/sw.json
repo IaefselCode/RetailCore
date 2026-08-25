@@ -533,10 +533,19 @@
   "imageUpload": {
     "upload": "Pakia picha",
     "replace": "Badilisha picha",
+    "change": "Badilisha picha",
     "remove": "Ondoa",
     "tooLarge": "Picha lazima iwe 10MB au ndogo zaidi.",
     "failed": "Upakiaji umeshindikana. Jaribu tena.",
-    "saved": "Umeokoa {percent}% ya uhifadhi"
+    "saved": "Umeokoa {percent}% ya uhifadhi",
+    "cropImage": "Kata Picha",
+    "previewCrop": "Hakiki",
+    "previewHint": "Hii ndiyo itakavyoonekana picha yako. Rudi ili kurekebisha ikiwa inahitajika.",
+    "reCrop": "Kata Tena",
+    "useThisPhoto": "Tumia picha hii",
+    "applyCrop": "Tumia Kata",
+    "cancel": "Ghairi",
+    "processing": "Inachakata..."
   },
   "addProduct": {
     "title": "Ongeza Bidhaa",
@@ -834,7 +843,12 @@
     "activityStats": "Takwimu za Shughuli",
     "totalSalesThisMonth": "Jumla ya Mauzo Mwezi Huu",
     "rating": "Ukadiriaji",
-    "yearsOfService": "Miaka ya Huduma"
+    "yearsOfService": "Miaka ya Huduma",
+    "profilePhoto": "Picha ya Wasifu",
+    "firstName": "Jina la Kwanza",
+    "lastName": "Jina la Mwisho",
+    "updated": "Wasifu umesasishwa.",
+    "updateFailed": "Imeshindikana kusasisha wasifu."
   },
   "employeeSettings": {
     "title": "Mipangilio",

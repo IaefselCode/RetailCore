@@ -69,11 +69,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session: updateSession }) {
+      // On initial sign-in, populate from the authorize result
       if (user) {
         token.uid = user.id
         token.role = user.role
         token.locale = user.locale ?? DEFAULT_LOCALE
+        token.image = user.image ?? null
+      }
+      // When the client calls update() on the session, pick up fresh values
+      if (trigger === "update" && updateSession?.user?.image !== undefined) {
+        token.image = updateSession.user.image
       }
       return token
     },
@@ -82,6 +88,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.uid
         session.user.role = token.role ?? "EMPLOYEE"
         session.user.locale = token.locale ?? DEFAULT_LOCALE
+        session.user.image = (token.image as string) ?? session.user.image ?? null
       }
       return session
     },

@@ -22,6 +22,7 @@ export type AuditEvent =
   | "sale_recorded"
   | "sale_voided"
   | "settings_updated"
+  | "profile_updated"
 
 export async function logAuditEvent(
   event: AuditEvent,

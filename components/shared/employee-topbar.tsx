@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl"
 import { motion } from "motion/react"
 
 import { Button as AnimateButton } from "@/components/ui/animate-button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
 import { LanguageSwitcher } from "@/components/shared/language-switcher"
 import { GlobalSearch } from "@/components/shared/global-search"
@@ -72,6 +72,9 @@ export function EmployeeTopbar({ notificationSlot }: { notificationSlot?: React.
           <DropdownMenuTrigger asChild>
             <AnimateButton variant="ghost" size="icon-sm" className="rounded-full">
               <Avatar className="size-7">
+                {user?.image ? (
+                  <AvatarImage src={user.image} alt={user.name ?? "Employee"} />
+                ) : null}
                 <AvatarFallback className="bg-primary/10 text-primary text-[11px] font-medium">
                   {initials}
                 </AvatarFallback>

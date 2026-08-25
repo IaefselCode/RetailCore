@@ -1,6 +1,14 @@
 import bcrypt from "bcryptjs"
 import { randomUUID } from "crypto"
 import pg from "pg"
+import dotenv from "dotenv"
+
+dotenv.config({ override: true })
+
+if (!process.env.DIRECT_URL) {
+  console.error("❌ DIRECT_URL is not set. Add it to your .env file.")
+  process.exit(1)
+}
 
 const pool = new pg.Pool({ connectionString: process.env.DIRECT_URL })
 

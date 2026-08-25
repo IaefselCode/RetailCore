@@ -25,6 +25,7 @@ model User {
   passwordHash String?
   firstName    String?
   lastName     String?
+  phone        String?
   imageUrl     String?
   role         UserRole  @default(EMPLOYEE)
   locale       String    @default("en")

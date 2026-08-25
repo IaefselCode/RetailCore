@@ -1,0 +1,1 @@
+-- AlterTable`nALTER TABLE "User" ADD COLUMN "phone" TEXT;

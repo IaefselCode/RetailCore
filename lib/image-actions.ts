@@ -18,7 +18,7 @@ export async function uploadImageAction(
   if (!session?.user?.id) return { error: "Not signed in" }
 
   const folder = String(formData.get("folder") ?? "products") as ImageFolder
-  if (folder !== "products" && folder !== "avatars") {
+  if (folder !== "products" && folder !== "avatars" && folder !== "profiles") {
     return { error: "Invalid folder" }
   }
 
@@ -36,7 +36,7 @@ export async function uploadImageAction(
   let optimized: Buffer
   try {
     optimized = await optimizeImage(source, {
-      maxDim: folder === "avatars" ? 400 : 800,
+      maxDim: folder === "products" ? 800 : 400,
     })
   } catch {
     return { error: "Invalid image file." }

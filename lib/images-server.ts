@@ -5,7 +5,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js"
 import sharp from "sharp"
 
 export const STORAGE_BUCKET = "images"
-export type ImageFolder = "products" | "avatars"
+export type ImageFolder = "products" | "avatars" | "profiles"
 
 /**
  * Where uploaded files are stored.

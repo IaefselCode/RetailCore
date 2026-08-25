@@ -552,10 +552,19 @@
   "imageUpload": {
     "upload": "Upload image",
     "replace": "Replace image",
+    "change": "Change photo",
     "remove": "Remove",
     "tooLarge": "Image must be 10MB or smaller.",
     "failed": "Upload failed. Please try again.",
-    "saved": "Saved {percent}% storage"
+    "saved": "Saved {percent}% storage",
+    "cropImage": "Crop Image",
+    "previewCrop": "Preview",
+    "previewHint": "This is how your photo will look. Go back to adjust if needed.",
+    "reCrop": "Re-crop",
+    "useThisPhoto": "Use this photo",
+    "applyCrop": "Apply Crop",
+    "cancel": "Cancel",
+    "processing": "Processing..."
   },
   "addProduct": {
     "title": "Add Product",
@@ -853,7 +862,12 @@
     "activityStats": "Activity Stats",
     "totalSalesThisMonth": "Total Sales This Month",
     "rating": "Rating",
-    "yearsOfService": "Years of Service"
+    "yearsOfService": "Years of Service",
+    "profilePhoto": "Profile Photo",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "updated": "Profile updated.",
+    "updateFailed": "Could not update profile."
   },
   "employeeSettings": {
     "title": "Settings",
