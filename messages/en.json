@@ -878,6 +878,7 @@
   "employeeProfile": {
     "staffLevel": "Staff Level II",
     "editProfile": "Edit Profile",
+    "backToProfile": "Back to Profile",
     "contactInformation": "Contact Information",
     "email": "Email",
     "phone": "Phone",

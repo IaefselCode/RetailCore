@@ -37,7 +37,6 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
       setImageUrl(url)
       const result = await updateProfilePhoto(url)
       if (result.success) {
-        // Refresh the NextAuth session so the sidebar & topbar pick up the new image
         await updateSession({ user: { image: url ?? undefined } })
         router.refresh()
       } else {
@@ -53,7 +52,7 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
       const result = await updateEmployeeProfile(prev, formData)
       if (result.success) {
         toast.success(t("updated"))
-        router.refresh()
+        router.push("/employee/profile")
       } else {
         toast.error(result.message || t("updateFailed"))
       }
@@ -73,28 +72,25 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
       <CardContent>
         <form action={formAction} className="space-y-6">
           {/* Avatar + upload */}
-          <div className="flex flex-col items-center gap-4">
-            <Avatar className="size-20">
+          <div className="flex flex-col items-center gap-3">
+            <Avatar className="size-24">
               {imageUrl ? (
                 <AvatarImage src={imageUrl} alt={`${user.firstName} ${user.lastName}`} />
               ) : null}
-              <AvatarFallback className="bg-primary/10 text-2xl font-bold text-primary">
+              <AvatarFallback className="bg-primary/10 text-3xl font-bold text-primary">
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <div className="w-full max-w-xs space-y-1">
-              <Label>{t("profilePhoto")}</Label>
-              <ImageUpload
-                value={imageUrl}
-                onChange={handlePhotoChange}
-                folder="profiles"
-                maxDim={400}
-                quality={0.72}
-                hidePreview
-                enableCrop
-                roundCrop
-              />
-            </div>
+            <ImageUpload
+              value={imageUrl}
+              onChange={handlePhotoChange}
+              folder="profiles"
+              maxDim={400}
+              quality={0.72}
+              hidePreview
+              enableCrop
+              roundCrop
+            />
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
