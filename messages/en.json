@@ -912,7 +912,16 @@
     "saveChanges": "Save Changes",
     "fillPasswordFields": "Please fill in all password fields",
     "passwordMismatch": "Passwords do not match",
+    "passwordsMatch": "Passwords match",
     "passwordChanged": "Password changed successfully",
+    "changing": "Changing...",
+    "passwordStrength": "Password strength",
+    "minLength": "8+ chars",
+    "uppercase": "A-Z",
+    "lowercase": "a-z",
+    "number": "0-9",
+    "symbol": "!@#$",
+    "somethingWentWrong": "Something went wrong. Please try again.",
     "saved": "Settings saved successfully"
   },
   "employeeNotifications": {

@@ -6,6 +6,7 @@ export type AuthEvent =
   | "password_reset_request"
   | "password_reset_complete"
   | "admin_password_reset"
+  | "password_changed"
 
 export async function logAuthEvent(
   event: AuthEvent,

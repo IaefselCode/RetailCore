@@ -892,7 +892,16 @@
     "saveChanges": "Hifadhi Mabadiliko",
     "fillPasswordFields": "Tafadhali jaza sehemu zote za nenosiri",
     "passwordMismatch": "Manenosiri hayalingani",
+    "passwordsMatch": "Manenosiri yanalingana",
     "passwordChanged": "Nenosiri limebadilishwa kwa mafanikio",
+    "changing": "Inabadilisha...",
+    "passwordStrength": "Uhimilivu wa nenosiri",
+    "minLength": "Herufi 8+",
+    "uppercase": "A-Z",
+    "lowercase": "a-z",
+    "number": "0-9",
+    "symbol": "!@#$",
+    "somethingWentWrong": "Kuna kitu kimeenda vibaya. Tafadhali jaribu tena.",
     "saved": "Mipangilio imehifadhiwa kwa mafanikio"
   },
   "employeeNotifications": {

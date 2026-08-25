@@ -1,10 +1,14 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
+import { auth } from "@/lib/auth"
 import { getSignedInRole } from "@/lib/auth-utils"
 import { getRequestMeta, type ActionResult } from "@/lib/actions"
 import { logAuditEvent } from "@/lib/audit-log"
+import { logAuthEvent } from "@/lib/auth-log"
+import { isStrongPassword } from "@/lib/password-policy"
 
 function fail(message: string): ActionResult {
   return { success: false, message }
@@ -76,6 +80,67 @@ export async function updateSystemSettings(formData: FormData): Promise<ActionRe
     return { success: true, message: "Settings saved successfully." }
   } catch (err) {
     console.error("updateSystemSettings failed:", err)
+    return fail("Something went wrong. Please try again.")
+  }
+}
+
+/**
+ * Change the current employee's password.
+ * Validates current password, checks strength, then updates.
+ */
+export async function changeEmployeePassword(data: {
+  currentPassword: string
+  newPassword: string
+}): Promise<ActionResult> {
+  const session = await auth()
+  const userId = session?.user?.id
+  if (!userId) return fail("You must be signed in.")
+
+  try {
+    const { currentPassword, newPassword } = data
+
+    if (!currentPassword || !newPassword) {
+      return fail("Please fill in all password fields.")
+    }
+
+    if (currentPassword === newPassword) {
+      return fail("New password must be different from current password.")
+    }
+
+    if (!isStrongPassword(newPassword)) {
+      return fail(
+        "Password must be at least 8 characters and include uppercase, lowercase, a number, and a symbol."
+      )
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { passwordHash: true, email: true },
+    })
+    if (!user || !user.passwordHash) return fail("User not found.")
+
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash)
+    if (!valid) return fail("Current password is incorrect.")
+
+    const passwordHash = await bcrypt.hash(newPassword, 12)
+    await prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    })
+
+    const meta = await getRequestMeta()
+    void logAuthEvent("password_changed", user.email, { userId, ip: meta.ip })
+    void logAuditEvent("password_changed", {
+      actorId: userId,
+      entityType: "User",
+      entityId: userId,
+      detail: "Employee changed their own password",
+      ip: meta.ip,
+    })
+
+    return { success: true, message: "Password changed successfully." }
+  } catch (err) {
+    console.error("changeEmployeePassword failed:", err)
     return fail("Something went wrong. Please try again.")
   }
 }

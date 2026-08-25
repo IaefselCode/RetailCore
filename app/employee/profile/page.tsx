@@ -1,7 +1,7 @@
 import { requireEmployeeContext } from "@/lib/auth-utils"
 import { prisma } from "@/lib/prisma"
 import { getTranslations } from "next-intl/server"
-import { Calendar, DollarSign, Mail, Phone, Star, Store } from "lucide-react"
+import { Calendar, DollarSign, Mail, Phone, Store } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ProfileForm } from "@/components/employee/profile-form"
@@ -130,15 +130,7 @@ export default async function EmployeeProfilePage() {
             </div>
             <span className="text-lg font-bold">{years ?? "—"}</span>
           </div>
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <div className="flex items-center gap-3">
-              <div className="flex size-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600">
-                <Star className="size-4" />
-              </div>
-              <p className="text-sm font-medium">{t("rating")}</p>
-            </div>
-            <span className="text-lg font-bold">—</span>
-          </div>
+
         </CardContent>
       </Card>
     </div>
