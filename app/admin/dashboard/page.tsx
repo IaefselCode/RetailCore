@@ -29,6 +29,7 @@ interface RecentSaleRow {
   id: string
   invoiceNo: string
   customerName: string | null
+  employeeName: string | null
   shopName: string
   itemCount: number
   total: number
@@ -100,6 +101,7 @@ async function RecentSalesContent() {
     take: 50,
     include: {
       shop: { select: { name: true } },
+      employee: { include: { user: { select: { firstName: true, lastName: true } } } },
       items: { select: { quantity: true } },
     },
   })
@@ -108,6 +110,7 @@ async function RecentSalesContent() {
     id: sale.id,
     invoiceNo: sale.invoiceNo,
     customerName: sale.customerName,
+    employeeName: sale.employee ? `${sale.employee.user.firstName ?? ""} ${sale.employee.user.lastName ?? ""}`.trim() || null : null,
     shopName: sale.shop.name,
     itemCount: sale.items.reduce((sum, i) => sum + i.quantity, 0),
     total: Number(sale.total),

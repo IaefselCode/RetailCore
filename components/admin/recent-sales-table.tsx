@@ -9,6 +9,7 @@ interface SaleRow {
   id: string
   invoiceNo: string
   customerName: string | null
+  employeeName: string | null
   shopName: string
   itemCount: number
   total: number
@@ -35,6 +36,10 @@ export function RecentSalesTable({ rows, cardless }: { rows: SaleRow[]; cardless
     }),
     helper.accessor("customerName", {
       header: t("colCustomer"),
+      cell: ({ getValue }) => (getValue() as string | null) ?? "—",
+    }),
+    helper.accessor("employeeName", {
+      header: t("colEmployee"),
       cell: ({ getValue }) => (getValue() as string | null) ?? "—",
     }),
     helper.accessor("shopName", {

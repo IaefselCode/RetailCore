@@ -9,9 +9,11 @@ interface SaleRow {
   id: string
   invoiceNo: string
   customerName: string | null
+  employeeName: string | null
   shopName: string
   itemCount: number
   total: number
+  discount: number
   paymentMethod: string | null
   createdAt: Date
   status: string
@@ -38,6 +40,10 @@ export function RecentTransactionsTable({ rows, cardless }: { rows: SaleRow[]; c
       header: t("colCustomer"),
       cell: ({ getValue }) => (getValue() as string | null) ?? "—",
     }),
+    helper.accessor("employeeName", {
+      header: t("colEmployee"),
+      cell: ({ getValue }) => (getValue() as string | null) ?? "—",
+    }),
     helper.accessor("shopName", {
       header: t("colShop"),
       cell: ({ getValue }) => getValue() as string,
@@ -51,6 +57,17 @@ export function RecentTransactionsTable({ rows, cardless }: { rows: SaleRow[]; c
       cell: ({ getValue }) => (
         <span className="font-medium">{formatMoney(getValue() as number)}</span>
       ),
+    }),
+    helper.accessor("discount", {
+      header: t("colDiscount"),
+      cell: ({ getValue }) => {
+        const d = getValue() as number
+        return d > 0 ? (
+          <span className="text-green-600 font-medium">-{formatMoney(d)}</span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )
+      },
     }),
     helper.accessor("paymentMethod", {
       header: t("colPayment"),

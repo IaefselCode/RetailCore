@@ -272,6 +272,7 @@ export default async function EmployeeDetailsPage({
                   customerName: sale.customerName,
                   items: sale._count.items,
                   total: Number(sale.total),
+                  discount: Number(sale.discount),
                   paymentMethod: sale.paymentMethod,
                   createdAt: sale.createdAt,
                   status: sale.status,

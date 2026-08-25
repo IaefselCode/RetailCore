@@ -105,6 +105,7 @@ async function SalesHistoryContent({
       take: PAGE_SIZE,
       include: {
         shop: { select: { name: true } },
+        employee: { include: { user: { select: { firstName: true, lastName: true } } } },
         items: { select: { quantity: true } },
       },
     }),
@@ -122,6 +123,7 @@ async function SalesHistoryContent({
         id: s.id,
         invoiceNo: s.invoiceNo,
         customerName: s.customerName,
+        employeeName: s.employee ? `${s.employee.user.firstName ?? ""} ${s.employee.user.lastName ?? ""}`.trim() || null : null,
         shopName: s.shop.name,
         itemCount: s.items.reduce((sum, i) => sum + i.quantity, 0),
         total: Number(s.total),

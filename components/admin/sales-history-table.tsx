@@ -29,6 +29,7 @@ export interface SalesHistoryRow {
   id: string
   invoiceNo: string
   customerName: string | null
+  employeeName: string | null
   shopName: string
   itemCount: number
   total: number
@@ -152,6 +153,10 @@ export function SalesHistoryTable({
       }),
       helper.accessor("customerName", {
         header: t("colCustomer"),
+        cell: ({ getValue }) => (getValue() as string | null) ?? "—",
+      }),
+      helper.accessor("employeeName", {
+        header: t("colEmployee"),
         cell: ({ getValue }) => (getValue() as string | null) ?? "—",
       }),
       helper.accessor("shopName", { header: t("colShop"), cell: ({ getValue }) => getValue() as string }),
