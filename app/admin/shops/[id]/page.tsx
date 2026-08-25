@@ -46,9 +46,6 @@ interface ShopSaleRow {
   status: string
 }
 
-const empHelper = createServerColumnHelper<ShopEmployeeRow>()
-const saleHelper = createServerColumnHelper<ShopSaleRow>()
-
 export default async function ShopDetailsPage({
   params,
 }: {

@@ -37,6 +37,7 @@ export default async function EmployeeSalesHistoryPage({
     customerName: sale.customerName,
     itemCount: sale.items.reduce((sum, i) => sum + i.quantity, 0),
     total: Number(sale.total),
+    discount: Number(sale.discount),
     createdAt: sale.createdAt,
     status: sale.status,
   }))

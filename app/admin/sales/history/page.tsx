@@ -125,6 +125,7 @@ async function SalesHistoryContent({
         shopName: s.shop.name,
         itemCount: s.items.reduce((sum, i) => sum + i.quantity, 0),
         total: Number(s.total),
+        discount: Number(s.discount),
         paymentMethod: s.paymentMethod,
         createdAt: s.createdAt.toISOString(),
         status: s.status,

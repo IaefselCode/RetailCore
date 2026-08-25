@@ -11,6 +11,7 @@ interface EmpSalesRow {
   customerName: string | null
   itemCount: number
   total: number
+  discount: number
   createdAt: Date
   status: string
 }
@@ -52,6 +53,17 @@ export function EmployeeSalesHistoryTable({ rows }: { rows: EmpSalesRow[] }) {
       cell: ({ getValue }) => (
         <span className="font-medium">{formatMoney(getValue() as number)}</span>
       ),
+    }),
+    helper.accessor("discount", {
+      header: t("colDiscount"),
+      cell: ({ getValue }) => {
+        const d = getValue() as number
+        return d > 0 ? (
+          <span className="text-green-600 font-medium">-{formatMoney(d)}</span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )
+      },
     }),
     helper.accessor("createdAt", {
       header: t("colDate"),

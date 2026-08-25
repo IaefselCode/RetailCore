@@ -32,6 +32,7 @@ export interface SalesHistoryRow {
   shopName: string
   itemCount: number
   total: number
+  discount: number
   paymentMethod: string | null
   createdAt: string
   status: string
@@ -158,6 +159,17 @@ export function SalesHistoryTable({
       helper.accessor("total", {
         header: t("colAmount"),
         cell: ({ getValue }) => <span className="font-medium">{formatMoney(getValue() as number)}</span>,
+      }),
+      helper.accessor("discount", {
+        header: t("colDiscount"),
+        cell: ({ getValue }) => {
+          const d = getValue() as number
+          return d > 0 ? (
+            <span className="text-green-600 font-medium">-{formatMoney(d)}</span>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )
+        },
       }),
       helper.accessor("paymentMethod", {
         header: t("colPayment"),

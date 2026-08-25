@@ -185,9 +185,10 @@ export async function recordSale(_prev: ActionResult | null, formData: FormData)
 
     // 2. Every sale → notify admin
     const employeeName = (ctx.firstName + " " + ctx.lastName).trim()
+    const discountNote = appliedDiscount > 0 ? " (discount: " + formatSaleTotal(appliedDiscount) + ")" : ""
     await notifyAdmins({
-      title: "New sale recorded",
-      message: "Invoice " + invoiceNo + " — " + formatSaleTotal(total) + " at " + ctx.shopName + (employeeName ? " by " + employeeName : ""),
+      title: appliedDiscount > 0 ? "Sale with discount recorded" : "New sale recorded",
+      message: "Invoice " + invoiceNo + " — " + formatSaleTotal(total) + " at " + ctx.shopName + (employeeName ? " by " + employeeName : "") + discountNote,
       type: "sales",
     })
 

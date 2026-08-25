@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { getRequestMeta, type ActionResult } from "@/lib/actions"
 import { logAuditEvent } from "@/lib/audit-log"
 import { deleteImage } from "@/lib/images-server"
+import { notifyAdmins } from "@/lib/notification-actions"
 
 function fail(message: string): ActionResult {
   return { success: false, message }
@@ -45,6 +46,19 @@ export async function updateProfilePhoto(
       await deleteImage(current.imageUrl)
     }
 
+    // Notify admins about the photo change
+    const employee = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { firstName: true, lastName: true },
+    })
+    const employeeName = employee ? `${employee.firstName} ${employee.lastName}` : "An employee"
+    const action = imageUrl ? "updated their profile photo" : "removed their profile photo"
+    await notifyAdmins({
+      title: "Profile Photo Updated",
+      message: `${employeeName} ${action}.`,
+      type: "info",
+    })
+
     return { success: true, imageUrl: imageUrl || null }
   } catch (err) {
     console.error("updateProfilePhoto failed:", err)
@@ -81,11 +95,14 @@ export async function updateEmployeeProfile(
       return fail("That email is already in use by another account.")
     }
 
-    const current = await prisma.user.findUnique({
+    // Fetch old values to detect what changed and compare later
+    const old = await prisma.user.findUnique({
       where: { id: userId },
-      select: { imageUrl: true },
+      select: {
+        firstName: true, lastName: true, email: true, phone: true, imageUrl: true,
+      },
     })
-    if (!current) return fail("Account not found.")
+    if (!old) return fail("Account not found.")
 
     await prisma.user.update({
       where: { id: userId },
@@ -100,11 +117,11 @@ export async function updateEmployeeProfile(
 
     // Remove the replaced profile picture from storage.
     if (
-      current.imageUrl &&
-      current.imageUrl !== imageUrl &&
-      current.imageUrl.startsWith("/uploads/profiles/")
+      old.imageUrl &&
+      old.imageUrl !== imageUrl &&
+      old.imageUrl.startsWith("/uploads/profiles/")
     ) {
-      await deleteImage(current.imageUrl)
+      await deleteImage(old.imageUrl)
     }
 
     const meta = await getRequestMeta()
@@ -114,6 +131,22 @@ export async function updateEmployeeProfile(
       entityId: userId,
       detail: email,
       ip: meta.ip,
+    })
+
+    // Build a list of changed fields for the admin notification
+    const changedFields: string[] = []
+    if (old.firstName !== firstName) changedFields.push("first name")
+    if (old.lastName !== lastName) changedFields.push("last name")
+    if (old.email !== email) changedFields.push("email")
+    if ((old.phone ?? "") !== (phone || "")) changedFields.push("phone")
+    if ((old.imageUrl ?? "") !== (imageUrl || "")) changedFields.push("profile photo")
+
+    const employeeName = `${old.firstName} ${old.lastName}`
+    const fieldList = changedFields.length > 0 ? changedFields.join(", ") : "profile"
+    await notifyAdmins({
+      title: "Employee Profile Updated",
+      message: `${employeeName} updated their ${fieldList}.`,
+      type: "info",
     })
 
     return { success: true, message: "Profile updated." }

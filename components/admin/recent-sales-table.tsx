@@ -12,6 +12,7 @@ interface SaleRow {
   shopName: string
   itemCount: number
   total: number
+  discount: number
   status: string
 }
 
@@ -49,6 +50,17 @@ export function RecentSalesTable({ rows }: { rows: SaleRow[] }) {
       cell: ({ getValue }) => (
         <span className="font-medium">{formatMoney(getValue() as number)}</span>
       ),
+    }),
+    helper.accessor("discount", {
+      header: t("colDiscount"),
+      cell: ({ getValue }) => {
+        const d = getValue() as number
+        return d > 0 ? (
+          <span className="text-green-600 text-xs font-medium">-{formatMoney(d)}</span>
+        ) : (
+          <span className="text-muted-foreground text-xs">—</span>
+        )
+      },
     }),
     helper.accessor("status", {
       header: t("colStatus"),

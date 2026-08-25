@@ -71,6 +71,7 @@ function RecordSaleFormBody({
   const [cart, setCart] = useState<CartItem[]>([])
   const [paymentMethod, setPaymentMethod] = useState("CASH")
   const [customerName, setCustomerName] = useState("")
+  const [discount, setDiscount] = useState(0)
 
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
@@ -114,8 +115,10 @@ function RecordSaleFormBody({
   }, [])
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const tax = Math.round(subtotal * TAX_RATE * 100) / 100
-  const total = subtotal + tax
+  const appliedDiscount = Math.min(discount, subtotal)
+  const taxable = subtotal - appliedDiscount
+  const tax = Math.round(taxable * TAX_RATE * 100) / 100
+  const total = taxable + tax
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     if (cart.length === 0) {
@@ -142,7 +145,7 @@ function RecordSaleFormBody({
         <input type="hidden" name="items" value={JSON.stringify(cart.map((c) => ({ productId: c.id, quantity: c.quantity })))} />
         <input type="hidden" name="paymentMethod" value={paymentMethod} />
         <input type="hidden" name="customerName" value={customerName} />
-        <input type="hidden" name="discount" value="0" />
+        <input type="hidden" name="discount" value={String(discount)} />
 
         <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
           <div className="space-y-4">
@@ -221,6 +224,26 @@ function RecordSaleFormBody({
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{t("subtotal")}</span>
                   <span className="text-sm font-medium">{formatMoney(subtotal)}</span>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">{t("discount")}</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    max={subtotal}
+                    value={discount || ""}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value)
+                      setDiscount(Number.isNaN(v) ? 0 : Math.max(0, v))
+                    }}
+                    placeholder="0.00"
+                  />
+                  {appliedDiscount > 0 && (
+                    <p className="text-xs text-green-600">
+                      -{formatMoney(appliedDiscount)} {t("discountApplied")}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{t("tax")}</span>

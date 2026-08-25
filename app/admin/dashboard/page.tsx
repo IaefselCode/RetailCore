@@ -32,6 +32,7 @@ interface RecentSaleRow {
   shopName: string
   itemCount: number
   total: number
+  discount: number
   status: string
 }
 
@@ -110,6 +111,7 @@ async function RecentSalesContent() {
     shopName: sale.shop.name,
     itemCount: sale.items.reduce((sum, i) => sum + i.quantity, 0),
     total: Number(sale.total),
+    discount: Number(sale.discount),
     status: sale.status,
   }))
 
