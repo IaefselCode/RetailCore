@@ -179,7 +179,6 @@ export default function EmployeeSettingsPage() {
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder={t("currentPassword")}
-                  autoComplete="current-password"
                 />
                 <button
                   type="button"
@@ -200,12 +199,10 @@ export default function EmployeeSettingsPage() {
                   type={showNew ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder={t("newPassword")}
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNew(!showNew)}
+                  placeholder={t("newPassword")}                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowNew(!showNew)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   {showNew ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -256,12 +253,10 @@ export default function EmployeeSettingsPage() {
                   type={showConfirm ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder={t("confirmNewPassword")}
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm(!showConfirm)}
+                  placeholder={t("confirmNewPassword")}                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowConfirm(!showConfirm)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   {showConfirm ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
