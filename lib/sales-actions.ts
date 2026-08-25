@@ -33,8 +33,6 @@ function parseCart(raw: string): CartItem[] | null {
   }
 }
 
-const TAX_RATE = 0.18
-
 export async function recordSale(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const ctx = await getEmployeeContext()
   if (!ctx) return fail("You do not have permission to do that.")
@@ -99,9 +97,7 @@ export async function recordSale(_prev: ActionResult | null, formData: FormData)
     }
 
     const appliedDiscount = Math.min(discount, subtotal)
-    const taxable = subtotal - appliedDiscount
-    const tax = Math.round(taxable * TAX_RATE * 100) / 100
-    const total = taxable + tax
+    const total = subtotal - appliedDiscount
     const invoiceNo = await nextInvoiceNo()
 
     await prisma.$transaction(async (tx) => {
@@ -113,12 +109,12 @@ export async function recordSale(_prev: ActionResult | null, formData: FormData)
           customerName,
           customerEmail,
           subtotal: toDecimalString(subtotal),
-          tax: toDecimalString(tax),
+          tax: toDecimalString(0),
           discount: toDecimalString(appliedDiscount),
           total: toDecimalString(total),
           // Goods-level profit snapshot (revenue = subtotal, cost = COGS).
           totalCost: toDecimalString(totalCost),
-          totalProfit: toDecimalString(subtotal - totalCost),
+          totalProfit: toDecimalString(subtotal - totalCost - appliedDiscount),
           paymentMethod,
           status: "COMPLETED",
         },
@@ -336,8 +332,8 @@ export async function getCsvExport(filters: {
   // Localized headers
   const isSw = locale === "sw"
   const headers = isSw
-    ? ["Ankara", "Tarehe", "Duka", "Mfanyakazi", "Mteja", "Vitu", "Mapato", "Gharama", "Faida", "Kodi", "Kiasi", "Jumla", "Malipo", "Hali"]
-    : ["Invoice", "Date", "Shop", "Employee", "Customer", "Items", "Revenue", "Cost", "Profit", "Tax", "Discount", "Total", "Payment", "Status"]
+    ? ["Ankara", "Tarehe", "Duka", "Mfanyakazi", "Mteja", "Vitu", "Mapato", "Gharama", "Faida", "Punguzo", "Jumla", "Malipo", "Hali"]
+    : ["Invoice", "Date", "Shop", "Employee", "Customer", "Items", "Revenue", "Cost", "Profit", "Discount", "Total", "Payment", "Status"]
 
   // Theme colors
   const PRIMARY = "4F46E5"
@@ -394,7 +390,6 @@ export async function getCsvExport(filters: {
       Number(s.subtotal),
       Number(s.totalCost),
       Number(s.totalProfit),
-      Number(s.tax),
       Number(s.discount),
       Number(s.total),
       s.paymentMethod ?? "",

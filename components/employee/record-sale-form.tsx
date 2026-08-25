@@ -48,7 +48,6 @@ interface CartItem {
   maxStock: number
 }
 
-const TAX_RATE = 0.18
 const initialState: ActionResult | null = null
 
 const cartHelper = createAppColumnHelper<CartItem>()
@@ -116,9 +115,7 @@ function RecordSaleFormBody({
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const appliedDiscount = Math.min(discount, subtotal)
-  const taxable = subtotal - appliedDiscount
-  const tax = Math.round(taxable * TAX_RATE * 100) / 100
-  const total = taxable + tax
+  const total = subtotal - appliedDiscount
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     if (cart.length === 0) {
@@ -244,10 +241,6 @@ function RecordSaleFormBody({
                       -{formatMoney(appliedDiscount)} {t("discountApplied")}
                     </p>
                   )}
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">{t("tax")}</span>
-                  <span className="text-sm font-medium">{formatMoney(tax)}</span>
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
