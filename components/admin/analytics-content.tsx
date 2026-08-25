@@ -286,7 +286,7 @@ interface ShopRow {
 
 const shopHelper = createAppColumnHelper<ShopRow>()
 
-function ShopTable({ shops }: { shops: ShopRow[] }) {
+function ShopTable({ shops, cardless }: { shops: ShopRow[]; cardless?: boolean }) {
   const t = useTranslations("analytics")
   const tc = useTranslations("common")
   const columns = shopHelper.columns([
@@ -334,6 +334,7 @@ function ShopTable({ shops }: { shops: ShopRow[] }) {
       data={shops}
       columns={columns}
       getRowId={(row) => row.name}
+      cardless={cardless}
       empty={tc("noData")}
     />
   )
@@ -350,7 +351,7 @@ interface EmployeeRow {
 
 const employeeHelper = createAppColumnHelper<EmployeeRow>()
 
-function EmployeePerformanceTable({ employees }: { employees: EmployeeRow[] }) {
+function EmployeePerformanceTable({ employees, cardless }: { employees: EmployeeRow[]; cardless?: boolean }) {
   const t = useTranslations("analytics")
   const tc = useTranslations("common")
   const columns = employeeHelper.columns([
@@ -379,6 +380,7 @@ function EmployeePerformanceTable({ employees }: { employees: EmployeeRow[] }) {
       data={employees}
       columns={columns}
       getRowId={(row) => row.name}
+      cardless={cardless}
       empty={tc("noData")}
     />
   )
@@ -916,7 +918,7 @@ export function AnalyticsContent({
             <CardDescription>{t("revenueBreakdown")}</CardDescription>
           </CardHeader>
           <CardContent>
-            <ShopTable shops={summary.shopRows} />
+            <ShopTable shops={summary.shopRows} cardless />
           </CardContent>
         </Card>
       </div>
@@ -929,7 +931,7 @@ export function AnalyticsContent({
           <CardDescription>{t("employeePerformanceDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <EmployeePerformanceTable employees={summary.employeeRows} />
+          <EmployeePerformanceTable employees={summary.employeeRows} cardless />
         </CardContent>
       </Card>
 

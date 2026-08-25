@@ -115,7 +115,7 @@ async function RecentSalesContent() {
     status: sale.status,
   }))
 
-  return <RecentSalesTable rows={rows} />
+  return <RecentSalesTable rows={rows} cardless />
 }
 
 const MONTH_KEYS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]

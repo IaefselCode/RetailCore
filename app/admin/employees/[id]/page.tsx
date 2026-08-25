@@ -265,6 +265,7 @@ export default async function EmployeeDetailsPage({
             </CardHeader>
             <CardContent className="p-0">
               <EmployeeSalesTable
+                cardless
                 rows={sales.map((sale) => ({
                   id: sale.id,
                   invoiceNo: sale.invoiceNo,

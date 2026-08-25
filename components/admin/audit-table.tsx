@@ -24,7 +24,7 @@ const EVENT_KEYS: Record<string, string> = {
   admin_password_reset: "adminReset",
 }
 
-export function AuditTable({ rows }: { rows: AuditRow[] }) {
+export function AuditTable({ rows, cardless }: { rows: AuditRow[]; cardless?: boolean }) {
   const t = useTranslations("audit")
 
   const columns = helper.columns([
@@ -81,6 +81,7 @@ export function AuditTable({ rows }: { rows: AuditRow[] }) {
       getRowId={(row) => row.id}
       numbered
       pagination
+      cardless={cardless}
       empty={t("empty")}
     />
   )

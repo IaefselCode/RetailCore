@@ -157,7 +157,7 @@ async function RecentTransactionsTable() {
     status: sale.status,
   }))
 
-  return <RecentTransactionsTableClient rows={rows} />
+  return <RecentTransactionsTableClient rows={rows} cardless />
 }
 
 export default async function SalesPage() {

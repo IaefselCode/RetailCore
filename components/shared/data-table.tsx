@@ -95,6 +95,8 @@ export interface DataTableProps<T extends RowData> {
   /** Grid classes for the card layout (defaults to a responsive 4-col grid). */
   cardGridClassName?: string
   className?: string
+  /** Skip the built-in Card wrapper — use when the caller already wraps in a Card. */
+  cardless?: boolean
 }
 
 /**
@@ -138,6 +140,7 @@ export function DataTable<T extends RowData>({
   renderCard,
   cardGridClassName,
   className,
+  cardless = false,
 }: DataTableProps<T>) {
   const t = useTranslations("common")
   const [searchValue, setSearchValue] = useState((initialGlobalFilter as string) ?? "")
@@ -237,66 +240,125 @@ export function DataTable<T extends RowData>({
           </div>
         )
       ) : (
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  {table.getHeaderGroups().map((group) => (
-                    <TableRow key={group.id}>
-                      {group.headers.map((header) => {
-                        const canSort = header.column.getCanSort()
-                        const sorted = header.column.getIsSorted()
-                        return (
-                          <TableHead
-                            key={header.id}
-                            onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-                            className={cn(canSort && "cursor-pointer select-none")}
-                          >
-                            {header.isPlaceholder ? null : (
-                              <div className="flex items-center gap-1.5">
-                                <table.FlexRender header={header} />
-                                {canSort &&
-                                  (sorted === "asc" ? (
-                                    <ArrowUp className="size-3.5" />
-                                  ) : sorted === "desc" ? (
-                                    <ArrowDown className="size-3.5" />
-                                  ) : (
-                                    <ArrowUpDown className="size-3.5 opacity-50" />
-                                  ))}
-                              </div>
-                            )}
-                          </TableHead>
-                        )
-                      })}
-                    </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody>
-                  {rows.length === 0 && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={displayColumns.length}
-                        className="py-8 text-center text-sm text-muted-foreground"
-                      >
-                        {empty}
+        cardless ? (
+          <div className="overflow-x-auto rounded-lg border">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((group) => (
+                  <TableRow key={group.id}>
+                    {group.headers.map((header) => {
+                      const canSort = header.column.getCanSort()
+                      const sorted = header.column.getIsSorted()
+                      return (
+                        <TableHead
+                          key={header.id}
+                          onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                          className={cn(canSort && "cursor-pointer select-none")}
+                        >
+                          {header.isPlaceholder ? null : (
+                            <div className="flex items-center gap-1.5">
+                              <table.FlexRender header={header} />
+                              {canSort &&
+                                (sorted === "asc" ? (
+                                  <ArrowUp className="size-3.5" />
+                                ) : sorted === "desc" ? (
+                                  <ArrowDown className="size-3.5" />
+                                ) : (
+                                  <ArrowUpDown className="size-3.5 opacity-50" />
+                                ))}
+                            </div>
+                          )}
+                        </TableHead>
+                      )
+                    })}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {rows.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={displayColumns.length}
+                      className="py-8 text-center text-sm text-muted-foreground"
+                    >
+                      {empty}
+                    </TableCell>
+                  </TableRow>
+                )}
+                {rows.map((row) => (
+                  <TableRow key={row.id} className="transition-colors hover:bg-muted/50">
+                    {row.getAllCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        <table.FlexRender cell={cell} />
                       </TableCell>
-                    </TableRow>
-                  )}
-                  {rows.map((row) => (
-                    <TableRow key={row.id} className="transition-colors hover:bg-muted/50">
-                      {row.getAllCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          <table.FlexRender cell={cell} />
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    {table.getHeaderGroups().map((group) => (
+                      <TableRow key={group.id}>
+                        {group.headers.map((header) => {
+                          const canSort = header.column.getCanSort()
+                          const sorted = header.column.getIsSorted()
+                          return (
+                            <TableHead
+                              key={header.id}
+                              onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                              className={cn(canSort && "cursor-pointer select-none")}
+                            >
+                              {header.isPlaceholder ? null : (
+                                <div className="flex items-center gap-1.5">
+                                  <table.FlexRender header={header} />
+                                  {canSort &&
+                                    (sorted === "asc" ? (
+                                      <ArrowUp className="size-3.5" />
+                                    ) : sorted === "desc" ? (
+                                      <ArrowDown className="size-3.5" />
+                                    ) : (
+                                      <ArrowUpDown className="size-3.5 opacity-50" />
+                                    ))}
+                                </div>
+                              )}
+                            </TableHead>
+                          )
+                        })}
+                      </TableRow>
+                    ))}
+                  </TableHeader>
+                  <TableBody>
+                    {rows.length === 0 && (
+                      <TableRow>
+                        <TableCell
+                          colSpan={displayColumns.length}
+                          className="py-8 text-center text-sm text-muted-foreground"
+                        >
+                          {empty}
                         </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                      </TableRow>
+                    )}
+                    {rows.map((row) => (
+                      <TableRow key={row.id} className="transition-colors hover:bg-muted/50">
+                        {row.getAllCells().map((cell) => (
+                          <TableCell key={cell.id}>
+                            <table.FlexRender cell={cell} />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        )
       )}
 
       {pagination && table.getRowCount() > pageSize && (

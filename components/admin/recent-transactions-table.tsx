@@ -26,7 +26,7 @@ const statusBadge: Record<string, "default" | "secondary" | "destructive"> = {
   CANCELLED: "destructive",
 }
 
-export function RecentTransactionsTable({ rows }: { rows: SaleRow[] }) {
+export function RecentTransactionsTable({ rows, cardless }: { rows: SaleRow[]; cardless?: boolean }) {
   const t = useTranslations("sales")
 
   const columns = helper.columns([
@@ -79,6 +79,7 @@ export function RecentTransactionsTable({ rows }: { rows: SaleRow[] }) {
       getRowId={(row) => row.id}
       numbered
       pagination
+      cardless={cardless}
       empty={t("empty")}
     />
   )

@@ -32,7 +32,7 @@ const STATUS_KEYS: Record<string, string> = {
   VOIDED: "voided",
 }
 
-export function EmployeeSalesTable({ rows }: { rows: EmpSaleRow[] }) {
+export function EmployeeSalesTable({ rows, cardless }: { rows: EmpSaleRow[]; cardless?: boolean }) {
   const t = useTranslations("employeeDetail")
 
   const columns = helper.columns([
@@ -81,6 +81,7 @@ export function EmployeeSalesTable({ rows }: { rows: EmpSaleRow[] }) {
       getRowId={(row) => row.id}
       numbered
       pagination
+      cardless={cardless}
       empty={t("noSales")}
     />
   )

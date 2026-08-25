@@ -48,7 +48,7 @@ async function AuditTableSection() {
             />
           }
         >
-          <AuditTable rows={logs} />
+          <AuditTable rows={logs} cardless />
         </Suspense>
       </CardContent>
     </Card>

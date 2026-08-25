@@ -25,7 +25,7 @@ const statusBadge: Record<string, "default" | "secondary" | "destructive"> = {
   CANCELLED: "destructive",
 }
 
-export function RecentSalesTable({ rows }: { rows: SaleRow[] }) {
+export function RecentSalesTable({ rows, cardless }: { rows: SaleRow[]; cardless?: boolean }) {
   const t = useTranslations("dashboard")
 
   const columns = helper.columns([
@@ -78,6 +78,7 @@ export function RecentSalesTable({ rows }: { rows: SaleRow[] }) {
       columns={columns}
       getRowId={(row) => row.id}
       pagination
+      cardless={cardless}
       empty={t("noSales")}
     />
   )
