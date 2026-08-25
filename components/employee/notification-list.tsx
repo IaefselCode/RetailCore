@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useTranslations } from "next-intl"
 import { motion } from "motion/react"
+import { useRouter } from "next/navigation"
 import { Bell, Clock, Package, BarChart3, CheckCheck, Trash2Icon } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -14,7 +15,7 @@ import {
   AnimatedAccordionContent,
 } from "@/components/ui/animated-accordion"
 import { markAsRead, markAllAsRead, deleteNotification, deleteAllNotifications, type NotificationData } from "@/lib/notification-actions"
-import { useRouter } from "next/navigation"
+import { useNotificationContext } from "@/lib/notification-context"
 
 const iconMap: Record<string, typeof Bell> = {
   info: Bell,
@@ -22,6 +23,20 @@ const iconMap: Record<string, typeof Bell> = {
   milestone: BarChart3,
   system: Bell,
   warning: Clock,
+}
+
+/** Map notification type to a relevant employee page */
+function getNotificationLink(type: string): string {
+  switch (type) {
+    case "stock":
+      return "/employee/inventory"
+    case "sales":
+      return "/employee/sales-history"
+    case "system":
+      return "/employee/dashboard"
+    default:
+      return "/employee/notifications"
+  }
 }
 
 function timeAgo(date: Date): string {
@@ -47,6 +62,7 @@ export function EmployeeNotificationList({ initialNotifications }: { initialNoti
   const t = useTranslations("employeeNotifications")
   const router = useRouter()
   const [notifications, setNotifications] = useState(initialNotifications)
+  const { markRead, markAllRead: markAllReadContext, deleteNotification: deleteNotificationContext, deleteAll: deleteAllContext } = useNotificationContext()
 
   const unreadCount = notifications.filter((n) => !n.isRead).length
 
@@ -62,27 +78,38 @@ export function EmployeeNotificationList({ initialNotifications }: { initialNoti
   async function handleMarkAllRead() {
     await markAllAsRead()
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+    markAllReadContext()
   }
 
   async function handleToggleRead(id: string) {
     await markAsRead(id)
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)))
+    markRead(id)
   }
 
   async function handleDelete(id: string) {
     await deleteNotification(id)
     setNotifications((prev) => prev.filter((n) => n.id !== id))
+    deleteNotificationContext()
     router.refresh()
   }
 
   async function handleDeleteAll() {
     await deleteAllNotifications()
     setNotifications([])
+    deleteAllContext()
     router.refresh()
+  }
+
+  function handleNotificationClick(notification: NotificationData) {
+    if (!notification.isRead) {
+      handleToggleRead(notification.id)
+    }
   }
 
   function renderNotification(notification: NotificationData, index: number) {
     const Icon = iconMap[notification.type] ?? Bell
+    const href = getNotificationLink(notification.type)
     return (
       <motion.div
         key={notification.id}
@@ -90,39 +117,44 @@ export function EmployeeNotificationList({ initialNotifications }: { initialNoti
         initial="hidden"
         animate="visible"
         transition={{ delay: index * 0.05 }}
-        className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-muted/50 ${
-          !notification.isRead ? "border-l-2 border-l-primary bg-muted/20" : ""
-        }`}
-        onClick={() => handleToggleRead(notification.id)}
       >
-        <div
-          className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${
-            !notification.isRead ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+        <a
+          href={href}
+          onClick={() => handleNotificationClick(notification)}
+          className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-muted/50 ${
+            !notification.isRead ? "border-l-2 border-l-primary bg-muted/20" : ""
           }`}
         >
-          <Icon className="size-4" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className={`text-sm ${!notification.isRead ? "font-semibold" : "font-medium text-muted-foreground"}`}>
-              {notification.title}
-            </p>
-            {!notification.isRead && <Badge className="size-2 rounded-full p-0" />}
+          <div
+            className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${
+              !notification.isRead ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+            }`}
+          >
+            <Icon className="size-4" />
           </div>
-          <p className="text-sm text-muted-foreground">{notification.message}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground/60">{timeAgo(new Date(notification.createdAt))}</p>
-        </div>
-        <AnimateButton
-          variant="ghost"
-          size="icon-sm"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleDelete(notification.id)
-          }}
-          className="shrink-0 text-muted-foreground hover:text-destructive"
-        >
-          <Trash2Icon className="size-3.5" />
-        </AnimateButton>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <p className={`text-sm ${!notification.isRead ? "font-semibold" : "font-medium text-muted-foreground"}`}>
+                {notification.title}
+              </p>
+              {!notification.isRead && <Badge className="size-2 rounded-full p-0" />}
+            </div>
+            <p className="text-sm text-muted-foreground">{notification.message}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground/60">{timeAgo(new Date(notification.createdAt))}</p>
+          </div>
+          <AnimateButton
+            variant="ghost"
+            size="icon-sm"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              handleDelete(notification.id)
+            }}
+            className="shrink-0 text-muted-foreground hover:text-destructive"
+          >
+            <Trash2Icon className="size-3.5" />
+          </AnimateButton>
+        </a>
       </motion.div>
     )
   }

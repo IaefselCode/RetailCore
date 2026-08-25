@@ -16,15 +16,16 @@ export interface UseNotificationSocketResult {
   unreadCount: number
   latestNotification: RealtimeNotification | null
   dismissLatest: () => void
+  markNotificationRead: (id: string) => void
+  markAllNotificationsRead: () => void
+  decrementCount: (by?: number) => void
 }
 
 /**
  * Connects to the Socket.IO server, joins the user's room, and listens for
- * new notifications.  Returns a live unread count (incremented in realtime)
- * and the most recent notification (for toast display).
- *
- * @param userId  - The current user's ID (from session).  Pass null to disable.
- * @param initialCount - Server-rendered unread count to hydrate from.
+ * new notifications. Returns a live unread count (incremented in realtime),
+ * the most recent notification (for toast display), and methods to update
+ * the counter when notifications are read/deleted.
  */
 export function useNotificationSocket(
   userId: string | null | undefined,
@@ -36,6 +37,18 @@ export function useNotificationSocket(
   const mountedRef = useRef(true)
 
   const dismissLatest = useCallback(() => setLatestNotification(null), [])
+
+  const markNotificationRead = useCallback((id: string) => {
+    setUnreadCount((c) => Math.max(0, c - 1))
+  }, [])
+
+  const markAllNotificationsRead = useCallback(() => {
+    setUnreadCount(0)
+  }, [])
+
+  const decrementCount = useCallback((by = 1) => {
+    setUnreadCount((c) => Math.max(0, c - by))
+  }, [])
 
   useEffect(() => {
     mountedRef.current = true
@@ -64,5 +77,12 @@ export function useNotificationSocket(
     }
   }, [userId])
 
-  return { unreadCount, latestNotification, dismissLatest }
+  return {
+    unreadCount,
+    latestNotification,
+    dismissLatest,
+    markNotificationRead,
+    markAllNotificationsRead,
+    decrementCount,
+  }
 }

@@ -2,7 +2,8 @@ import { requireRole } from "@/lib/auth-utils"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { AdminShell } from "@/components/shared/admin-shell"
-import { NotificationBadge } from "@/components/shared/notification-badge"
+import { NotificationProvider } from "@/components/shared/notification-provider"
+import { NotificationBell } from "@/components/shared/notification-bell"
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   await requireRole("ADMIN")
@@ -13,8 +14,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     : 0
 
   return (
-    <AdminShell notificationSlot={<NotificationBadge userId={userId} initialCount={initialCount} href="/admin/notifications" />}>
-      {children}
-    </AdminShell>
+    <NotificationProvider userId={userId} initialCount={initialCount}>
+      <AdminShell notificationSlot={<NotificationBell href="/admin/notifications" size="icon-sm" />}>
+        {children}
+      </AdminShell>
+    </NotificationProvider>
   )
 }
