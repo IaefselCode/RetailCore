@@ -92,6 +92,18 @@ export async function purchaseStock(formData: FormData): Promise<ActionResult> {
       ip: meta.ip,
     })
 
+    // Notify employees at this shop that stock has been added
+    const productNames = await prisma.product.findMany({
+      where: { id: { in: items.map((i) => i.productId) } },
+      select: { name: true },
+    })
+    const itemList = productNames.map((p) => p.name).join(", ")
+    await notifyShopEmployees(shopId, {
+      title: "New Stock Added",
+      message: `${items.length} product(s) (${itemList}) have been added to ${shop.name}.`,
+      type: "stock",
+    })
+
     revalidatePath("/admin/inventory")
     revalidatePath("/employee/inventory")
     revalidatePath("/employee/products")

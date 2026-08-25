@@ -732,6 +732,7 @@
     "title": "Arifa",
     "new": "{count} mpya",
     "markAllRead": "Weka Zote Kama Zimesomwa",
+    "deleteAll": "Futa Zote",
     "today": "Leo",
     "yesterday": "Jana",
     "thisWeek": "Wiki Hii",
@@ -911,6 +912,7 @@
     "unreadPlural": "Una arifa {count} ambazo hazijasomwa",
     "allCaughtUp": "Umesoma zote!",
     "markAllRead": "Weka Zote Kama Zimesomwa",
+    "deleteAll": "Futa Zote",
     "today": "Leo",
     "earlier": "Zamani"
   },

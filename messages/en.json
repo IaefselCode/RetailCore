@@ -752,6 +752,7 @@
     "title": "Notifications",
     "new": "{count} new",
     "markAllRead": "Mark All as Read",
+    "deleteAll": "Delete All",
     "today": "Today",
     "yesterday": "Yesterday",
     "thisWeek": "This Week",
@@ -931,6 +932,7 @@
     "unreadPlural": "You have {count} unread notifications",
     "allCaughtUp": "All caught up!",
     "markAllRead": "Mark All as Read",
+    "deleteAll": "Delete All",
     "today": "Today",
     "earlier": "Earlier"
   },

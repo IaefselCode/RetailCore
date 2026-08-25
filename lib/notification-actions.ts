@@ -73,6 +73,19 @@ export async function deleteNotification(notificationId: string): Promise<void> 
   revalidatePath("/employee/notifications")
 }
 
+/** Delete all notifications for the current user. */
+export async function deleteAllNotifications(): Promise<void> {
+  const userId = await requireUser()
+  if (!userId) return
+
+  await prisma.notification.deleteMany({
+    where: { userId },
+  })
+
+  revalidatePath("/admin/notifications")
+  revalidatePath("/employee/notifications")
+}
+
 
 export interface NotificationPreferenceData {
   emailEnabled: boolean

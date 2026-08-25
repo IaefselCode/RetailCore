@@ -13,7 +13,7 @@ import {
   AnimatedAccordionTrigger,
   AnimatedAccordionContent,
 } from "@/components/ui/animated-accordion"
-import { markAsRead, markAllAsRead, deleteNotification, type NotificationData } from "@/lib/notification-actions"
+import { markAsRead, markAllAsRead, deleteNotification, deleteAllNotifications, type NotificationData } from "@/lib/notification-actions"
 import { useRouter } from "next/navigation"
 
 const iconMap: Record<string, typeof Bell> = {
@@ -72,6 +72,12 @@ export function EmployeeNotificationList({ initialNotifications }: { initialNoti
   async function handleDelete(id: string) {
     await deleteNotification(id)
     setNotifications((prev) => prev.filter((n) => n.id !== id))
+    router.refresh()
+  }
+
+  async function handleDeleteAll() {
+    await deleteAllNotifications()
+    setNotifications([])
     router.refresh()
   }
 
@@ -134,12 +140,20 @@ export function EmployeeNotificationList({ initialNotifications }: { initialNoti
               : t("allCaughtUp")}
           </p>
         </div>
-        {unreadCount > 0 && (
-          <AnimateButton variant="outline" size="sm" onClick={handleMarkAllRead}>
-            <CheckCheck className="size-4" />
-            {t("markAllRead")}
-          </AnimateButton>
-        )}
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <AnimateButton variant="outline" size="sm" onClick={handleMarkAllRead}>
+              <CheckCheck className="size-4" />
+              {t("markAllRead")}
+            </AnimateButton>
+          )}
+          {notifications.length > 0 && (
+            <AnimateButton variant="outline" size="sm" onClick={handleDeleteAll} className="text-destructive hover:bg-destructive/10 hover:text-destructive">
+              <Trash2Icon className="size-4" />
+              {t("deleteAll")}
+            </AnimateButton>
+          )}
+        </div>
       </div>
 
       {notifications.length === 0 ? (

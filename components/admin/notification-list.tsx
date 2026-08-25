@@ -14,7 +14,7 @@ import {
   AccordionContent,
 } from "@/components/ui/animated-accordion"
 import Link from "next/link"
-import { markAsRead, markAllAsRead, deleteNotification, type NotificationData } from "@/lib/notification-actions"
+import { markAsRead, markAllAsRead, deleteNotification, deleteAllNotifications, type NotificationData } from "@/lib/notification-actions"
 import { useRouter } from "next/navigation"
 
 const iconMap: Record<string, typeof BellIcon> = {
@@ -86,6 +86,12 @@ export function NotificationList({ initialNotifications }: { initialNotification
     router.refresh()
   }
 
+  async function handleDeleteAll() {
+    await deleteAllNotifications()
+    setNotifications([])
+    router.refresh()
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <nav className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -105,6 +111,10 @@ export function NotificationList({ initialNotifications }: { initialNotification
           <AnimateButton variant="outline" onClick={handleMarkAllRead} disabled={unreadCount === 0}>
             <CheckCheckIcon />
             {t("markAllRead")}
+          </AnimateButton>
+          <AnimateButton variant="outline" onClick={handleDeleteAll} disabled={notifications.length === 0} className="text-destructive hover:bg-destructive/10 hover:text-destructive">
+            <Trash2Icon />
+            {t("deleteAll")}
           </AnimateButton>
           <Link href="/admin/settings">
             <AnimateButton variant="ghost" size="icon-sm">
