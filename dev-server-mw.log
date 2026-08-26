@@ -1,0 +1,20 @@
+▲ Next.js 16.2.12 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.103:3000
+- Environments: .env
+✓ Ready in 3.0s
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+Unhandled Rejection: Error: Both middleware file "./middleware.ts" and proxy file "./proxy.ts" are detected. Please use "./proxy.ts" only. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+    at ignore-listed frames
+Unhandled Rejection: Error: Both middleware file "./middleware.ts" and proxy file "./proxy.ts" are detected. Please use "./proxy.ts" only. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+    at ignore-listed frames
+Unhandled Rejection: Error: Both middleware file "./middleware.ts" and proxy file "./proxy.ts" are detected. Please use "./proxy.ts" only. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+    at ignore-listed frames
+Unhandled Rejection: Error: Both middleware file "./middleware.ts" and proxy file "./proxy.ts" are detected. Please use "./proxy.ts" only. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+    at ignore-listed frames
+
+ GET /login 200 in 3.3s (next.js: 529ms, proxy.ts: 982ms, application-code: 1771ms)
+ GET /login 200 in 3.3s (next.js: 1655ms, proxy.ts: 983ms, application-code: 702ms)
+✓ Compiled in 1380ms
+ GET /login 200 in 749ms (next.js: 169ms, proxy.ts: 99ms, application-code: 481ms)
+[?25h

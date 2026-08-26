@@ -1,0 +1,27 @@
+▲ Next.js 16.2.12 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.103:3000
+- Environments: .env
+✓ Ready in 1433ms
+
+ GET /api/auth/csrf 200 in 2.2s (next.js: 2.1s, application-code: 63ms)
+ POST /api/auth/callback/credentials 302 in 3.1s (next.js: 33ms, application-code: 3.1s)
+ GET /admin/dashboard 200 in 6.2s (next.js: 366ms, proxy.ts: 19ms, application-code: 5.9s)
+ GET /admin/dashboard 200 in 2.1s (next.js: 18ms, proxy.ts: 22ms, application-code: 2.0s)
+ GET /admin/dashboard 200 in 2.3s (next.js: 15ms, proxy.ts: 14ms, application-code: 2.3s)
+ GET /admin/dashboard 200 in 2.3s (next.js: 15ms, proxy.ts: 16ms, application-code: 2.3s)
+ GET /admin/dashboard 200 in 2.4s (next.js: 14ms, proxy.ts: 17ms, application-code: 2.4s)
+ GET /admin/profile 200 in 1944ms (next.js: 262ms, proxy.ts: 19ms, application-code: 1662ms)
+ GET /admin/settings 200 in 1463ms (next.js: 118ms, proxy.ts: 20ms, application-code: 1325ms)
+ GET /admin/dashboard 200 in 3.4s (next.js: 17ms, proxy.ts: 19ms, application-code: 3.3s)
+ GET /admin/dashboard 200 in 2.1s (next.js: 12ms, proxy.ts: 14ms, application-code: 2.1s)
+ GET /api/auth/csrf 200 in 67ms (next.js: 40ms, application-code: 27ms)
+ POST /api/auth/callback/credentials 302 in 2.4s (next.js: 5ms, application-code: 2.4s)
+ GET /employee/dashboard 200 in 4.9s (next.js: 174ms, proxy.ts: 17ms, application-code: 4.7s)
+ GET /employee/profile 200 in 2.3s (next.js: 126ms, proxy.ts: 24ms, application-code: 2.2s)
+ GET /employee/settings 200 in 1412ms (next.js: 132ms, proxy.ts: 21ms, application-code: 1259ms)
+ GET /api/auth/signout 200 in 64ms (next.js: 34ms, application-code: 30ms)
+○ Compiling /forgot-password ...
+ GET /forgot-password 200 in 8.4s (next.js: 8.1s, proxy.ts: 9ms, application-code: 326ms)
+ GET /reset-password 200 in 2.5s (next.js: 2.3s, proxy.ts: 11ms, application-code: 205ms)
+ GET /login 200 in 384ms (next.js: 87ms, proxy.ts: 10ms, application-code: 287ms)
