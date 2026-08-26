@@ -30,6 +30,8 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
+    seed: "npx tsx ./prisma/seed.ts",
+    //  seed: 'bun·./prisma/seed.ts',
   },
   // Direct connection (bypasses pooler) — required for migrations,
   // DDL, and other admin operations that cannot go through PgBouncer.
