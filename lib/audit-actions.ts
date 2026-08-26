@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getSignedInRole } from "@/lib/auth-utils"
+import { csvSafe } from "@/lib/sanitize"
 import type { ActionResult } from "@/lib/actions"
 
 function fail(message: string): ActionResult {
@@ -60,13 +61,12 @@ export async function exportAuthLogsCsv(): Promise<string> {
     orderBy: { createdAt: "desc" },
   })
 
-  const escape = (v: string) => `"${v.replace(/"/g, '""')}"`
   const header = ["Timestamp", "Event", "Email", "IP", "User Agent"]
-    .map(escape)
+    .map(csvSafe)
     .join(",")
   const rows = logs.map((log) =>
     [log.createdAt.toISOString(), log.event, log.email, log.ip ?? "", log.userAgent ?? ""]
-      .map(escape)
+      .map(csvSafe)
       .join(",")
   )
 

@@ -1,5 +1,6 @@
 "use server"
 
+import { sanitize } from "@/lib/sanitize"
 import { revalidatePath } from "next/cache"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
@@ -15,7 +16,7 @@ function fail(message: string): ActionResult {
 }
 
 function str(value: FormDataEntryValue | null): string {
-  return String(value ?? "").trim()
+  return sanitize(value)
 }
 
 async function requireAdmin() {

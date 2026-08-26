@@ -36,6 +36,7 @@ model User {
   employee     Employee?
   notifications           Notification[]
   notificationPreference  NotificationPreference?
+  refreshTokens           RefreshToken[]
 }
 
 model Shop {
@@ -206,6 +207,18 @@ model StockTransaction {
   reference   String?
   notes       String?
   createdAt   DateTime @default(now())
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([tokenHash])
+  @@index([userId])
 }
 
 model SystemSetting {

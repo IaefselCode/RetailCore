@@ -1,5 +1,6 @@
 "use server"
 
+import { sanitize } from "@/lib/sanitize"
 import { revalidatePath } from "next/cache"
 import { randomBytes } from "crypto"
 import bcrypt from "bcryptjs"
@@ -16,7 +17,7 @@ function fail(message: string): ActionResult {
 }
 
 function str(value: FormDataEntryValue | null): string {
-  return String(value ?? "").trim()
+  return sanitize(value)
 }
 
 function bool(value: FormDataEntryValue | null): boolean {

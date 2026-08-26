@@ -1,5 +1,6 @@
 "use server"
 
+import { sanitize } from "@/lib/sanitize"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getEmployeeContext, getSignedInRole } from "@/lib/auth-utils"
@@ -15,7 +16,7 @@ function fail(message: string): ActionResult {
 }
 
 function str(value: FormDataEntryValue | null): string {
-  return String(value ?? "").trim()
+  return sanitize(value)
 }
 
 type CartItem = { productId: string; quantity: number }

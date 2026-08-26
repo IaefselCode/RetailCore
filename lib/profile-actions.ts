@@ -1,5 +1,6 @@
 "use server"
 
+import { sanitize } from "@/lib/sanitize"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getRequestMeta, type ActionResult } from "@/lib/actions"
@@ -12,7 +13,7 @@ function fail(message: string): ActionResult {
 }
 
 function str(value: FormDataEntryValue | null): string {
-  return String(value ?? "").trim()
+  return sanitize(value)
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/

@@ -3,7 +3,8 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { signOut, useSession } from "next-auth/react"
+import { useSession } from "next-auth/react"
+import { handleLogout } from "@/lib/logout-client"
 import {
   LayoutDashboard,
   Store,
@@ -126,7 +127,7 @@ export function AdminSidebar({ onNavClick }: AdminSidebarProps) {
               {tn("profile")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive" onClick={() => signOut({ callbackUrl: "/login" })}>
+            <DropdownMenuItem className="text-destructive" onClick={() => handleLogout()}>
               <LogOut className="size-4" />
               {tc("signOut")}
             </DropdownMenuItem>

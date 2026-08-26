@@ -2,7 +2,8 @@
 
 import { Menu, User, LogOut, Settings } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { signOut, useSession } from "next-auth/react"
+import { useSession } from "next-auth/react"
+import { handleLogout } from "@/lib/logout-client"
 import { useTranslations } from "next-intl"
 import { motion } from "motion/react"
 
@@ -74,7 +75,7 @@ export function AdminTopbar({ onMenuClick, notificationSlot }: AdminTopbarProps)
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive" onClick={() => signOut({ callbackUrl: "/login" })}>
+            <DropdownMenuItem className="text-destructive" onClick={() => handleLogout()}>
               <LogOut className="size-4" />
               Sign out
             </DropdownMenuItem>
