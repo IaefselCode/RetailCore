@@ -1,15 +1,13 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useMemo } from "react"
 import { useTranslations } from "next-intl"
 import { motion } from "motion/react"
 import { toast } from "sonner"
-import { ShoppingCart, Shield, Eye, EyeOff, Check, X, Loader2 } from "lucide-react"
-import { getNotificationPreferences, updateNotificationPreferences } from "@/lib/notification-actions"
+import { Shield, Eye, EyeOff, Check, X, Loader2 } from "lucide-react"
 import { changeEmployeePassword } from "@/lib/settings-actions"
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
-import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -37,11 +35,6 @@ function passwordStrength(pw: string): { score: number; label: string; color: st
 export default function EmployeeSettingsPage() {
   const t = useTranslations("employeeSettings")
 
-  // Notification preferences
-  const [notifyStock, setNotifyStock] = useState(true)
-  const [prefsLoaded, setPrefsLoaded] = useState(false)
-  const [savingPref, setSavingPref] = useState(false)
-
   // Password change
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
@@ -50,26 +43,6 @@ export default function EmployeeSettingsPage() {
   const [showNew, setShowNew] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [changingPassword, setChangingPassword] = useState(false)
-
-  // Load preferences on mount
-  useEffect(() => {
-    getNotificationPreferences().then((prefs) => {
-      setNotifyStock(prefs.stockAlerts)
-      setPrefsLoaded(true)
-    })
-  }, [])
-
-  const updatePref = async (key: "stockAlerts", value: boolean) => {
-    setSavingPref(true)
-    try {
-      await updateNotificationPreferences({ [key]: value })
-      toast.success(t("saved"))
-    } catch {
-      toast.error(t("somethingWentWrong"))
-    } finally {
-      setSavingPref(false)
-    }
-  }
 
   const strength = useMemo(() => passwordStrength(newPassword), [newPassword])
 
@@ -115,40 +88,6 @@ export default function EmployeeSettingsPage() {
       >
         <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
-      </motion.div>
-
-      {/* Notification Preferences */}
-      <motion.div
-        variants={sectionVariants}
-        initial="hidden"
-        animate="visible"
-        transition={{ delay: 0.05 }}
-      >
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("notificationPrefs")}</CardTitle>
-            <CardDescription>{t("notificationPrefsDesc")}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <ShoppingCart className="size-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">{t("stockAlerts")}</p>
-                  <p className="text-xs text-muted-foreground">{t("stockAlertsDesc")}</p>
-                </div>
-              </div>
-              <Switch
-                checked={notifyStock}
-                disabled={!prefsLoaded || savingPref}
-                onCheckedChange={(v) => {
-                  setNotifyStock(v)
-                  updatePref("stockAlerts", v)
-                }}
-              />
-            </div>
-          </CardContent>
-        </Card>
       </motion.div>
 
       {/* Change Password */}

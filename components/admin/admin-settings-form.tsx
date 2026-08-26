@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import {
@@ -20,11 +19,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
 import { updateSystemSettings } from "@/lib/settings-actions"
 import { changeEmployeePassword } from "@/lib/settings-actions"
-import { updateNotificationPreferences, type NotificationPreferenceData } from "@/lib/notification-actions"
+
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -56,7 +54,6 @@ export interface SystemSettingsData {
   currency: string
   dateFormat: string
   sessionTimeout: string
-  notificationPrefs?: NotificationPreferenceData
 }
 
 export function AdminSettingsForm({ initial }: { initial: SystemSettingsData }) {
@@ -65,7 +62,6 @@ export function AdminSettingsForm({ initial }: { initial: SystemSettingsData }) 
   const tc = useTranslations("common")
   const tp = useTranslations("employeeSettings")
   const [pending, startTransition] = useTransition()
-  const [pushNotifications, setPushNotifications] = useState(initial.notificationPrefs?.pushEnabled ?? true)
   const [form, setForm] = useState({
     shopName: initial.shopName,
     timezone: initial.timezone,
@@ -107,7 +103,6 @@ export function AdminSettingsForm({ initial }: { initial: SystemSettingsData }) 
 
     startTransition(async () => {
       const result = await updateSystemSettings(fd)
-      await updateNotificationPreferences({ pushEnabled: pushNotifications })
       if (result.success) {
         toast.success(result.message)
         router.refresh()
@@ -154,7 +149,6 @@ export function AdminSettingsForm({ initial }: { initial: SystemSettingsData }) 
       <Tabs defaultValue="general">
         <TabsList>
           <TabsTrigger value="general">{t("general")}</TabsTrigger>
-          <TabsTrigger value="notifications">{t("notifications")}</TabsTrigger>
           <TabsTrigger value="security">{t("security")}</TabsTrigger>
         </TabsList>
 
@@ -168,6 +162,7 @@ export function AdminSettingsForm({ initial }: { initial: SystemSettingsData }) 
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Currency */}
                     <div className="flex flex-col gap-2">
                       <Label htmlFor="currency">{t("currency")}</Label>
                       <Select value={form.currency} onValueChange={(v) => update("currency", v)}>
@@ -179,9 +174,11 @@ export function AdminSettingsForm({ initial }: { initial: SystemSettingsData }) 
                           <SelectItem value="eur">EUR (€)</SelectItem>
                           <SelectItem value="gbp">GBP (£)</SelectItem>
                           <SelectItem value="cad">CAD (C$)</SelectItem>
+                          <SelectItem value="tzs">TZS (TSh)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
+                    {/* Date Format */}
                     <div className="flex flex-col gap-2">
                       <Label htmlFor="date-format">{t("dateFormat")}</Label>
                       <Select value={form.dateFormat} onValueChange={(v) => update("dateFormat", v)}>
@@ -195,28 +192,6 @@ export function AdminSettingsForm({ initial }: { initial: SystemSettingsData }) 
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </motion.div>
-        </TabsContent>
-
-        <TabsContent value="notifications" className="mt-6">
-          <motion.div variants={containerVariants} initial="hidden" animate="visible">
-            <motion.div variants={itemVariants}>
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t("notificationPrefs")}</CardTitle>
-                  <CardDescription>{t("notificationPrefsDesc")}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-sm font-medium">{t("pushNotifications")}</Label>
-                      <p className="text-sm text-muted-foreground">{t("pushNotificationsDesc")}</p>
-                    </div>
-                    <Switch checked={pushNotifications} onCheckedChange={setPushNotifications} />
                   </div>
                 </CardContent>
               </Card>
@@ -357,27 +332,6 @@ export function AdminSettingsForm({ initial }: { initial: SystemSettingsData }) 
                     )}
                   </Button>
 
-                  <Separator />
-
-                  {/* Session Timeout */}
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="session-timeout">{t("sessionTimeout")}</Label>
-                    <Select
-                      value={form.sessionTimeout}
-                      onValueChange={(v) => update("sessionTimeout", v)}
-                    >
-                      <SelectTrigger id="session-timeout" className="w-48">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="15">15 minutes</SelectItem>
-                        <SelectItem value="30">30 minutes</SelectItem>
-                        <SelectItem value="60">1 hour</SelectItem>
-                        <SelectItem value="240">4 hours</SelectItem>
-                        <SelectItem value="never">Never</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </CardContent>
               </Card>
             </motion.div>

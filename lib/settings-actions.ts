@@ -24,9 +24,21 @@ async function requireAdmin() {
   return userId
 }
 
-const ALLOWED_TIMEZONES = new Set(["utc", "est", "pst", "cst"])
-const ALLOWED_CURRENCIES = new Set(["usd", "eur", "gbp", "cad"])
+const ALLOWED_TIMEZONES = new Set(["utc", "est", "pst", "cst", "cat", "eet", "ist", "jst", "aest", "nst"])
+const ALLOWED_CURRENCIES = new Set(["usd", "eur", "gbp", "cad", "tzs"])
 const ALLOWED_DATE_FORMATS = new Set(["mdy", "dmy", "ymd"])
+
+/**
+ * Get a single system setting by key. Returns the value or a default.
+ */
+export async function getSystemSetting(key: string, defaultValue: string = ""): Promise<string> {
+  try {
+    const row = await prisma.systemSetting.findUnique({ where: { key } })
+    return row?.value ?? defaultValue
+  } catch {
+    return defaultValue
+  }
+}
 
 export async function updateSystemSettings(formData: FormData): Promise<ActionResult> {
   const actorId = await requireAdmin()
