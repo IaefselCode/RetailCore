@@ -379,12 +379,42 @@ export async function deleteEmployee(formData: FormData): Promise<ActionResult> 
     if (!employee) return fail("Employee not found.")
 
     await prisma.$transaction(async (tx) => {
-      // Keep past sales, just unlink them from the deleted employee.
-      await tx.sale.updateMany({
+      // 1. Delete SaleItems for sales made by this employee
+      const sales = await tx.sale.findMany({
         where: { employeeId: id },
-        data: { employeeId: null },
+        select: { id: true },
       })
-      // Deleting the user cascades to the employee row.
+      const saleIds = sales.map((s) => s.id)
+      if (saleIds.length > 0) {
+        await tx.saleItem.deleteMany({ where: { saleId: { in: saleIds } } })
+      }
+
+      // 2. Delete Sales made by this employee
+      await tx.sale.deleteMany({ where: { employeeId: id } })
+
+      // 3. Delete Notifications
+      await tx.notification.deleteMany({ where: { userId: employee.userId } })
+
+      // 4. Delete AuthLogs
+      await tx.authLog.deleteMany({ where: { userId: employee.userId } })
+
+      // 5. Delete RefreshTokens
+      await tx.refreshToken.deleteMany({ where: { userId: employee.userId } })
+
+      // 6. Delete NotificationPreference
+      await tx.notificationPreference.deleteMany({ where: { userId: employee.userId } })
+
+      // 7. Delete AuditLogs referencing this employee
+      await tx.auditLog.deleteMany({
+        where: {
+          OR: [
+            { actorId: employee.userId },
+            { entityType: "Employee", entityId: id },
+          ],
+        },
+      })
+
+      // 8. Delete the User (cascades to Employee via onDelete: Cascade)
       await tx.user.delete({ where: { id: employee.userId } })
     })
 
