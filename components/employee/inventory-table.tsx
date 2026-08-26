@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { formatMoney } from "@/lib/money"
+import { useCurrency } from "@/components/providers/currency-provider"
 import { DataTable, createAppColumnHelper } from "@/components/shared/data-table"
 
 interface EmpInventoryRow {
@@ -18,6 +19,7 @@ const helper = createAppColumnHelper<EmpInventoryRow>()
 
 export function EmployeeInventoryTable({ rows }: { rows: EmpInventoryRow[] }) {
   const t = useTranslations("employeeInventory")
+  const currency = useCurrency()
 
   const columns = helper.columns([
     helper.accessor("productName", {
@@ -36,7 +38,7 @@ export function EmployeeInventoryTable({ rows }: { rows: EmpInventoryRow[] }) {
     }),
     helper.accessor("price", {
       header: t("colPrice"),
-      cell: ({ getValue }) => formatMoney(getValue() as number),
+      cell: ({ getValue }) => formatMoney(getValue() as number, currency),
     }),
     helper.accessor("statusKey", {
       header: t("colStatus"),

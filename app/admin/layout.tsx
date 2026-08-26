@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma"
 import { AdminShell } from "@/components/shared/admin-shell"
 import { NotificationProvider } from "@/components/shared/notification-provider"
 import { NotificationBell } from "@/components/shared/notification-bell"
+import { CurrencyProvider } from "@/components/providers/currency-provider"
+import { getSystemCurrency } from "@/lib/money"
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   await requireRole("ADMIN")
@@ -12,12 +14,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const initialCount = userId
     ? await prisma.notification.count({ where: { userId, isRead: false } })
     : 0
+  const currency = await getSystemCurrency()
 
   return (
-    <NotificationProvider userId={userId} initialCount={initialCount}>
-      <AdminShell notificationSlot={<NotificationBell href="/admin/notifications" size="icon-sm" />}>
-        {children}
-      </AdminShell>
-    </NotificationProvider>
+    <CurrencyProvider currency={currency}>
+      <NotificationProvider userId={userId} initialCount={initialCount}>
+        <AdminShell notificationSlot={<NotificationBell href="/admin/notifications" size="icon-sm" />}>
+          {children}
+        </AdminShell>
+      </NotificationProvider>
+    </CurrencyProvider>
   )
 }

@@ -6,6 +6,7 @@ import { DollarSign, Wallet, TrendingUp, Boxes, ShoppingCart } from "lucide-reac
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { formatMoney } from "@/lib/money"
+import { useCurrency } from "@/components/providers/currency-provider"
 import { cn } from "@/lib/utils"
 
 export interface SalesPeriodData {
@@ -26,14 +27,15 @@ const PERIOD_KEYS: { value: SalesPeriodData["key"]; labelKey: string }[] = [
 
 export function SalesOverview({ data }: { data: SalesPeriodData[] }) {
   const t = useTranslations("sales")
+  const currency = useCurrency()
   const [activeKey, setActiveKey] = useState<SalesPeriodData["key"]>("today")
 
   const active = data.find((d) => d.key === activeKey) ?? data[0]
 
   const metrics = [
-    { labelKey: "metricRevenue", value: formatMoney(active.revenue), icon: DollarSign },
-    { labelKey: "metricCost", value: formatMoney(active.cost), icon: Wallet },
-    { labelKey: "metricProfit", value: formatMoney(active.profit), icon: TrendingUp },
+    { labelKey: "metricRevenue", value: formatMoney(active.revenue, currency), icon: DollarSign },
+    { labelKey: "metricCost", value: formatMoney(active.cost, currency), icon: Wallet },
+    { labelKey: "metricProfit", value: formatMoney(active.profit, currency), icon: TrendingUp },
     { labelKey: "metricUnits", value: active.units.toLocaleString(), icon: Boxes },
     { labelKey: "metricTransactions", value: active.transactions.toLocaleString(), icon: ShoppingCart },
   ]

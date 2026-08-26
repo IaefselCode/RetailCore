@@ -4,7 +4,7 @@ import { requireEmployeeContext } from "@/lib/auth-utils"
 import { getTranslations } from "next-intl/server"
 import { EmployeeDashboard } from "@/components/employee/employee-dashboard"
 import { ShoppingCart } from "lucide-react"
-import { formatMoney } from "@/lib/money"
+import { formatMoney, getSystemCurrency } from "@/lib/money"
 import { SkeletonStat, ListSkeleton } from "@/components/shared/skeleton-primitives"
 import { isLowOrOut } from "@/lib/stock-status"
 
@@ -36,7 +36,8 @@ async function TodaySalesValue({ shopId }: { shopId: string }) {
     where: { shopId, status: "COMPLETED", createdAt: { gte: startOfDay(new Date()) } },
     _sum: { total: true },
   })
-  return <>{formatMoney(agg._sum.total ?? 0)}</>
+  const currency = await getSystemCurrency()
+  return <>{formatMoney(agg._sum.total ?? 0, currency)}</>
 }
 
 async function OrdersTodayValue({ shopId }: { shopId: string }) {
@@ -65,7 +66,8 @@ async function MonthSalesValue({ shopId, employeeId }: { shopId: string; employe
     },
     _sum: { total: true },
   })
-  return <>{formatMoney(agg._sum.total ?? 0)}</>
+  const currency = await getSystemCurrency()
+  return <>{formatMoney(agg._sum.total ?? 0, currency)}</>
 }
 
 async function StockUnitsValue({ shopId }: { shopId: string }) {
@@ -75,6 +77,7 @@ async function StockUnitsValue({ shopId }: { shopId: string }) {
 
 async function ActivityItems({ shopId, employeeId }: { shopId: string; employeeId: string }) {
   const t = await getTranslations("employeeDashboard")
+  const currency = await getSystemCurrency()
   const recentSales = await prisma.sale.findMany({
     where: { shopId, employeeId },
     orderBy: { createdAt: "desc" },
@@ -104,7 +107,7 @@ async function ActivityItems({ shopId, employeeId }: { shopId: string; employeeI
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium">{sale.invoiceNo}</p>
             <p className="text-sm text-muted-foreground">
-              {t("processedByYou", { amount: formatMoney(sale.total) })}
+              {t("processedByYou", { amount: formatMoney(sale.total, currency) })}
             </p>
           </div>
           <span className="text-xs text-muted-foreground shrink-0">

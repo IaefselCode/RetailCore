@@ -40,6 +40,7 @@ import {
 } from "@/components/shared/data-table"
 import { toggleProductActive, deleteProduct } from "@/lib/products-actions"
 import { formatMoney } from "@/lib/money"
+import { useCurrency } from "@/components/providers/currency-provider"
 
 export interface ProductRow {
   id: string
@@ -78,6 +79,7 @@ export function ProductsTable({
   const router = useRouter()
   const t = useTranslations("products")
   const tc = useTranslations("common")
+  const currency = useCurrency()
   const [deleteTarget, setDeleteTarget] = useState<ProductRow | null>(null)
   const [viewMode, setViewMode] = useState<"table" | "cards">("table")
   const [pending, startTransition] = useTransition()
@@ -141,7 +143,7 @@ export function ProductsTable({
         <CardContent className="flex flex-1 flex-col justify-between gap-3">
           <div className="flex items-center justify-between text-sm">
             <span className="font-mono text-xs text-muted-foreground">{product.sku}</span>
-            <span className="text-lg font-bold">{formatMoney(product.price)}</span>
+            <span className="text-lg font-bold">{formatMoney(product.price, currency)}</span>
           </div>
           <div className="flex flex-wrap items-center gap-1">
             {product.shops.length > 0 &&
@@ -223,7 +225,7 @@ export function ProductsTable({
     }),
     helper.accessor("price", {
       header: t("colPrice"),
-      cell: ({ getValue }) => formatMoney(getValue() as number),
+      cell: ({ getValue }) => formatMoney(getValue() as number, currency),
     }),
     helper.accessor("totalStock", {
       header: t("colStock"),

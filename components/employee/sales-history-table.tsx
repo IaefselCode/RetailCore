@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { formatMoney } from "@/lib/money"
+import { useCurrency } from "@/components/providers/currency-provider"
 import { DataTable, createAppColumnHelper } from "@/components/shared/data-table"
 
 interface EmpSalesRow {
@@ -34,6 +35,7 @@ const STATUS_KEYS: Record<string, string> = {
 
 export function EmployeeSalesHistoryTable({ rows }: { rows: EmpSalesRow[] }) {
   const t = useTranslations("employeeSalesHistory")
+  const currency = useCurrency()
 
   const columns = helper.columns([
     helper.accessor("invoiceNo", {
@@ -51,7 +53,7 @@ export function EmployeeSalesHistoryTable({ rows }: { rows: EmpSalesRow[] }) {
     helper.accessor("total", {
       header: t("colAmount"),
       cell: ({ getValue }) => (
-        <span className="font-medium">{formatMoney(getValue() as number)}</span>
+        <span className="font-medium">{formatMoney(getValue() as number, currency)}</span>
       ),
     }),
     helper.accessor("discount", {
@@ -59,7 +61,7 @@ export function EmployeeSalesHistoryTable({ rows }: { rows: EmpSalesRow[] }) {
       cell: ({ getValue }) => {
         const d = getValue() as number
         return d > 0 ? (
-          <span className="text-green-600 font-medium">-{formatMoney(d)}</span>
+          <span className="text-green-600 font-medium">-{formatMoney(d, currency)}</span>
         ) : (
           <span className="text-muted-foreground">—</span>
         )

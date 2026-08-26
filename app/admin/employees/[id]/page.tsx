@@ -12,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { EmployeeSalesTable } from "@/components/admin/employee-sales-table"
 import { EmployeePerformance, type PeriodStats } from "@/components/admin/employee-performance"
 import Link from "next/link"
-import { formatMoney } from "@/lib/money"
+import { formatMoney, getSystemCurrency } from "@/lib/money"
 
 export const metadata = { title: "Employee Details | RetailCore" }
 
@@ -24,6 +24,7 @@ export default async function EmployeeDetailsPage({
   await requireRole("ADMIN")
   const t = await getTranslations("employeeDetail")
   const tc = await getTranslations("common")
+  const currency = await getSystemCurrency()
   const { id } = await params
 
   const employee = await prisma.employee.findUnique({
@@ -213,7 +214,7 @@ export default async function EmployeeDetailsPage({
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">{t("salary")}</p>
-                  <p className="text-sm font-medium">{formatMoney(employee.salary)}</p>
+                  <p className="text-sm font-medium">{formatMoney(employee.salary, currency)}</p>
                 </div>
               </div>
               <Separator />

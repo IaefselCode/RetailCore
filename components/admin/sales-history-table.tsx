@@ -24,6 +24,7 @@ import {
 } from "@/components/shared/data-table"
 import { refundSale, getCsvExport } from "@/lib/sales-actions"
 import { formatMoney } from "@/lib/money"
+import { useCurrency } from "@/components/providers/currency-provider"
 
 export interface SalesHistoryRow {
   id: string
@@ -78,6 +79,7 @@ export function SalesHistoryTable({
   const searchParams = useSearchParams()
   const t = useTranslations("salesHistory")
   const tc = useTranslations("common")
+  const currency = useCurrency()
   const [pending, startTransition] = useTransition()
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -163,14 +165,14 @@ export function SalesHistoryTable({
       helper.accessor("itemCount", { header: t("colItems"), cell: ({ getValue }) => getValue() as number }),
       helper.accessor("total", {
         header: t("colAmount"),
-        cell: ({ getValue }) => <span className="font-medium">{formatMoney(getValue() as number)}</span>,
+        cell: ({ getValue }) => <span className="font-medium">{formatMoney(getValue() as number, currency)}</span>,
       }),
       helper.accessor("discount", {
         header: t("colDiscount"),
         cell: ({ getValue }) => {
           const d = getValue() as number
           return d > 0 ? (
-            <span className="text-green-600 font-medium">-{formatMoney(d)}</span>
+            <span className="text-green-600 font-medium">-{formatMoney(d, currency)}</span>
           ) : (
             <span className="text-muted-foreground">—</span>
           )

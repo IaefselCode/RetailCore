@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useTranslations } from "next-intl"
+import { useCurrency } from "@/components/providers/currency-provider"
 import {
   TrendingUp,
   TrendingDown,
@@ -160,7 +161,8 @@ function PaymentBreakdown({ methods }: { methods: Record<string, number> }) {
 function PeriodStatsView({ stats }: { stats: PeriodStats }) {
   const t = useTranslations("employeeDetail")
   const tc = useTranslations("common")
-  const formatMoney = (v: number) => `$${v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  const currency = useCurrency()
+  const formatMoney = (v: number) => v.toLocaleString("en-US", { style: "currency", currency, minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
   return (
     <div className="space-y-4">

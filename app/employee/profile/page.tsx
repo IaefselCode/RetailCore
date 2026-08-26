@@ -7,7 +7,7 @@ import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { formatMoney } from "@/lib/money"
+import { formatMoney, getSystemCurrency } from "@/lib/money"
 
 export const metadata = { title: "Profile | RetailCore" }
 
@@ -29,6 +29,7 @@ function yearsOfService(hireDate: Date | null): number | null {
 export default async function EmployeeProfilePage() {
   const ctx = await requireEmployeeContext()
   const t = await getTranslations("employeeProfile")
+  const currency = await getSystemCurrency()
 
   const [user, monthAgg] = await Promise.all([
     prisma.user.findUnique({
@@ -145,7 +146,7 @@ export default async function EmployeeProfilePage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">{t("totalSalesThisMonth")}</p>
-                <p className="text-lg font-bold">{formatMoney(monthAgg._sum.total ?? 0)}</p>
+                <p className="text-lg font-bold">{formatMoney(monthAgg._sum.total ?? 0, currency)}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 rounded-lg border p-3">

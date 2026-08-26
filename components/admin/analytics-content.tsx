@@ -46,6 +46,7 @@ import {
 } from "@/components/shared/data-table"
 import ExcelJS from "exceljs"
 import { formatMoney } from "@/lib/money"
+import { useCurrency } from "@/components/providers/currency-provider"
 import { toast } from "sonner"
 
 const containerVariants = {
@@ -289,6 +290,7 @@ const shopHelper = createAppColumnHelper<ShopRow>()
 function ShopTable({ shops, cardless }: { shops: ShopRow[]; cardless?: boolean }) {
   const t = useTranslations("analytics")
   const tc = useTranslations("common")
+  const currency = useCurrency()
   const columns = shopHelper.columns([
     shopHelper.accessor("name", {
       header: t("colShop"),
@@ -296,17 +298,17 @@ function ShopTable({ shops, cardless }: { shops: ShopRow[]; cardless?: boolean }
     }),
     shopHelper.accessor("revenue", {
       header: t("colRevenue"),
-      cell: ({ getValue }) => <span className="font-medium">{formatMoney(getValue() as number)}</span>,
+      cell: ({ getValue }) => <span className="font-medium">{formatMoney(getValue() as number, currency)}</span>,
     }),
     shopHelper.accessor("cost", {
       header: t("colCost"),
-      cell: ({ getValue }) => <span className="text-muted-foreground">{formatMoney(getValue() as number)}</span>,
+      cell: ({ getValue }) => <span className="text-muted-foreground">{formatMoney(getValue() as number, currency)}</span>,
     }),
     shopHelper.accessor("profit", {
       header: t("colProfit"),
       cell: ({ getValue }) => (
         <span className={getValue() as number >= 0 ? "font-medium" : "font-medium text-destructive"}>
-          {formatMoney(getValue() as number)}
+          {formatMoney(getValue() as number, currency)}
         </span>
       ),
     }),
@@ -354,6 +356,7 @@ const employeeHelper = createAppColumnHelper<EmployeeRow>()
 function EmployeePerformanceTable({ employees, cardless }: { employees: EmployeeRow[]; cardless?: boolean }) {
   const t = useTranslations("analytics")
   const tc = useTranslations("common")
+  const currency = useCurrency()
   const columns = employeeHelper.columns([
     employeeHelper.accessor("name", {
       header: t("colEmployee"),
@@ -364,13 +367,13 @@ function EmployeePerformanceTable({ employees, cardless }: { employees: Employee
     employeeHelper.accessor("units", { header: t("colUnits"), cell: ({ getValue }) => getValue() as number }),
     employeeHelper.accessor("revenue", {
       header: t("colRevenue"),
-      cell: ({ getValue }) => <span className="font-medium">{formatMoney(getValue() as number)}</span>,
+      cell: ({ getValue }) => <span className="font-medium">{formatMoney(getValue() as number, currency)}</span>,
     }),
     employeeHelper.accessor("profit", {
       header: t("colProfit"),
       cell: ({ getValue }) => (
         <span className={getValue() as number >= 0 ? "font-medium" : "font-medium text-destructive"}>
-          {formatMoney(getValue() as number)}
+          {formatMoney(getValue() as number, currency)}
         </span>
       ),
     }),
@@ -398,6 +401,7 @@ export function AnalyticsContent({
 }) {
   const t = useTranslations("analytics")
   const tc = useTranslations("common")
+  const currency = useCurrency()
   const [granularity, setGranularity] = useState<Granularity>(initialView)
   const [chartMode, setChartMode] = useState<ChartMode>("bar")
   const [topMetric, setTopMetric] = useState<TopMetric>("revenue")
@@ -712,9 +716,9 @@ export function AnalyticsContent({
   }, [chartData, data.dailyProducts, data.dailyShops, data.dailyEmployees, startKey, endKey, prevStartKey, prevEndKey, growthUnknown, topMetric])
 
   const kpis = [
-    { labelKey: "revenue", value: formatMoney(summary.windowRevenue), icon: DollarSignIcon },
-    { labelKey: "cost", value: formatMoney(summary.windowCost), icon: WalletIcon },
-    { labelKey: "profit", value: formatMoney(summary.windowProfit), icon: TrendingUpIcon },
+    { labelKey: "revenue", value: formatMoney(summary.windowRevenue, currency), icon: DollarSignIcon },
+    { labelKey: "cost", value: formatMoney(summary.windowCost, currency), icon: WalletIcon },
+    { labelKey: "profit", value: formatMoney(summary.windowProfit, currency), icon: TrendingUpIcon },
     { labelKey: "unitsSold", value: summary.windowUnits.toLocaleString(), icon: PackageIcon },
     { labelKey: "orders", value: summary.windowOrders.toLocaleString(), icon: ShoppingCartIcon },
   ]
@@ -813,7 +817,7 @@ export function AnalyticsContent({
                   content={
                     <ChartTooltipContent
                       indicator="dashed"
-                      formatter={(value) => formatMoney(Number(value))}
+                      formatter={(value) => formatMoney(Number(value), currency)}
                     />
                   }
                 />
@@ -836,7 +840,7 @@ export function AnalyticsContent({
                   content={
                     <ChartTooltipContent
                       indicator="dot"
-                      formatter={(value) => formatMoney(Number(value))}
+                      formatter={(value) => formatMoney(Number(value), currency)}
                     />
                   }
                 />
@@ -899,7 +903,7 @@ export function AnalyticsContent({
                   <span className="text-muted-foreground">
                     {topMetric === "units"
                       ? `${product.metricValue.toLocaleString()} ${t("unitsShort")}`
-                      : formatMoney(product.metricValue)}
+                      : formatMoney(product.metricValue, currency)}
                   </span>
                 </div>
                 <Progress value={product.percentage}>

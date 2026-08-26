@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select"
 import { AnimateButton } from "@/components/ui/animate-button"
 import { formatMoney } from "@/lib/money"
+import { useCurrency } from "@/components/providers/currency-provider"
 import { cn } from "@/lib/utils"
 
 export interface EmployeeProductRow {
@@ -38,6 +39,7 @@ export interface EmployeeProductRow {
 
 export function EmployeeProductCatalog({ products }: { products: EmployeeProductRow[] }) {
   const t = useTranslations("employeeProducts")
+  const currency = useCurrency()
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("All")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
@@ -86,7 +88,7 @@ export function EmployeeProductCatalog({ products }: { products: EmployeeProduct
           {product.description && <p className="text-sm text-muted-foreground">{product.description}</p>}
           <div className="flex items-center justify-between rounded-lg border p-3">
             <span className="text-sm font-medium">{t("price")}</span>
-            <span className="text-lg font-bold">{formatMoney(product.price)}</span>
+            <span className="text-lg font-bold">{formatMoney(product.price, currency)}</span>
           </div>
           <div className="flex items-center justify-between rounded-lg border p-3">
             <span className="text-sm font-medium">{t("shopStock")}</span>
@@ -156,7 +158,7 @@ export function EmployeeProductCatalog({ products }: { products: EmployeeProduct
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-lg font-bold">{formatMoney(product.price)}</p>
+                      <p className="text-lg font-bold">{formatMoney(product.price, currency)}</p>
                       <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
                         <Eye className="size-3" /> {t("clickToView")}
                       </div>
@@ -182,7 +184,7 @@ export function EmployeeProductCatalog({ products }: { products: EmployeeProduct
                     </div>
                     <div className="flex items-center gap-4">
                       <Badge variant={badge.variant}>{t("stockLeft", { count: product.stock })}</Badge>
-                      <span className="text-sm font-semibold">{formatMoney(product.price)}</span>
+                      <span className="text-sm font-semibold">{formatMoney(product.price, currency)}</span>
                     </div>
                   </div>
                 </DialogTrigger>

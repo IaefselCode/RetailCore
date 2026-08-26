@@ -31,6 +31,7 @@ import { Separator } from "@/components/ui/separator"
 import { AnimateButton } from "@/components/ui/animate-button"
 import { recordSale } from "@/lib/sales-actions"
 import { formatMoney } from "@/lib/money"
+import { useCurrency } from "@/components/providers/currency-provider"
 import type { ActionResult } from "@/lib/actions"
 
 export interface PosProduct {
@@ -66,6 +67,7 @@ function RecordSaleFormBody({
   successMessage: string | null
 }) {
   const t = useTranslations("recordSale")
+  const currency = useCurrency()
   const [search, setSearch] = useState("")
   const [cart, setCart] = useState<CartItem[]>([])
   const [paymentMethod, setPaymentMethod] = useState("CASH")
@@ -168,7 +170,7 @@ function RecordSaleFormBody({
                         <div>
                           <p className="text-sm font-medium">{product.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {formatMoney(product.price)} · {t("inStock", { count: product.stock })}
+                            {formatMoney(product.price, currency)} · {t("inStock", { count: product.stock })}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -202,6 +204,7 @@ function RecordSaleFormBody({
                   <CartTable
                     cart={cart}
                     t={t}
+                    currency={currency}
                     onQuantity={updateQuantity}
                     onRemove={removeFromCart}
                   />
@@ -220,7 +223,7 @@ function RecordSaleFormBody({
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{t("subtotal")}</span>
-                  <span className="text-sm font-medium">{formatMoney(subtotal)}</span>
+                  <span className="text-sm font-medium">{formatMoney(subtotal, currency)}</span>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground">{t("discount")}</label>
@@ -238,14 +241,14 @@ function RecordSaleFormBody({
                   />
                   {appliedDiscount > 0 && (
                     <p className="text-xs text-green-600">
-                      -{formatMoney(appliedDiscount)} {t("discountApplied")}
+                      -{formatMoney(appliedDiscount, currency)} {t("discountApplied")}
                     </p>
                   )}
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
                   <span className="text-base font-semibold">{t("total")}</span>
-                  <span className="text-xl font-bold">{formatMoney(total)}</span>
+                  <span className="text-xl font-bold">{formatMoney(total, currency)}</span>
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col gap-3">
@@ -275,11 +278,13 @@ function RecordSaleFormBody({
 function CartTable({
   cart,
   t,
+  currency,
   onQuantity,
   onRemove,
 }: {
   cart: CartItem[]
   t: (key: string, values?: Record<string, string | number>) => string
+  currency: string
   onQuantity: (id: string, quantity: number) => void
   onRemove: (id: string) => void
 }) {
@@ -316,12 +321,12 @@ function CartTable({
       }),
       cartHelper.accessor("price", {
         header: t("colPrice"),
-        cell: ({ getValue }) => formatMoney(getValue() as number),
+        cell: ({ getValue }) => formatMoney(getValue() as number, currency),
       }),
       cartHelper.display({
         id: "subtotal",
         header: t("colSubtotal"),
-        cell: ({ row }) => formatMoney(row.original.price * row.original.quantity),
+        cell: ({ row }) => formatMoney(row.original.price * row.original.quantity, currency),
       }),
       cartHelper.display({
         id: "remove",

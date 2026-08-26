@@ -7,7 +7,7 @@ import { getRequestMeta, type ActionResult } from "@/lib/actions"
 import { logAuditEvent } from "@/lib/audit-log"
 import { nextInvoiceNo } from "@/lib/invoice"
 import { notifyAdmins, checkAndNotifyStockHealth } from "@/lib/notification-actions"
-import { toDecimalString } from "@/lib/money"
+import { toDecimalString, getSystemCurrency } from "@/lib/money"
 import ExcelJS from "exceljs"
 
 function fail(message: string): ActionResult {
@@ -99,6 +99,7 @@ export async function recordSale(_prev: ActionResult | null, formData: FormData)
     const appliedDiscount = Math.min(discount, subtotal)
     const total = subtotal - appliedDiscount
     const invoiceNo = await nextInvoiceNo()
+    const formattedTotal = await formatSaleTotal(total)
 
     await prisma.$transaction(async (tx) => {
       const sale = await tx.sale.create({
@@ -164,7 +165,7 @@ export async function recordSale(_prev: ActionResult | null, formData: FormData)
       actorId: ctx.userId,
       entityType: "Sale",
       entityId: invoiceNo,
-      detail: `${formatSaleTotal(total)} via ${paymentMethod}`,
+      detail: `${formattedTotal} via ${paymentMethod}`,
       ip: meta.ip,
     })
 
@@ -181,10 +182,11 @@ export async function recordSale(_prev: ActionResult | null, formData: FormData)
 
     // 2. Every sale → notify admin
     const employeeName = (ctx.firstName + " " + ctx.lastName).trim()
-    const discountNote = appliedDiscount > 0 ? " (discount: " + formatSaleTotal(appliedDiscount) + ")" : ""
+    const formattedDiscount = appliedDiscount > 0 ? await formatSaleTotal(appliedDiscount) : ""
+    const discountNote = formattedDiscount ? " (discount: " + formattedDiscount + ")" : ""
     await notifyAdmins({
       title: appliedDiscount > 0 ? "Sale with discount recorded" : "New sale recorded",
-      message: "Invoice " + invoiceNo + " — " + formatSaleTotal(total) + " at " + ctx.shopName + (employeeName ? " by " + employeeName : "") + discountNote,
+      message: "Invoice " + invoiceNo + " — " + formattedTotal + " at " + ctx.shopName + (employeeName ? " by " + employeeName : "") + discountNote,
       type: "sales",
     })
 
@@ -192,7 +194,7 @@ export async function recordSale(_prev: ActionResult | null, formData: FormData)
     if (total >= 500_000) {
       await notifyAdmins({
         title: "High-value sale",
-        message: "Invoice " + invoiceNo + " — " + formatSaleTotal(total) + " at " + ctx.shopName,
+        message: "Invoice " + invoiceNo + " — " + formattedTotal + " at " + ctx.shopName,
         type: "sales",
       })
     }
@@ -200,7 +202,7 @@ export async function recordSale(_prev: ActionResult | null, formData: FormData)
 
     return {
       success: true,
-      message: `Sale completed! Invoice ${invoiceNo} — ${formatSaleTotal(total)}`,
+      message: `Sale completed! Invoice ${invoiceNo} — ${formattedTotal}`,
     }
   } catch (err) {
     console.error("recordSale failed:", err)
@@ -208,8 +210,9 @@ export async function recordSale(_prev: ActionResult | null, formData: FormData)
   }
 }
 
-function formatSaleTotal(total: number): string {
-  return total.toLocaleString("en-US", { style: "currency", currency: "USD" })
+async function formatSaleTotal(total: number): Promise<string> {
+  const currency = await getSystemCurrency()
+  return total.toLocaleString("en-US", { style: "currency", currency })
 }
 
 export async function refundSale(formData: FormData): Promise<ActionResult> {
@@ -279,7 +282,7 @@ export async function refundSale(formData: FormData): Promise<ActionResult> {
     // Notify admins about the refund
     await notifyAdmins({
       title: "Sale refunded",
-      message: "Invoice " + sale.invoiceNo + " (" + formatSaleTotal(Number(sale.total)) + ") at " + sale.shop.name + " has been voided",
+      message: "Invoice " + sale.invoiceNo + " (" + await formatSaleTotal(Number(sale.total)) + ") at " + sale.shop.name + " has been voided",
       type: "operational",
     })
 

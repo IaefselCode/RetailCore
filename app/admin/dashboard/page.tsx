@@ -6,7 +6,7 @@ import { getTranslations } from "next-intl/server"
 import { AdminDashboard } from "@/components/admin/admin-dashboard"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { formatMoney } from "@/lib/money"
+import { formatMoney, getSystemCurrency } from "@/lib/money"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SkeletonStat, TableRowsSkeleton, ListSkeleton } from "@/components/shared/skeleton-primitives"
 import { RecentSalesTable } from "@/components/admin/recent-sales-table"
@@ -42,7 +42,8 @@ async function TodaySalesValue() {
     where: { status: "COMPLETED", createdAt: { gte: startOfDay(new Date()) } },
     _sum: { subtotal: true },
   })
-  return <>{formatMoney(agg._sum.subtotal ?? 0)}</>
+  const currency = await getSystemCurrency()
+  return <>{formatMoney(agg._sum.subtotal ?? 0, currency)}</>
 }
 
 async function TodayProfitValue() {
@@ -50,7 +51,8 @@ async function TodayProfitValue() {
     where: { status: "COMPLETED", createdAt: { gte: startOfDay(new Date()) } },
     _sum: { totalProfit: true },
   })
-  return <>{formatMoney(agg._sum.totalProfit ?? 0)}</>
+  const currency = await getSystemCurrency()
+  return <>{formatMoney(agg._sum.totalProfit ?? 0, currency)}</>
 }
 
 async function UnitsTodayValue() {
@@ -73,7 +75,8 @@ async function MonthRevenueValue() {
     where: { status: "COMPLETED", createdAt: { gte: startOfMonth(new Date()) } },
     _sum: { subtotal: true },
   })
-  return <>{formatMoney(agg._sum.subtotal ?? 0)}</>
+  const currency = await getSystemCurrency()
+  return <>{formatMoney(agg._sum.subtotal ?? 0, currency)}</>
 }
 
 async function InventoryValueValue() {
@@ -81,7 +84,8 @@ async function InventoryValueValue() {
     select: { quantity: true, product: { select: { cost: true } } },
   })
   const value = rows.reduce((sum, r) => sum + r.quantity * (Number(r.product.cost) || 0), 0)
-  return <>{formatMoney(value)}</>
+  const currency = await getSystemCurrency()
+  return <>{formatMoney(value, currency)}</>
 }
 
 async function LowStockCountValue() {
@@ -125,6 +129,7 @@ const MONTH_KEYS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep
 
 async function AnalyticsSection() {
   const t = await getTranslations("dashboard")
+  const currency = await getSystemCurrency()
   const twelveMonthsAgo = new Date()
   twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11, 1)
   twelveMonthsAgo.setHours(0, 0, 0, 0)
@@ -165,7 +170,7 @@ async function AnalyticsSection() {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <div>
         <p className="text-xs text-muted-foreground">{t("analyticsRevenue")}</p>
-        <p className="text-xl font-semibold">{formatMoney(revenue)}</p>
+        <p className="text-xl font-semibold">{formatMoney(revenue, currency)}</p>
       </div>
       <div>
         <p className="text-xs text-muted-foreground">{t("analyticsOrders")}</p>
@@ -174,7 +179,7 @@ async function AnalyticsSection() {
       <div>
         <p className="text-xs text-muted-foreground">{t("analyticsBestMonth")}</p>
         <p className="text-xl font-semibold">{bestLabel}</p>
-        <p className="text-xs text-muted-foreground">{formatMoney(bestValue)}</p>
+        <p className="text-xs text-muted-foreground">{formatMoney(bestValue, currency)}</p>
       </div>
     </div>
   )

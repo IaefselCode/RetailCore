@@ -9,7 +9,7 @@ import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { ShopEmployeesTable } from "@/components/admin/shop-employees-table"
 import { ShopSalesTable } from "@/components/admin/shop-sales-table"
 import Link from "next/link"
-import { formatMoney } from "@/lib/money"
+import { formatMoney, getSystemCurrency } from "@/lib/money"
 
 export const metadata = { title: "Shop Details | RetailCore" }
 
@@ -54,6 +54,7 @@ export default async function ShopDetailsPage({
   await requireRole("ADMIN")
   const t = await getTranslations("shopDetail")
   const tc = await getTranslations("common")
+  const currency = await getSystemCurrency()
   const { id } = await params
 
   const shop = await prisma.shop.findUnique({
@@ -139,7 +140,7 @@ export default async function ShopDetailsPage({
             <DollarSign className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatMoney(revenue._sum.total)}</div>
+            <div className="text-2xl font-bold">{formatMoney(revenue._sum.total, currency)}</div>
           </CardContent>
         </Card>
         <Card>

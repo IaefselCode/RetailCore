@@ -31,6 +31,7 @@ import {
 import { AnimateButton } from "@/components/ui/animate-button"
 import { purchaseStock } from "@/lib/inventory-actions"
 import { formatMoney } from "@/lib/money"
+import { useCurrency } from "@/components/providers/currency-provider"
 
 interface ShopOption {
   id: string
@@ -51,10 +52,12 @@ const lineHelper = createAppColumnHelper<LineItem>()
 function LineItemsTable({
   items,
   t,
+  currency,
   onRemove,
 }: {
   items: LineItem[]
   t: (key: string, values?: Record<string, string | number>) => string
+  currency: string
   onRemove: (index: number) => void
 }) {
   const table = useAppTable({
@@ -70,14 +73,15 @@ function LineItemsTable({
       }),
       lineHelper.accessor("unitCost", {
         header: t("unitCost"),
-        cell: ({ getValue }) => formatMoney(parseFloat(getValue() as string) || 0),
+        cell: ({ getValue }) => formatMoney(parseFloat(getValue() as string) || 0, currency),
       }),
       lineHelper.display({
         id: "lineTotal",
         header: t("lineTotal"),
         cell: ({ row }) =>
           formatMoney(
-            (parseFloat(row.original.quantity) || 0) * (parseFloat(row.original.unitCost) || 0)
+            (parseFloat(row.original.quantity) || 0) * (parseFloat(row.original.unitCost) || 0),
+            currency
           ),
       }),
       lineHelper.display({
@@ -140,6 +144,7 @@ export function PurchaseStockForm({
   const t = useTranslations("purchaseStock")
   const tc = useTranslations("common")
   const tn = useTranslations("nav")
+  const currency = useCurrency()
   const [pending, startTransition] = useTransition()
   const [shopId, setShopId] = useState("")
   const [reference, setReference] = useState("")
@@ -278,12 +283,13 @@ export function PurchaseStockForm({
             <LineItemsTable
               items={lineItems}
               t={t}
+              currency={currency}
               onRemove={removeLineItem}
             />
           )}
 
           <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">{t("estimatedTotal")}: <span className="font-semibold text-foreground">{formatMoney(totalCost)}</span></p>
+            <p className="text-sm text-muted-foreground">{t("estimatedTotal")}: <span className="font-semibold text-foreground">{formatMoney(totalCost, currency)}</span></p>
             <AnimateButton variant="accent" onClick={submit} disabled={pending}>
               <Save className="size-4" />
               {t("submitPurchase")}

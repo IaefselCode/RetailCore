@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { deleteProduct, updateStockLevels } from "@/lib/products-actions"
 import { formatMoney } from "@/lib/money"
+import { useCurrency } from "@/components/providers/currency-provider"
 import { isLowOrOut } from "@/lib/stock-status"
 
 export interface ProductDetailData {
@@ -59,6 +60,7 @@ export function ProductDetailActions({ product }: { product: ProductDetailData }
   const t = useTranslations("productDetail")
   const tc = useTranslations("common")
   const tn = useTranslations("nav")
+  const currency = useCurrency()
   const [pending, startTransition] = useTransition()
   const [savingId, setSavingId] = useState<string | null>(null)
   const [drafts, setDrafts] = useState<Record<string, { min: string; max: string }>>(() =>
@@ -180,11 +182,11 @@ export function ProductDetailActions({ product }: { product: ProductDetailData }
           <CardContent className="space-y-2">
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t("price")}</span>
-              <span className="font-semibold">{formatMoney(product.price)}</span>
+              <span className="font-semibold">{formatMoney(product.price, currency)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t("cost")}</span>
-              <span>{product.cost != null ? formatMoney(product.cost) : "—"}</span>
+              <span>{product.cost != null ? formatMoney(product.cost, currency) : "—"}</span>
             </div>
             {margin != null && (
               <div className="flex justify-between">
