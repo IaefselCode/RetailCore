@@ -843,6 +843,8 @@
     "compactDashboard": "Compact Dashboard",
     "compactDashboardDesc": "Show more information on the dashboard",
     "saveChanges": "Save Changes",
+    "firstName": "First Name",
+    "lastName": "Last Name",
     "saved": "Profile updated successfully"
   },
   "settings": {

@@ -126,7 +126,7 @@ export function AdminSidebar({ onNavClick }: AdminSidebarProps) {
               {tn("profile")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
+            <DropdownMenuItem className="text-destructive" onClick={() => signOut({ callbackUrl: "/login" })}>
               <LogOut className="size-4" />
               {tc("signOut")}
             </DropdownMenuItem>

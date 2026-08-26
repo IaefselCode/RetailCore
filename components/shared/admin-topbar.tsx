@@ -74,7 +74,7 @@ export function AdminTopbar({ onMenuClick, notificationSlot }: AdminTopbarProps)
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
+            <DropdownMenuItem className="text-destructive" onClick={() => signOut({ callbackUrl: "/login" })}>
               <LogOut className="size-4" />
               Sign out
             </DropdownMenuItem>
