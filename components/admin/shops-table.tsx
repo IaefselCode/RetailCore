@@ -23,7 +23,7 @@ import {
   DataTable,
   createAppColumnHelper,
 } from "@/components/shared/data-table"
-import { setShopActive, deleteShop } from "@/lib/organization-actions"
+import { setShopActive, deleteShop, deleteAllShops } from "@/lib/organization-actions"
 import { ShopFormDialog, type ShopRow } from "@/components/admin/shop-form-dialog"
 
 const helper = createAppColumnHelper<ShopRow>()
@@ -34,6 +34,7 @@ export function ShopsTable({ shops }: { shops: ShopRow[] }) {
   const router = useRouter()
   const [editing, setEditing] = useState<ShopRow | null | undefined>(undefined)
   const [deleteTarget, setDeleteTarget] = useState<ShopRow | null>(null)
+  const [deleteAllOpen, setDeleteAllOpen] = useState(false)
   const [pending, startTransition] = useTransition()
 
   function toggle(shop: ShopRow) {
@@ -134,6 +135,19 @@ export function ShopsTable({ shops }: { shops: ShopRow[] }) {
         numbered
         pagination
         empty={t("noResults")}
+        toolbar={() => (
+          <div className="flex items-center gap-2">
+            <AnimateButton
+              variant="destructive"
+              size="sm"
+              onClick={() => setDeleteAllOpen(true)}
+              disabled={pending || shops.length === 0}
+            >
+              <Trash2 className="size-4" />
+              Delete All
+            </AnimateButton>
+          </div>
+        )}
       />
 
       <div className="flex justify-end">
@@ -163,6 +177,42 @@ export function ShopsTable({ shops }: { shops: ShopRow[] }) {
             <AlertDialogCancel onClick={() => setDeleteTarget(null)}>{tc("cancel")}</AlertDialogCancel>
             <AlertDialogAction variant="destructive" disabled={pending} onClick={confirmDelete}>
               {t("deleteConfirmButton")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete all dialog */}
+      <AlertDialog open={deleteAllOpen} onOpenChange={setDeleteAllOpen}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogMedia>
+              <AlertTriangle className="size-8 text-destructive" />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Delete all shops?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all {shops.length} shops, their employees, sales, and inventory. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={pending}
+              onClick={() => {
+                startTransition(async () => {
+                  const result = await deleteAllShops()
+                  setDeleteAllOpen(false)
+                  if (result.success) {
+                    toast.success(result.message)
+                    router.refresh()
+                  } else {
+                    toast.error(result.message)
+                  }
+                })
+              }}
+            >
+              Delete All
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

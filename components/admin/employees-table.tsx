@@ -30,7 +30,7 @@ import {
   DataTable,
   createAppColumnHelper,
 } from "@/components/shared/data-table"
-import { setEmployeeActive, deleteEmployee } from "@/lib/organization-actions"
+import { setEmployeeActive, deleteEmployee, deleteAllEmployees } from "@/lib/organization-actions"
 import { EmployeeFormDialog, type EmployeeRow, type ShopOption } from "@/components/admin/employee-form-dialog"
 
 const helper = createAppColumnHelper<EmployeeRow>()
@@ -47,6 +47,7 @@ export function EmployeesTable({
   const tc = useTranslations("common")
   const [editing, setEditing] = useState<EmployeeRow | null | undefined>(undefined)
   const [deleting, setDeleting] = useState<EmployeeRow | null>(null)
+  const [deleteAllOpen, setDeleteAllOpen] = useState(false)
   const [pending, startTransition] = useTransition()
 
   function toggle(emp: EmployeeRow) {
@@ -147,23 +148,34 @@ export function EmployeesTable({
         numbered
         pagination
         toolbar={(table) => (
-          <Select
-            value={String((table.getColumn("shop")?.getFilterValue() as string) ?? "all")}
-            onValueChange={(v) => {
-              if (!v) return
-              table.getColumn("shop")?.setFilterValue(v === "all" ? undefined : v)
-            }}
-          >
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder={t("allShops")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("allShops")}</SelectItem>
-              {shops.map((s) => (
-                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select
+              value={String((table.getColumn("shop")?.getFilterValue() as string) ?? "all")}
+              onValueChange={(v) => {
+                if (!v) return
+                table.getColumn("shop")?.setFilterValue(v === "all" ? undefined : v)
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder={t("allShops")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("allShops")}</SelectItem>
+                {shops.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <AnimateButton
+              variant="destructive"
+              size="sm"
+              onClick={() => setDeleteAllOpen(true)}
+              disabled={pending || employees.length === 0}
+            >
+              <Trash2 className="size-4" />
+              Delete All
+            </AnimateButton>
+          </div>
         )}
         empty={t("noResults")}
       />
@@ -177,6 +189,7 @@ export function EmployeesTable({
         }}
       />
 
+      {/* Single delete dialog */}
       <AlertDialog open={deleting !== null} onOpenChange={(open) => { if (!open) setDeleting(null) }}>
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
@@ -205,6 +218,39 @@ export function EmployeesTable({
               }}
             >
               {t("deleteConfirmButton")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete all dialog */}
+      <AlertDialog open={deleteAllOpen} onOpenChange={setDeleteAllOpen}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete all employees?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all {employees.length} employees, their sales history, and all related data. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={pending}
+              onClick={() => {
+                startTransition(async () => {
+                  const result = await deleteAllEmployees()
+                  setDeleteAllOpen(false)
+                  if (result.success) {
+                    toast.success(result.message)
+                    router.refresh()
+                  } else {
+                    toast.error(result.message)
+                  }
+                })
+              }}
+            >
+              Delete All
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

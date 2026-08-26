@@ -433,3 +433,95 @@ export async function deleteEmployee(formData: FormData): Promise<ActionResult> 
     return fail("Something went wrong. Please try again.")
   }
 }
+
+export async function deleteAllShops(): Promise<ActionResult> {
+  const actorId = await requireAdmin()
+  if (!actorId) return fail("You do not have permission to do that.")
+
+  try {
+    const count = await prisma.shop.count()
+    if (count === 0) return fail("No shops to delete.")
+
+    await prisma.$transaction(async (tx) => {
+      // Delete all shop-related data
+      const employees = await tx.employee.findMany({ select: { userId: true } })
+      const sales = await tx.sale.findMany({ select: { id: true } })
+      const saleIds = sales.map((s) => s.id)
+
+      if (saleIds.length > 0) {
+        await tx.saleItem.deleteMany({ where: { saleId: { in: saleIds } } })
+      }
+      await tx.sale.deleteMany({})
+      await tx.stockTransaction.deleteMany({})
+      await tx.inventory.deleteMany({})
+      await tx.employee.deleteMany({})
+      if (employees.length > 0) {
+        await tx.user.deleteMany({ where: { id: { in: employees.map((e) => e.userId) } } })
+      }
+      await tx.shop.deleteMany({})
+    })
+
+    const meta = await getRequestMeta()
+    await logAuditEvent("shops_deleted_all", {
+      actorId,
+      entityType: "Shop",
+      detail: `Deleted ${count} shops`,
+      ip: meta.ip,
+    })
+    revalidatePath("/admin/shops")
+    revalidatePath("/admin/employees")
+    revalidatePath("/admin/dashboard")
+    return { success: true, message: `All ${count} shops deleted.` }
+  } catch (err) {
+    console.error("deleteAllShops failed:", err)
+    return fail("Something went wrong. Please try again.")
+  }
+}
+
+export async function deleteAllEmployees(): Promise<ActionResult> {
+  const actorId = await requireAdmin()
+  if (!actorId) return fail("You do not have permission to do that.")
+
+  try {
+    const count = await prisma.employee.count()
+    if (count === 0) return fail("No employees to delete.")
+
+    await prisma.$transaction(async (tx) => {
+      const employees = await tx.employee.findMany({ select: { userId: true, id: true } })
+      const empIds = employees.map((e) => e.id)
+      const userIds = employees.map((e) => e.userId)
+
+      // Delete sales and sale items for these employees
+      const sales = await tx.sale.findMany({ where: { employeeId: { in: empIds } }, select: { id: true } })
+      const saleIds = sales.map((s) => s.id)
+      if (saleIds.length > 0) {
+        await tx.saleItem.deleteMany({ where: { saleId: { in: saleIds } } })
+      }
+      await tx.sale.deleteMany({ where: { employeeId: { in: empIds } } })
+
+      // Delete user-related data
+      await tx.notification.deleteMany({ where: { userId: { in: userIds } } })
+      await tx.authLog.deleteMany({ where: { userId: { in: userIds } } })
+      await tx.refreshToken.deleteMany({ where: { userId: { in: userIds } } })
+      await tx.notificationPreference.deleteMany({ where: { userId: { in: userIds } } })
+      await tx.auditLog.deleteMany({ where: { actorId: { in: userIds } } })
+
+      await tx.employee.deleteMany({})
+      await tx.user.deleteMany({ where: { id: { in: userIds } } })
+    })
+
+    const meta = await getRequestMeta()
+    await logAuditEvent("employees_deleted_all", {
+      actorId,
+      entityType: "Employee",
+      detail: `Deleted ${count} employees`,
+      ip: meta.ip,
+    })
+    revalidatePath("/admin/employees")
+    revalidatePath("/admin/dashboard")
+    return { success: true, message: `All ${count} employees deleted.` }
+  } catch (err) {
+    console.error("deleteAllEmployees failed:", err)
+    return fail("Something went wrong. Please try again.")
+  }
+}

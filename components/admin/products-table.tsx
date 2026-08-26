@@ -38,7 +38,7 @@ import {
   DataTable,
   createAppColumnHelper,
 } from "@/components/shared/data-table"
-import { toggleProductActive, deleteProduct } from "@/lib/products-actions"
+import { toggleProductActive, deleteProduct, deleteAllProducts } from "@/lib/products-actions"
 import { formatMoney } from "@/lib/money"
 import { useCurrency } from "@/components/providers/currency-provider"
 
@@ -81,6 +81,7 @@ export function ProductsTable({
   const tc = useTranslations("common")
   const currency = useCurrency()
   const [deleteTarget, setDeleteTarget] = useState<ProductRow | null>(null)
+  const [deleteAllOpen, setDeleteAllOpen] = useState(false)
   const [viewMode, setViewMode] = useState<"table" | "cards">("table")
   const [pending, startTransition] = useTransition()
 
@@ -325,6 +326,15 @@ export function ProductsTable({
               <SelectItem value="inactive">{t("inactive")}</SelectItem>
             </SelectContent>
           </Select>
+          <AnimateButton
+              variant="destructive"
+              size="sm"
+              onClick={() => setDeleteAllOpen(true)}
+              disabled={pending || products.length === 0}
+            >
+              <Trash2 className="size-4" />
+              Delete All
+            </AnimateButton>
           <div className="flex items-center rounded-lg border p-0.5">
             <AnimateButton
               variant={viewMode === "table" ? "secondary" : "ghost"}
@@ -377,6 +387,42 @@ export function ProductsTable({
           <AlertDialogCancel onClick={() => setDeleteTarget(null)}>{tc("cancel")}</AlertDialogCancel>
           <AlertDialogAction variant="destructive" disabled={pending} onClick={confirmDelete}>
             {t("deleteConfirmButton")}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    {/* Delete all dialog */}
+    <AlertDialog open={deleteAllOpen} onOpenChange={setDeleteAllOpen}>
+      <AlertDialogContent size="sm">
+        <AlertDialogHeader>
+          <AlertDialogMedia>
+            <AlertTriangle className="size-8 text-destructive" />
+          </AlertDialogMedia>
+          <AlertDialogTitle>Delete all products?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will permanently delete all {products.length} products, their inventory, and stock history. This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            disabled={pending}
+            onClick={() => {
+              startTransition(async () => {
+                const result = await deleteAllProducts()
+                setDeleteAllOpen(false)
+                if (result.success) {
+                  toast.success(result.message)
+                  router.refresh()
+                } else {
+                  toast.error(result.message)
+                }
+              })
+            }}
+          >
+            Delete All
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

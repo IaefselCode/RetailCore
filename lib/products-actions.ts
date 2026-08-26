@@ -337,3 +337,39 @@ export async function updateStockLevels(formData: FormData): Promise<ActionResul
     return fail("Something went wrong. Please try again.")
   }
 }
+
+export async function deleteAllProducts(): Promise<ActionResult> {
+  const actorId = await requireAdmin()
+  if (!actorId) return fail("You do not have permission to do that.")
+
+  try {
+    const count = await prisma.product.count()
+    if (count === 0) return fail("No products to delete.")
+
+    await prisma.$transaction(async (tx) => {
+      // Delete all product-related data
+      const products = await tx.product.findMany({ select: { id: true } })
+      const productIds = products.map((p) => p.id)
+
+      await tx.saleItem.deleteMany({ where: { productId: { in: productIds } } })
+      await tx.stockTransaction.deleteMany({ where: { productId: { in: productIds } } })
+      await tx.inventory.deleteMany({ where: { productId: { in: productIds } } })
+      await tx.product.deleteMany({})
+    })
+
+    const meta = await getRequestMeta()
+    await logAuditEvent("products_deleted_all", {
+      actorId,
+      entityType: "Product",
+      detail: `Deleted ${count} products`,
+      ip: meta.ip,
+    })
+    revalidatePath("/admin/products")
+    revalidatePath("/admin/inventory")
+    revalidatePath("/admin/dashboard")
+    return { success: true, message: `All ${count} products deleted.` }
+  } catch (err) {
+    console.error("deleteAllProducts failed:", err)
+    return fail("Something went wrong. Please try again.")
+  }
+}
