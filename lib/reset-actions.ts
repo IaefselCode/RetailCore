@@ -26,6 +26,24 @@ async function getRequestMeta() {
   }
 }
 
+/**
+ * Derive the base URL from request headers so the password reset link always
+ * points to the correct host, even in production on Vercel.
+ */
+async function getBaseUrl(): Promise<string> {
+  // Explicit env override takes priority (e.g. for local dev or custom domains)
+  const envUrl = process.env.AUTH_URL || process.env.NEXTAUTH_URL
+  if (envUrl) return envUrl.replace(/\/$/, "")
+
+  const h = await headers()
+  const proto = h.get("x-forwarded-proto") || "https"
+  const host = h.get("host")
+  if (host) return `${proto}://${host}`
+
+  // Last resort fallback
+  return process.env.NODE_ENV === "development" ? "http://localhost:3000" : ""
+}
+
 export async function requestPasswordReset(
   _prevState: unknown,
   formData: FormData
@@ -67,11 +85,7 @@ export async function requestPasswordReset(
       userAgent,
     })
 
-    const baseUrl =
-      process.env.AUTH_URL ||
-      (process.env.NODE_ENV === "development"
-        ? "http://localhost:3000"
-        : "")
+    const baseUrl = await getBaseUrl()
     await sendPasswordResetEmail(
       email,
       `${baseUrl}/reset-password?token=${token}`

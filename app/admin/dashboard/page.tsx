@@ -200,38 +200,67 @@ async function StockHealthOverview() {
     return <p className="py-8 text-center text-sm text-muted-foreground">{t("stockHealthEmpty")}</p>
   }
 
+  // Desktop: full table. Mobile: compact card layout.
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>{t("colShop")}</TableHead>
-          <TableHead className="text-right">{t("colOut")}</TableHead>
-          <TableHead className="text-right">{t("colLow")}</TableHead>
-          <TableHead className="text-right">{t("colOver")}</TableHead>
-          <TableHead className="text-right">{t("colHealthy")}</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
+    <>
+      {/* Desktop table */}
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("colShop")}</TableHead>
+              <TableHead className="text-right">{t("colOut")}</TableHead>
+              <TableHead className="text-right">{t("colLow")}</TableHead>
+              <TableHead className="text-right">{t("colOver")}</TableHead>
+              <TableHead className="text-right">{t("colHealthy")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {perShop.map((r) => (
+              <TableRow key={r.shopId}>
+                <TableCell className="font-medium">{r.shopName}</TableCell>
+                <TableCell className="text-right tabular-nums text-red-600">{r.out}</TableCell>
+                <TableCell className="text-right tabular-nums text-yellow-600">{r.low}</TableCell>
+                <TableCell className="text-right tabular-nums text-blue-600">{r.over}</TableCell>
+                <TableCell className="text-right tabular-nums text-green-600">{r.healthy}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell className="font-medium">{t("colTotal")}</TableCell>
+              <TableCell className="text-right tabular-nums text-red-600">{totals.out}</TableCell>
+              <TableCell className="text-right tabular-nums text-yellow-600">{totals.low}</TableCell>
+              <TableCell className="text-right tabular-nums text-blue-600">{totals.over}</TableCell>
+              <TableCell className="text-right tabular-nums text-green-600">{totals.healthy}</TableCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </div>
+      {/* Mobile: stacked cards */}
+      <div className="divide-y md:hidden">
         {perShop.map((r) => (
-          <TableRow key={r.shopId}>
-            <TableCell className="font-medium">{r.shopName}</TableCell>
-            <TableCell className="text-right tabular-nums text-red-600">{r.out}</TableCell>
-            <TableCell className="text-right tabular-nums text-yellow-600">{r.low}</TableCell>
-            <TableCell className="text-right tabular-nums text-blue-600">{r.over}</TableCell>
-            <TableCell className="text-right tabular-nums text-green-600">{r.healthy}</TableCell>
-          </TableRow>
+          <div key={r.shopId} className="flex items-center justify-between px-4 py-3">
+            <p className="text-sm font-medium truncate">{r.shopName}</p>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-red-600">Out {r.out}</span>
+              <span className="text-yellow-600">Low {r.low}</span>
+              <span className="text-blue-600">Over {r.over}</span>
+              <span className="text-green-600">OK {r.healthy}</span>
+            </div>
+          </div>
         ))}
-      </TableBody>
-      <TableFooter>
-        <TableRow>
-          <TableCell className="font-medium">{t("colTotal")}</TableCell>
-          <TableCell className="text-right tabular-nums text-red-600">{totals.out}</TableCell>
-          <TableCell className="text-right tabular-nums text-yellow-600">{totals.low}</TableCell>
-          <TableCell className="text-right tabular-nums text-blue-600">{totals.over}</TableCell>
-          <TableCell className="text-right tabular-nums text-green-600">{totals.healthy}</TableCell>
-        </TableRow>
-      </TableFooter>
-    </Table>
+        <div className="flex items-center justify-between px-4 py-3 bg-muted/50">
+          <p className="text-sm font-bold">{t("colTotal")}</p>
+          <div className="flex items-center gap-2 text-xs font-bold">
+            <span className="text-red-600">Out {totals.out}</span>
+            <span className="text-yellow-600">Low {totals.low}</span>
+            <span className="text-blue-600">Over {totals.over}</span>
+            <span className="text-green-600">OK {totals.healthy}</span>
+          </div>
+        </div>
+      </div>
+    </>
   )
 }
 

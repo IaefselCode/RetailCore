@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { formatMoney } from "@/lib/money"
 import { useCurrency } from "@/components/providers/currency-provider"
+import { useFormattedDate } from "@/components/providers/date-format-provider"
 import { DataTable, createAppColumnHelper } from "@/components/shared/data-table"
 
 interface SaleRow {
@@ -30,6 +31,7 @@ const statusBadge: Record<string, "default" | "secondary" | "destructive"> = {
 }
 
 export function RecentTransactionsTable({ rows, cardless }: { rows: SaleRow[]; cardless?: boolean }) {
+  const fmtDate = useFormattedDate()
   const t = useTranslations("sales")
   const currency = useCurrency()
 
@@ -78,7 +80,7 @@ export function RecentTransactionsTable({ rows, cardless }: { rows: SaleRow[]; c
     helper.accessor("createdAt", {
       header: t("colDate"),
       cell: ({ getValue }) => (
-        <span className="text-muted-foreground">{(getValue() as Date).toLocaleDateString()}</span>
+        <span className="text-muted-foreground">{fmtDate(getValue() as Date)}</span>
       ),
     }),
     helper.accessor("status", {

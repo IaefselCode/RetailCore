@@ -187,11 +187,11 @@ export function AdminDashboard({
             </Link>
           </AnimateButton>
         </CardHeader>
-        <CardContent className="p-0">{stockHealthContent}</CardContent>
+        <CardContent className="p-0 overflow-x-auto">{stockHealthContent}</CardContent>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+        <Card className="lg:col-span-2 overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
@@ -205,7 +205,7 @@ export function AdminDashboard({
               </Link>
             </AnimateButton>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-x-auto">
             {recentSalesContent}
           </CardContent>
         </Card>

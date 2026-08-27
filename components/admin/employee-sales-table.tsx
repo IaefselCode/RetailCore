@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { formatMoney } from "@/lib/money"
 import { useCurrency } from "@/components/providers/currency-provider"
 import { DataTable, createAppColumnHelper } from "@/components/shared/data-table"
+import { useFormattedDate } from "@/components/providers/date-format-provider"
 
 interface EmpSaleRow {
   id: string
@@ -35,6 +36,7 @@ const STATUS_KEYS: Record<string, string> = {
 }
 
 export function EmployeeSalesTable({ rows, cardless }: { rows: EmpSaleRow[]; cardless?: boolean }) {
+  const fmtDate = useFormattedDate()
   const t = useTranslations("employeeDetail")
   const currency = useCurrency()
 
@@ -75,7 +77,7 @@ export function EmployeeSalesTable({ rows, cardless }: { rows: EmpSaleRow[]; car
     helper.accessor("createdAt", {
       header: t("colDate"),
       cell: ({ getValue }) => (
-        <span className="text-muted-foreground">{(getValue() as Date).toLocaleDateString()}</span>
+        <span className="text-muted-foreground">{fmtDate(getValue() as Date)}</span>
       ),
     }),
     helper.accessor("status", {

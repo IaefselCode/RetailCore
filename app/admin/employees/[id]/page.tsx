@@ -6,13 +6,14 @@ import { ChevronRight, ArrowLeft, Mail, Phone, Store } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { EmployeeSalesTable } from "@/components/admin/employee-sales-table"
 import { EmployeePerformance, type PeriodStats } from "@/components/admin/employee-performance"
 import Link from "next/link"
 import { formatMoney, getSystemCurrency } from "@/lib/money"
+import { formatDateLong } from "@/lib/date-format"
 
 export const metadata = { title: "Employee Details | RetailCore" }
 
@@ -30,7 +31,15 @@ export default async function EmployeeDetailsPage({
   const employee = await prisma.employee.findUnique({
     where: { id },
     include: {
-      user: true,
+      user: {
+        select: {
+          firstName: true,
+          lastName: true,
+          email: true,
+          phone: true,
+          imageUrl: true,
+        },
+      },
       shop: true,
       sales: {
         orderBy: { createdAt: "desc" },
@@ -161,6 +170,7 @@ export default async function EmployeeDetailsPage({
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="flex items-center gap-4">
           <Avatar className="size-14">
+            {user.imageUrl ? <AvatarImage src={user.imageUrl} alt={`${user.firstName} ${user.lastName}`} /> : null}
             <AvatarFallback className="text-sm font-medium">{initials}</AvatarFallback>
           </Avatar>
           <div>
@@ -209,7 +219,7 @@ export default async function EmployeeDetailsPage({
                 <div>
                   <p className="text-xs text-muted-foreground">{t("hireDate")}</p>
                   <p className="text-sm font-medium">
-                    {employee.hireDate ? new Date(employee.hireDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "â€”"}
+                    {formatDateLong(employee.hireDate)}
                   </p>
                 </div>
                 <div>

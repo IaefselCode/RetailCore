@@ -25,6 +25,7 @@ import {
 import { refundSale, getCsvExport } from "@/lib/sales-actions"
 import { formatMoney } from "@/lib/money"
 import { useCurrency } from "@/components/providers/currency-provider"
+import { useFormattedDate } from "@/components/providers/date-format-provider"
 
 export interface SalesHistoryRow {
   id: string
@@ -80,6 +81,7 @@ export function SalesHistoryTable({
   const t = useTranslations("salesHistory")
   const tc = useTranslations("common")
   const currency = useCurrency()
+  const fmtDate = useFormattedDate()
   const [pending, startTransition] = useTransition()
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -185,7 +187,7 @@ export function SalesHistoryTable({
       helper.accessor("createdAt", {
         header: t("colDate"),
         cell: ({ getValue }) => (
-          <span className="text-muted-foreground">{new Date(getValue() as string).toLocaleDateString()}</span>
+          <span className="text-muted-foreground">{fmtDate(getValue() as string)}</span>
         ),
       }),
       helper.accessor("status", {

@@ -5,7 +5,9 @@ import { EmployeeShell } from "@/components/shared/employee-shell"
 import { NotificationProvider } from "@/components/shared/notification-provider"
 import { NotificationBell } from "@/components/shared/notification-bell"
 import { CurrencyProvider } from "@/components/providers/currency-provider"
+import { DateFormatProvider } from "@/components/providers/date-format-provider"
 import { getSystemCurrency } from "@/lib/money"
+import { getDateFormat } from "@/lib/date-format"
 
 export default async function EmployeeLayout({ children }: { children: React.ReactNode }) {
   await requireRole("EMPLOYEE")
@@ -15,8 +17,10 @@ export default async function EmployeeLayout({ children }: { children: React.Rea
     ? await prisma.notification.count({ where: { userId, isRead: false } })
     : 0
   const currency = await getSystemCurrency()
+  const dateFormat = await getDateFormat()
 
   return (
+    <DateFormatProvider dateFormat={dateFormat}>
     <CurrencyProvider currency={currency}>
       <NotificationProvider userId={userId} initialCount={initialCount}>
         <EmployeeShell notificationSlot={<NotificationBell href="/employee/notifications" size="icon-sm" />}>
@@ -24,5 +28,6 @@ export default async function EmployeeLayout({ children }: { children: React.Rea
         </EmployeeShell>
       </NotificationProvider>
     </CurrencyProvider>
+    </DateFormatProvider>
   )
 }

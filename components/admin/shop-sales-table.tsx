@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { formatMoney } from "@/lib/money"
 import { useCurrency } from "@/components/providers/currency-provider"
+import { useFormattedDate } from "@/components/providers/date-format-provider"
 import { DataTable, createAppColumnHelper } from "@/components/shared/data-table"
 
 interface ShopSaleRow {
@@ -34,6 +35,7 @@ const STATUS_KEYS: Record<string, string> = {
 }
 
 export function ShopSalesTable({ rows }: { rows: ShopSaleRow[] }) {
+  const fmtDate = useFormattedDate()
   const t = useTranslations("shopDetail")
   const currency = useCurrency()
 
@@ -63,7 +65,7 @@ export function ShopSalesTable({ rows }: { rows: ShopSaleRow[] }) {
     saleHelper.accessor("createdAt", {
       header: t("colDate"),
       cell: ({ getValue }) => (
-        <span className="text-muted-foreground">{(getValue() as Date).toLocaleDateString()}</span>
+        <span className="text-muted-foreground">{fmtDate(getValue() as Date)}</span>
       ),
     }),
     saleHelper.accessor("status", {

@@ -32,6 +32,7 @@ import {
 } from "@/components/shared/data-table"
 import { setEmployeeActive, deleteEmployee, deleteAllEmployees } from "@/lib/organization-actions"
 import { EmployeeFormDialog, type EmployeeRow, type ShopOption } from "@/components/admin/employee-form-dialog"
+import { useFormattedDate } from "@/components/providers/date-format-provider"
 
 const helper = createAppColumnHelper<EmployeeRow>()
 
@@ -43,6 +44,7 @@ export function EmployeesTable({
   shops: ShopOption[]
 }) {
   const router = useRouter()
+  const fmtDate = useFormattedDate()
   const t = useTranslations("employees")
   const tc = useTranslations("common")
   const [editing, setEditing] = useState<EmployeeRow | null | undefined>(undefined)
@@ -100,7 +102,7 @@ export function EmployeesTable({
       header: t("colHireDate"),
       cell: ({ getValue }) => {
         const d = getValue() as string | null
-        return <span className="text-muted-foreground">{d ? new Date(d).toLocaleDateString() : "—"}</span>
+        return <span className="text-muted-foreground">{d ? fmtDate(d) : "—"}</span>
       },
     }),
     helper.display({

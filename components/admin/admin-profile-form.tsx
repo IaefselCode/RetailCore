@@ -32,6 +32,7 @@ import { AnimateButton } from "@/components/ui/animate-button"
 import { updateAdminProfile, type AdminProfileData } from "@/lib/profile-actions"
 import { changeEmployeePassword } from "@/lib/settings-actions"
 import { type ActionResult } from "@/lib/actions"
+import { useFormattedDate } from "@/components/providers/date-format-provider"
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 12 },
@@ -52,16 +53,9 @@ function passwordStrength(pw: string): { score: number; label: string; color: st
   return { score, label: "Strong", color: "bg-green-500" }
 }
 
-function formatDate(iso: string | null): string {
+function formatDate(iso: string | null, fmtDate: (d: Date | string | number | null | undefined) => string): string {
   if (!iso) return "—"
-  const d = new Date(iso)
-  return d.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  })
+  return fmtDate(iso)
 }
 
 export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
@@ -69,6 +63,7 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
   const t = useTranslations("profile")
   const tc = useTranslations("common")
   const tp = useTranslations("employeeSettings")
+  const fmtDate = useFormattedDate()
 
   const [editing, setEditing] = useState(false)
   const [pending, startTransition] = useTransition()
@@ -314,7 +309,7 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
                   <div className="flex-1">
                     <p className="text-sm font-medium">{t("lastLogin")}</p>
                     <p className="text-sm text-muted-foreground">
-                      {formatDate(profile.lastLogin)}
+                      {formatDate(profile.lastLogin, fmtDate)}
                     </p>
                   </div>
                 </div>
@@ -323,7 +318,7 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
                   <div className="flex-1">
                     <p className="text-sm font-medium">{t("passwordChanged")}</p>
                     <p className="text-sm text-muted-foreground">
-                      {formatDate(profile.lastPasswordChange)}
+                      {formatDate(profile.lastPasswordChange, fmtDate)}
                     </p>
                   </div>
                 </div>
