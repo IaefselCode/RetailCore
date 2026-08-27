@@ -100,7 +100,9 @@
     "backToLogin": "Rudi kwenye kuingia",
     "privacyPolicy": "Sera ya Faragha",
     "termsOfService": "Masharti ya Huduma",
-    "contactSupport": "Wasiliana na Usaidizi"
+    "contactSupport": "Wasiliana na Usaidizi",
+    "accountDeactivated": "Akaunti yako imezimwa. Tafadhali wasiliana na msimamizi wako.",
+    "shopDeactivated": "Duka lako \"{shop}\" limezimwa. Tafadhali wasiliana na msimamizi wako."
   },
   "dashboard": {
     "greetingMorning": "Habari za asubuhi",
@@ -487,7 +489,8 @@
     "stockLeft": "{count} zimebaki",
     "empty": "Hakuna bidhaa zilizopatikana",
     "all": "Zote",
-    "oos": "Imeisha"
+    "oos": "Imeisha",
+    "inactive": "Imezimwa"
   },
   "employeeSalesHistory": {
     "title": "Historia ya Mauzo",
@@ -538,7 +541,8 @@
     "mobilePayment": "Malipo ya simu",
     "processing": "Inachakatua...",
     "completeSale": "Kamilisha Muamala",
-    "noProductsFound": "Hakuna bidhaa zilizopatikana"
+    "noProductsFound": "Hakuna bidhaa zilizopatikana",
+    "productDeactivated": "Bidhaa hii imezimwa na haiwezi kuuza"
   },
   "imageUpload": {
     "upload": "Pakia picha",
@@ -678,7 +682,6 @@
     "colDate": "Tarehe",
     "colStatus": "Hali",
     "noSales": "Hakuna mauzo yaliyorekodiwa",
-    "completed": "Imekamilika",
     "pending": "Inakusudiwa",
     "cancelled": "Imefutwa",
     "voided": "Imefutwa"
@@ -704,7 +707,6 @@
     "colAmount": "Kiasi",
     "colPayment": "Malipo",
     "colDate": "Tarehe",
-    "colStatus": "Hali",
     "noSales": "Hakuna mauzo bado",
     "completed": "Imekamilika",
     "pending": "Inakusudiwa",

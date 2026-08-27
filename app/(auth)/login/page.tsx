@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion } from "motion/react"
@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { toast } from "sonner"
+import { checkLoginStatus } from "@/lib/login-check"
 
 type LoginForm = z.infer<ReturnType<typeof buildSchema>>
 
@@ -41,11 +42,36 @@ export default function LoginPage() {
     defaultValues: { email: "", password: "" },
   })
 
+    // Handle deactivation error from proxy redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const error = params.get("error")
+    if (error === "account_deactivated") {
+      toast.error(t("accountDeactivated"))
+      window.history.replaceState({}, "", "/login")
+    } else if (error === "shop_deactivated") {
+      const shop = params.get("shop") || ""
+      toast.error(t("shopDeactivated", { shop }))
+      window.history.replaceState({}, "", "/login")
+    }
+  }, [t])
+
   const emailValue = watch("email") ?? ""
   const passwordValue = watch("password") ?? ""
 
   async function onSubmit(data: LoginForm) {
     try {
+      // Pre-check account status for specific error messages
+      const status = await checkLoginStatus(data.email)
+      if (!status.ok) {
+        if (status.error === "account_deactivated") {
+          toast.error(t("accountDeactivated"))
+        } else if (status.error === "shop_deactivated") {
+          toast.error(t("shopDeactivated", { shop: status.shopName || "" }))
+        }
+        return
+      }
+
       const result = await signIn("credentials", {
         email: data.email,
         password: data.password,

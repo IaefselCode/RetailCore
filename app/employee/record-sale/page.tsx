@@ -46,6 +46,7 @@ async function RecordSaleContent({ shopId, shopName }: { shopId: string; shopNam
       name: p.name,
       price: Number(p.price),
       stock: p.inventory[0]?.quantity ?? 0,
+      isActive: p.isActive,
     }))
     .filter((p) => p.stock > 0)
 

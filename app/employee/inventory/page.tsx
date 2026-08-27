@@ -21,7 +21,7 @@ export default async function EmployeeInventoryPage() {
   })
 
   const rows = inventory
-    .filter((i) => i.product.isActive)
+    
     .map((item) => ({
       id: item.id,
       productName: item.product.name,
@@ -29,6 +29,7 @@ export default async function EmployeeInventoryPage() {
       quantity: item.quantity,
       price: Number(item.product.price),
       statusKey: stockStatusKey(item.quantity, item.minStock, item.maxStock),
+      isActive: item.product.isActive,
     }))
 
   return (

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useTranslations } from "next-intl"
-import { Search, Grid3X3, List, Eye, Package } from "lucide-react"
+import { Search, Grid3X3, List, Eye, Package, Ban } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
@@ -35,6 +35,7 @@ export interface EmployeeProductRow {
   categoryName: string | null
   description: string | null
   imageUrl: string | null
+  isActive: boolean
 }
 
 export function EmployeeProductCatalog({ products }: { products: EmployeeProductRow[] }) {
@@ -82,6 +83,12 @@ export function EmployeeProductCatalog({ products }: { products: EmployeeProduct
         <DialogHeader>
           <DialogTitle>{product.name}</DialogTitle>
           <DialogDescription>SKU: {product.sku}</DialogDescription>
+        {!product.isActive && (
+          <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+            <Ban className="size-4" />
+            {t("inactive")} — {t("inactive")}
+          </div>
+        )}
         </DialogHeader>
         <div className="space-y-3">
           <ProductImage product={product} className="h-48 w-full rounded-lg border" />
@@ -146,7 +153,7 @@ export function EmployeeProductCatalog({ products }: { products: EmployeeProduct
             return (
               <Dialog key={product.id}>
                 <DialogTrigger asChild>
-                  <Card className="cursor-pointer overflow-hidden transition-shadow hover:shadow-md">
+                  <Card className={"overflow-hidden transition-shadow " + (product.isActive ? "cursor-pointer hover:shadow-md" : "opacity-60")}>
                     <ProductImage product={product} className="h-40 w-full" />
                     <CardHeader>
                       <div className="flex items-start justify-between">
@@ -177,12 +184,13 @@ export function EmployeeProductCatalog({ products }: { products: EmployeeProduct
             return (
               <Dialog key={product.id}>
                 <DialogTrigger asChild>
-                  <div className="flex cursor-pointer items-center justify-between px-4 py-3 transition-colors hover:bg-muted/50">
+                  <div className={"flex items-center justify-between px-4 py-3 transition-colors " + (product.isActive ? "cursor-pointer hover:bg-muted/50" : "opacity-60")}>
                     <div className="flex-1">
                       <p className="text-sm font-medium">{product.name}</p>
                       <p className="text-xs text-muted-foreground">{product.sku}</p>
                     </div>
                     <div className="flex items-center gap-4">
+                      {!product.isActive && <Badge variant="destructive" className="text-xs">{t("inactive")}</Badge>}
                       <Badge variant={badge.variant}>{t("stockLeft", { count: product.stock })}</Badge>
                       <span className="text-sm font-semibold">{formatMoney(product.price, currency)}</span>
                     </div>

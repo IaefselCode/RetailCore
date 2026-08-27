@@ -43,7 +43,7 @@ function ProductCatalogSkeleton() {
 
 async function EmployeeProductsContent({ shopId }: { shopId: string }) {
   const products = await prisma.product.findMany({
-    where: { isActive: true, inventory: { some: { shopId } } },
+    where: { inventory: { some: { shopId } } },
     orderBy: { name: "asc" },
     include: {
       category: { select: { name: true } },
@@ -60,6 +60,7 @@ async function EmployeeProductsContent({ shopId }: { shopId: string }) {
     categoryName: p.category?.name ?? null,
     description: p.description,
     imageUrl: p.imageUrl,
+    isActive: p.isActive,
   }))
 
   return <EmployeeProductCatalog products={rows} />

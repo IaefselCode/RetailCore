@@ -13,6 +13,7 @@ interface EmpInventoryRow {
   quantity: number
   price: number
   statusKey: string
+  isActive?: boolean
 }
 
 const helper = createAppColumnHelper<EmpInventoryRow>()
@@ -24,7 +25,12 @@ export function EmployeeInventoryTable({ rows }: { rows: EmpInventoryRow[] }) {
   const columns = helper.columns([
     helper.accessor("productName", {
       header: t("colProduct"),
-      cell: ({ getValue }) => <span className="font-medium">{getValue() as string}</span>,
+      cell: ({ getValue, row }) => (
+        <span className={"font-medium" + (row.original.isActive === false ? " text-muted-foreground line-through" : "")}>
+          {getValue() as string}
+          {row.original.isActive === false && <Badge variant="destructive" className="ml-2 text-xs">{"Deactivated"}</Badge>}
+        </span>
+      ),
     }),
     helper.accessor("sku", {
       header: t("colSku"),

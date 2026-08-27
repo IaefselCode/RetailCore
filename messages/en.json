@@ -100,7 +100,9 @@
     "backToLogin": "Back to sign in",
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service",
-    "contactSupport": "Contact Support"
+    "contactSupport": "Contact Support",
+    "accountDeactivated": "Your account has been deactivated. Please contact your administrator.",
+    "shopDeactivated": "Your shop \"{shop}\" has been deactivated. Please contact your administrator."
   },
   "dashboard": {
     "greetingMorning": "Good morning",
@@ -506,7 +508,8 @@
     "stockLeft": "{count} left",
     "empty": "No products found",
     "all": "All",
-    "oos": "OOS"
+    "oos": "OOS",
+    "inactive": "Deactivated"
   },
   "employeeSalesHistory": {
     "title": "Sales History",
@@ -557,7 +560,8 @@
     "mobilePayment": "Mobile Payment",
     "processing": "Processing...",
     "completeSale": "Complete Sale",
-    "noProductsFound": "No products found"
+    "noProductsFound": "No products found",
+    "productDeactivated": "This product is deactivated and cannot be sold"
   },
   "imageUpload": {
     "upload": "Upload image",
@@ -698,7 +702,6 @@
     "colStatus": "Status",
     "colDiscount": "Discount",
     "noSales": "No sales recorded",
-    "completed": "Completed",
     "pending": "Pending",
     "cancelled": "Cancelled",
     "voided": "Voided"
@@ -724,7 +727,6 @@
     "colAmount": "Amount",
     "colPayment": "Payment",
     "colDate": "Date",
-    "colStatus": "Status",
     "noSales": "No sales yet",
     "completed": "Completed",
     "pending": "Pending",

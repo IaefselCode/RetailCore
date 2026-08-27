@@ -39,6 +39,7 @@ export interface PosProduct {
   name: string
   price: number
   stock: number
+  isActive?: boolean
 }
 
 interface CartItem {
@@ -79,6 +80,10 @@ function RecordSaleFormBody({
   )
 
   const addToCart = useCallback((product: PosProduct) => {
+    if (product.isActive === false) {
+      toast.error(t("productDeactivated"))
+      return
+    }
     if (product.stock <= 0) {
       toast.error(t("productOutOfStock"))
       return
@@ -165,15 +170,16 @@ function RecordSaleFormBody({
                       <div
                         key={product.id}
                         className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 transition-colors hover:bg-muted"
-                        onClick={() => addToCart(product)}
+                        onClick={() => product.isActive !== false && addToCart(product)}
                       >
                         <div>
-                          <p className="text-sm font-medium">{product.name}</p>
+                          <p className={"text-sm font-medium " + (product.isActive === false ? "text-muted-foreground line-through" : "")}>{product.name}</p>
                           <p className="text-xs text-muted-foreground">
                             {formatMoney(product.price, currency)} · {t("inStock", { count: product.stock })}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
+                          {product.isActive === false && <Badge variant="destructive" className="text-xs">{t("productDeactivated")}</Badge>}
                           {inCart && <Badge variant="secondary">{t("inCart", { count: inCart.quantity })}</Badge>}
                           <Button variant="ghost" size="icon-sm" type="button">
                             <Plus className="size-4" />
