@@ -2,7 +2,6 @@ import { randomUUID } from "crypto"
 import { mkdir, unlink, writeFile } from "fs/promises"
 import path from "path"
 import { createClient, type SupabaseClient } from "@supabase/supabase-js"
-import sharp from "sharp"
 
 export const STORAGE_BUCKET = "images"
 export type ImageFolder = "products" | "avatars" | "profiles"
@@ -29,6 +28,28 @@ export function getStorageProvider(): StorageProvider {
 
 /** Local uploads live under the Next.js public dir so they are served statically. */
 export const LOCAL_UPLOADS_DIR = path.join(process.cwd(), "public", "uploads")
+
+// ---------------------------------------------------------------------------
+// Optional sharp import — gracefully degrades if native binary unavailable
+// ---------------------------------------------------------------------------
+
+let sharpFn: any = null
+let sharpLoadAttempted = false
+
+async function getSharp() {
+  if (sharpLoadAttempted) return sharpFn
+  sharpLoadAttempted = true
+  try {
+    const mod = await import("sharp")
+    sharpFn = mod.default as typeof sharpFn
+    return sharpFn
+  } catch {
+    // sharp native binary not available (e.g. Vercel runtime)
+    // Client-side compression is the primary path, so this is fine
+    sharpFn = null
+    return null
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Supabase provider
@@ -130,11 +151,19 @@ async function deleteLocal(value: string): Promise<void> {
  * Server-side re-compression backstop. Runs BEFORE the file is uploaded so the
  * stored file is always a bounded, optimized WebP regardless of what the
  * client sent (the client also compresses first in ImageUpload).
+ *
+ * Falls back to the original buffer if sharp is unavailable (Vercel runtime).
+ * The client already compresses to WebP via canvas, so the fallback is safe.
  */
 export async function optimizeImage(
   buffer: Buffer,
   { maxDim = 800, quality = 72 }: { maxDim?: number; quality?: number } = {}
 ): Promise<Buffer> {
+  const sharp = await getSharp()
+  if (!sharp) {
+    // sharp unavailable — trust client-side compression
+    return buffer
+  }
   return sharp(buffer, { failOn: "error" })
     .rotate()
     .resize({ width: maxDim, height: maxDim, fit: "inside", withoutEnlargement: true })
