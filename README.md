@@ -310,9 +310,8 @@ npm run db:health        # Check database health
 - `RESEND_API_KEY`, `EMAIL_FROM`
 - `STORAGE_PROVIDER=supabase`
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
-- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,`AUTH_URL`
 
-> **Note:** Do NOT set `AUTH_URL` or `NEXTAUTH_URL` in Vercel — the app auto-detects the domain from request headers.
 
 ### Self-Hosted
 
