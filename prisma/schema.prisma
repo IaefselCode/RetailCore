@@ -238,16 +238,3 @@ model NotificationPreference {
   salesReports   Boolean @default(false)
 }
 
-model AuditLog {
-  id         String   @id @default(cuid())
-  actorId    String?
-  event      String
-  entityType String?
-  entityId   String?
-  detail     String?
-  ip         String?
-  createdAt  DateTime @default(now())
-
-  @@index([entityType, entityId])
-  @@index([createdAt])
-}

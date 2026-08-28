@@ -4,7 +4,6 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { stockStatusKey } from "@/lib/stock-status"
-import { pushNotification } from "../server/ws-publisher"
 
 export interface NotificationData {
   id: string
@@ -174,15 +173,6 @@ export async function createNotification(
     },
   })
 
-  // Push to connected browser(s) in realtime via WebSocket
-  pushNotification(userId, {
-    id: created.id,
-    title: created.title,
-    message: created.message,
-    type: created.type,
-    isRead: created.isRead,
-    createdAt: created.createdAt.toISOString(),
-  })
 }
 
 /** Notify all admin users. */

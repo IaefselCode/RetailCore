@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { Bell, AlertTriangle, ShoppingCart, Package, AlertCircle } from "lucide-react"
-import type { RealtimeNotification } from "@/lib/use-notification-socket"
+import type { RealtimeNotification } from "@/lib/use-notification-sse"
 
 const TYPE_ICONS: Record<string, typeof Bell> = {
   stock: AlertTriangle,

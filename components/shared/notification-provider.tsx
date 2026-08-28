@@ -1,6 +1,6 @@
 "use client"
 
-import { useNotificationSocket } from "@/lib/use-notification-socket"
+import { useNotificationSocket } from "@/lib/use-notification-sse"
 import { NotificationContext } from "@/lib/notification-context"
 import { NotificationToast } from "@/components/shared/notification-toast"
 

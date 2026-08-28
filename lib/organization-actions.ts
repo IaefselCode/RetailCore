@@ -6,8 +6,7 @@ import { randomBytes } from "crypto"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { getSignedInRole } from "@/lib/auth-utils"
-import { getRequestMeta, type ActionResult } from "@/lib/actions"
-import { logAuditEvent } from "@/lib/audit-log"
+import { type ActionResult } from "@/lib/actions"
 import { notifyAdmins } from "@/lib/notification-actions"
 import { deleteImage } from "@/lib/images-server"
 
@@ -62,14 +61,6 @@ export async function createShop(formData: FormData): Promise<ActionResult> {
       },
     })
 
-    const meta = await getRequestMeta()
-    await logAuditEvent("shop_created", {
-      actorId,
-      entityType: "Shop",
-      entityId: shop.id,
-      detail: name,
-      ip: meta.ip,
-    })
     revalidatePath("/admin/shops")
     await notifyAdmins({ title: "New shop created", message: name + " has been added as a new location", type: "system" })
     return { success: true, message: "Shop created." }
@@ -101,14 +92,6 @@ export async function updateShop(formData: FormData): Promise<ActionResult> {
       },
     })
 
-    const meta = await getRequestMeta()
-    await logAuditEvent(shop.isActive ? "shop_updated" : "shop_deactivated", {
-      actorId,
-      entityType: "Shop",
-      entityId: shop.id,
-      detail: name,
-      ip: meta.ip,
-    })
     revalidatePath("/admin/shops")
     return { success: true, message: shop.isActive ? "Shop updated." : "Shop deactivated." }
   } catch (err) {
@@ -127,14 +110,6 @@ export async function setShopActive(formData: FormData): Promise<ActionResult> {
     if (!id) return fail("Missing shop id.")
 
     const shop = await prisma.shop.update({ where: { id }, data: { isActive: active } })
-    const meta = await getRequestMeta()
-    await logAuditEvent(active ? "shop_activated" : "shop_deactivated", {
-      actorId,
-      entityType: "Shop",
-      entityId: shop.id,
-      detail: shop.name,
-      ip: meta.ip,
-    })
     revalidatePath("/admin/shops")
     return { success: true, message: active ? "Shop activated." : "Shop deactivated." }
   } catch (err) {
@@ -182,14 +157,6 @@ export async function deleteShop(formData: FormData): Promise<ActionResult> {
       await deleteImage(url).catch(() => {})
     }
 
-    const meta = await getRequestMeta()
-    await logAuditEvent("shop_deleted", {
-      actorId,
-      entityType: "Shop",
-      entityId: shop.id,
-      detail: shop.name,
-      ip: meta.ip,
-    })
     revalidatePath("/admin/shops")
     return { success: true, message: "Shop deleted." }
   } catch (err) {
@@ -254,14 +221,6 @@ export async function createEmployee(formData: FormData): Promise<EmployeeAction
       })
     })
 
-    const meta = await getRequestMeta()
-    await logAuditEvent("employee_created", {
-      actorId,
-      entityType: "Employee",
-      entityId: employee.id,
-      detail: `${firstName} ${lastName} <${email}>`,
-      ip: meta.ip,
-    })
     revalidatePath("/admin/employees")
     await notifyAdmins({ title: "New employee onboarded", message: firstName + " " + lastName + " has been added to the team", type: "operational" })
     return {
@@ -323,14 +282,6 @@ export async function updateEmployee(formData: FormData): Promise<ActionResult> 
       })
     })
 
-    const meta = await getRequestMeta()
-    await logAuditEvent(isActive ? "employee_updated" : "employee_deactivated", {
-      actorId,
-      entityType: "Employee",
-      entityId: updated.id,
-      detail: `${firstName} ${lastName} <${email}>`,
-      ip: meta.ip,
-    })
     revalidatePath("/admin/employees")
     return { success: true, message: isActive ? "Employee updated." : "Employee deactivated." }
   } catch (err) {
@@ -356,13 +307,6 @@ export async function setEmployeeActive(formData: FormData): Promise<ActionResul
       prisma.employee.update({ where: { id }, data: { isActive: active } }),
     ])
 
-    const meta = await getRequestMeta()
-    await logAuditEvent(active ? "employee_activated" : "employee_deactivated", {
-      actorId,
-      entityType: "Employee",
-      entityId: employee.id,
-      ip: meta.ip,
-    })
     revalidatePath("/admin/employees")
     return { success: true, message: active ? "Employee activated." : "Employee deactivated." }
   } catch (err) {
@@ -415,16 +359,6 @@ export async function deleteEmployee(formData: FormData): Promise<ActionResult> 
       // 6. Delete NotificationPreference
       await tx.notificationPreference.deleteMany({ where: { userId: employee.userId } })
 
-      // 7. Delete AuditLogs referencing this employee
-      await tx.auditLog.deleteMany({
-        where: {
-          OR: [
-            { actorId: employee.userId },
-            { entityType: "Employee", entityId: id },
-          ],
-        },
-      })
-
       // 8. Delete the User (cascades to Employee via onDelete: Cascade)
       await tx.user.delete({ where: { id: employee.userId } })
     })
@@ -434,14 +368,6 @@ export async function deleteEmployee(formData: FormData): Promise<ActionResult> 
       await deleteImage(employee.user.imageUrl).catch(() => {})
     }
 
-    const meta = await getRequestMeta()
-    await logAuditEvent("employee_deleted", {
-      actorId,
-      entityType: "Employee",
-      entityId: employee.id,
-      detail: `${employee.user.firstName} ${employee.user.lastName} <${employee.user.email}>`,
-      ip: meta.ip,
-    })
     revalidatePath("/admin/employees")
     return { success: true, message: "Employee deleted." }
   } catch (err) {
@@ -488,13 +414,6 @@ export async function deleteAllShops(): Promise<ActionResult> {
       await deleteImage(url).catch(() => {})
     }
 
-    const meta = await getRequestMeta()
-    await logAuditEvent("shops_deleted_all", {
-      actorId,
-      entityType: "Shop",
-      detail: `Deleted ${count} shops`,
-      ip: meta.ip,
-    })
     revalidatePath("/admin/shops")
     revalidatePath("/admin/employees")
     revalidatePath("/admin/dashboard")
@@ -536,7 +455,6 @@ export async function deleteAllEmployees(): Promise<ActionResult> {
       await tx.authLog.deleteMany({ where: { userId: { in: userIds } } })
       await tx.refreshToken.deleteMany({ where: { userId: { in: userIds } } })
       await tx.notificationPreference.deleteMany({ where: { userId: { in: userIds } } })
-      await tx.auditLog.deleteMany({ where: { actorId: { in: userIds } } })
 
       await tx.employee.deleteMany({})
       await tx.user.deleteMany({ where: { id: { in: userIds } } })
@@ -547,13 +465,6 @@ export async function deleteAllEmployees(): Promise<ActionResult> {
       await deleteImage(url).catch(() => {})
     }
 
-    const meta = await getRequestMeta()
-    await logAuditEvent("employees_deleted_all", {
-      actorId,
-      entityType: "Employee",
-      detail: `Deleted ${count} employees`,
-      ip: meta.ip,
-    })
     revalidatePath("/admin/employees")
     revalidatePath("/admin/dashboard")
     return { success: true, message: `All ${count} employees deleted.` }

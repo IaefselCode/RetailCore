@@ -4,8 +4,7 @@ import { sanitize } from "@/lib/sanitize"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getSignedInRole } from "@/lib/auth-utils"
-import { getRequestMeta, type ActionResult } from "@/lib/actions"
-import { logAuditEvent } from "@/lib/audit-log"
+import { type ActionResult } from "@/lib/actions"
 import { notifyAdmins } from "@/lib/notification-actions"
 import { deleteImage } from "@/lib/images-server"
 
@@ -93,14 +92,6 @@ export async function createProduct(formData: FormData): Promise<ActionResult> {
       },
     })
 
-    const meta = await getRequestMeta()
-    await logAuditEvent("product_created", {
-      actorId,
-      entityType: "Product",
-      entityId: product.id,
-      detail: `${name} (${sku})`,
-      ip: meta.ip,
-    })
     revalidatePath("/admin/products")
     revalidatePath("/employee/products")
     await notifyAdmins({ title: "New product added", message: name + " (" + sku + ") has been added to the catalog", type: "system" })
@@ -202,14 +193,6 @@ export async function updateProduct(formData: FormData): Promise<ActionResult> {
       await deleteImage(existingImage.imageUrl)
     }
 
-    const meta = await getRequestMeta()
-    await logAuditEvent("product_updated", {
-      actorId,
-      entityType: "Product",
-      entityId: product.id,
-      detail: `${name} (${sku})`,
-      ip: meta.ip,
-    })
     revalidatePath("/admin/products")
     revalidatePath(`/admin/products/${id}`)
     revalidatePath("/employee/products")
@@ -234,14 +217,6 @@ export async function toggleProductActive(formData: FormData): Promise<ActionRes
       data: { isActive: active },
     })
 
-    const meta = await getRequestMeta()
-    await logAuditEvent(active ? "product_activated" : "product_deactivated", {
-      actorId,
-      entityType: "Product",
-      entityId: product.id,
-      detail: product.name,
-      ip: meta.ip,
-    })
     revalidatePath("/admin/products")
     revalidatePath("/employee/products")
     return { success: true, message: active ? "Product activated." : "Product deactivated." }
@@ -275,14 +250,6 @@ export async function deleteProduct(formData: FormData): Promise<ActionResult> {
       await deleteImage(product.imageUrl)
     }
 
-    const meta = await getRequestMeta()
-    await logAuditEvent("product_deleted", {
-      actorId,
-      entityType: "Product",
-      entityId: id,
-      detail: `${product.name} (${product.sku})`,
-      ip: meta.ip,
-    })
     revalidatePath("/admin/products")
     revalidatePath("/employee/products")
     return { success: true, message: "Product deleted." }
@@ -319,14 +286,6 @@ export async function updateStockLevels(formData: FormData): Promise<ActionResul
       data: { minStock, maxStock },
     })
 
-    const meta = await getRequestMeta()
-    await logAuditEvent("stock_levels_updated", {
-      actorId,
-      entityType: "Product",
-      entityId: row.productId,
-      detail: `${row.product.name} @ ${row.shop.name} (min: ${minStock}, max: ${maxStock})`,
-      ip: meta.ip,
-    })
     revalidatePath(`/admin/products/${row.productId}`)
     revalidatePath("/admin/inventory")
     revalidatePath("/employee/inventory")
@@ -367,13 +326,6 @@ export async function deleteAllProducts(): Promise<ActionResult> {
       await deleteImage(url).catch(() => {})
     }
 
-    const meta = await getRequestMeta()
-    await logAuditEvent("products_deleted_all", {
-      actorId,
-      entityType: "Product",
-      detail: `Deleted ${count} products`,
-      ip: meta.ip,
-    })
     revalidatePath("/admin/products")
     revalidatePath("/admin/inventory")
     revalidatePath("/admin/dashboard")

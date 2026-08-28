@@ -4,8 +4,7 @@ import { sanitize } from "@/lib/sanitize"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getEmployeeContext, getSignedInRole } from "@/lib/auth-utils"
-import { getRequestMeta, type ActionResult } from "@/lib/actions"
-import { logAuditEvent } from "@/lib/audit-log"
+import { type ActionResult } from "@/lib/actions"
 import { nextInvoiceNo } from "@/lib/invoice"
 import { notifyAdmins, checkAndNotifyStockHealth } from "@/lib/notification-actions"
 import { toDecimalString, getSystemCurrency } from "@/lib/money"
@@ -161,15 +160,6 @@ export async function recordSale(_prev: ActionResult | null, formData: FormData)
       }
     })
 
-    const meta = await getRequestMeta()
-    await logAuditEvent("sale_recorded", {
-      actorId: ctx.userId,
-      entityType: "Sale",
-      entityId: invoiceNo,
-      detail: `${formattedTotal} via ${paymentMethod}`,
-      ip: meta.ip,
-    })
-
     revalidatePath("/employee/record-sale")
     revalidatePath("/employee/sales-history")
     revalidatePath("/employee/inventory")
@@ -264,15 +254,6 @@ export async function refundSale(formData: FormData): Promise<ActionResult> {
           },
         })
       }
-    })
-
-    const meta = await getRequestMeta()
-    await logAuditEvent("sale_voided", {
-      actorId: userId,
-      entityType: "Sale",
-      entityId: sale.id,
-      detail: sale.invoiceNo,
-      ip: meta.ip,
     })
 
     revalidatePath("/admin/sales")

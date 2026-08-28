@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import Link from "next/link"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { requestPasswordReset } from "@/lib/reset-actions"
 
@@ -78,6 +79,13 @@ export default function ForgotPasswordPage() {
             )}
           </AnimateButton>
         </form>
+
+          <Link
+            href="/login"
+            className="block text-center text-xs text-primary underline-offset-4 hover:underline"
+          >
+            Back to sign in
+          </Link>
         </CardContent>
       </Card>
     </motion.div>

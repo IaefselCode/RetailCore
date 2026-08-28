@@ -4,8 +4,7 @@ import { sanitize } from "@/lib/sanitize"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getSignedInRole } from "@/lib/auth-utils"
-import { getRequestMeta, type ActionResult } from "@/lib/actions"
-import { logAuditEvent } from "@/lib/audit-log"
+import { type ActionResult } from "@/lib/actions"
 import { notifyShopEmployees, checkAndNotifyStockHealth } from "@/lib/notification-actions"
 
 function fail(message: string): ActionResult {
@@ -82,15 +81,6 @@ export async function purchaseStock(formData: FormData): Promise<ActionResult> {
           },
         })
       }
-    })
-
-    const meta = await getRequestMeta()
-    await logAuditEvent("stock_purchased", {
-      actorId,
-      entityType: "Shop",
-      entityId: shopId,
-      detail: `${items.length} item(s) at ${shop.name}`,
-      ip: meta.ip,
     })
 
     // Notify employees at this shop that stock has been added
@@ -198,15 +188,6 @@ export async function distributeStock(formData: FormData): Promise<ActionResult>
           },
         })
       }
-    })
-
-    const meta = await getRequestMeta()
-    await logAuditEvent("stock_distributed", {
-      actorId,
-      entityType: "Product",
-      entityId: productId,
-      detail: `${totalOut} units from shop ${fromShopId}`,
-      ip: meta.ip,
     })
 
     revalidatePath("/admin/inventory")

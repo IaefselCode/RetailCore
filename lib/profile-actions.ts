@@ -3,8 +3,7 @@
 import { sanitize } from "@/lib/sanitize"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { getRequestMeta, type ActionResult } from "@/lib/actions"
-import { logAuditEvent } from "@/lib/audit-log"
+import { type ActionResult } from "@/lib/actions"
 import { deleteImage } from "@/lib/images-server"
 import { notifyAdmins } from "@/lib/notification-actions"
 
@@ -131,15 +130,6 @@ export async function updateAdminProfile(
       await deleteImage(old.imageUrl)
     }
 
-    const meta = await getRequestMeta()
-    await logAuditEvent("profile_updated", {
-      actorId: userId,
-      entityType: "User",
-      entityId: userId,
-      detail: email,
-      ip: meta.ip,
-    })
-
     return { success: true, message: "Profile updated successfully." }
   } catch (err) {
     console.error("updateAdminProfile failed:", err)
@@ -176,11 +166,11 @@ export async function updateProfilePhoto(
       where: { id: userId },
       select: { firstName: true, lastName: true },
     })
-    const employeeName = employee ? `${employee.firstName} ${employee.lastName}` : "An employee"
+    const employeeName = employee ? employee.firstName + " " + employee.lastName : "An employee"
     const action = imageUrl ? "updated their profile photo" : "removed their profile photo"
     await notifyAdmins({
       title: "Profile Photo Updated",
-      message: `${employeeName} ${action}.`,
+      message: employeeName + " " + action + ".",
       type: "info",
     })
 
@@ -245,14 +235,6 @@ export async function updateEmployeeProfile(
       await deleteImage(old.imageUrl)
     }
 
-    const meta = await getRequestMeta()
-    await logAuditEvent("profile_updated", {
-      actorId: userId,
-      entityType: "User",
-      entityId: userId,
-      detail: email,
-      ip: meta.ip,
-    })
 
     // Build a list of changed fields for the admin notification
     const changedFields: string[] = []

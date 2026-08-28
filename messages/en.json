@@ -40,7 +40,7 @@
     "inventory": "Inventory",
     "sales": "Sales",
     "analytics": "Analytics",
-    "auditLog": "Audit Log",
+    "authLog": "Auth Log",
     "settings": "Settings",
     "recordSale": "Record Sale",
     "salesHistory": "Sales History",

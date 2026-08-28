@@ -39,7 +39,7 @@ const navItems = [
   { labelKey: "inventory", href: "/admin/inventory", icon: Warehouse },
   { labelKey: "sales", href: "/admin/sales", icon: CreditCard },
   { labelKey: "analytics", href: "/admin/analytics", icon: BarChart3 },
-  { labelKey: "auditLog", href: "/admin/audit", icon: ScrollText },
+  { labelKey: "authLog", href: "/admin/audit", icon: ScrollText },
 ]
 
 interface AdminSidebarProps {

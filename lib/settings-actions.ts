@@ -7,7 +7,6 @@ import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { getSignedInRole } from "@/lib/auth-utils"
 import { getRequestMeta, type ActionResult } from "@/lib/actions"
-import { logAuditEvent } from "@/lib/audit-log"
 import { logAuthEvent } from "@/lib/auth-log"
 import { isStrongPassword } from "@/lib/password-policy"
 
@@ -81,14 +80,6 @@ export async function updateSystemSettings(formData: FormData): Promise<ActionRe
       )
     )
 
-    const meta = await getRequestMeta()
-    await logAuditEvent("settings_updated", {
-      actorId,
-      entityType: "System",
-      detail: `shopName=${shopName}, currency=${currency}, timezone=${timezone}, sessionTimeout=${sessionTimeout}`,
-      ip: meta.ip,
-    })
-
     revalidatePath("/admin/settings")
     return { success: true, message: "Settings saved successfully." }
   } catch (err) {
@@ -143,13 +134,6 @@ export async function changeEmployeePassword(data: {
 
     const meta = await getRequestMeta()
     void logAuthEvent("password_changed", user.email, { userId, ip: meta.ip })
-    void logAuditEvent("password_changed", {
-      actorId: userId,
-      entityType: "User",
-      entityId: userId,
-      detail: "Employee changed their own password",
-      ip: meta.ip,
-    })
 
     return { success: true, message: "Password changed successfully." }
   } catch (err) {

@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Bell } from "lucide-react"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
-import { useNotificationSocket } from "@/lib/use-notification-socket"
+import { useNotificationSocket } from "@/lib/use-notification-sse"
 import { NotificationToast } from "@/components/shared/notification-toast"
 import { NotificationContext } from "@/lib/notification-context"
 
