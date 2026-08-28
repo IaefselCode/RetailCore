@@ -7,7 +7,7 @@ export default auth(async (req) => {
   const session = req.auth
 
   // Public routes
-  const publicPaths = ["/login", "/forgot-password", "/reset-password"]
+  const publicPaths = ["/login", "/forgot-password", "/reset-password", "/privacy", "/terms"]
   const isPublic = publicPaths.some((p) => pathname.startsWith(p))
 
   // Unauthenticated: redirect to login
