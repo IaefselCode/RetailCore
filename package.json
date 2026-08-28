@@ -15,10 +15,7 @@
     "db:studio": "prisma studio",
     "db:health": "node scripts/db-healthcheck.mjs"
   },
-  "overrides": {
-    "postcss": "$postcss",
-    "sharp": "$sharp"
-  },
+
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
     "@prisma/adapter-pg": "^7.8.0",

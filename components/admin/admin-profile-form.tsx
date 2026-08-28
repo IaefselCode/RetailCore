@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition, useMemo } from "react"
+import { useState, useTransition, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { motion } from "motion/react"
@@ -28,8 +28,10 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 import { toast } from "sonner"
+import { useSession } from "next-auth/react"
 import { AnimateButton } from "@/components/ui/animate-button"
-import { updateAdminProfile, type AdminProfileData } from "@/lib/profile-actions"
+import { ImageUpload } from "@/components/ui/image-upload"
+import { updateAdminProfile, updateProfilePhoto, type AdminProfileData } from "@/lib/profile-actions"
 import { changeEmployeePassword } from "@/lib/settings-actions"
 import { type ActionResult } from "@/lib/actions"
 import { useFormattedDate } from "@/components/providers/date-format-provider"
@@ -65,8 +67,10 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
   const tp = useTranslations("employeeSettings")
   const fmtDate = useFormattedDate()
 
+  const { update: updateSession } = useSession()
   const [editing, setEditing] = useState(false)
   const [pending, startTransition] = useTransition()
+  const [imageUrl, setImageUrl] = useState<string | null>(profile.imageUrl)
   const [form, setForm] = useState({
     firstName: profile.firstName,
     lastName: profile.lastName,
@@ -102,7 +106,22 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
     form.firstName !== profile.firstName ||
     form.lastName !== profile.lastName ||
     form.email !== profile.email ||
-    form.phone !== (profile.phone ?? "")
+    form.phone !== (profile.phone ?? "") ||
+    imageUrl !== profile.imageUrl
+
+  const handlePhotoChange = useCallback(
+    async (url: string | null) => {
+      setImageUrl(url)
+      const result = await updateProfilePhoto(url)
+      if (result.success) {
+        await updateSession({ user: { image: url ?? undefined } })
+        router.refresh()
+      } else {
+        toast.error("Failed to save photo")
+      }
+    },
+    [updateSession, router]
+  )
 
   function handleSave() {
     const fd = new FormData()
@@ -110,7 +129,7 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
     fd.append("lastName", form.lastName)
     fd.append("email", form.email)
     fd.append("phone", form.phone)
-    fd.append("imageUrl", profile.imageUrl ?? "")
+    fd.append("imageUrl", imageUrl ?? "")
 
     startTransition(async () => {
       const result = await updateAdminProfile(null, fd)
@@ -169,24 +188,40 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
         transition={{ duration: 0.3 }}
       >
         <Card>
-          <CardContent className="flex items-center gap-4 pt-6">
-            <Avatar className="size-16">
-              {profile.imageUrl ? (
-                <AvatarImage
-                  src={profile.imageUrl}
-                  alt={`${form.firstName} ${form.lastName}`}
-                />
-              ) : null}
-              <AvatarFallback className="text-lg font-medium bg-primary/10 text-primary">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h1 className="text-xl font-medium">
-                {form.firstName} {form.lastName}
-              </h1>
-              <p className="text-sm text-muted-foreground">{t("adminRole")}</p>
-              <Badge variant="outline" className="mt-1">{t("superAdmin")}</Badge>
+          <CardContent className="pt-6">
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="relative">
+                <Avatar className="size-20">
+                  {imageUrl ? (
+                    <AvatarImage
+                      src={imageUrl}
+                      alt={`${form.firstName} ${form.lastName}`}
+                    />
+                  ) : null}
+                  <AvatarFallback className="text-xl font-medium bg-primary/10 text-primary">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              <div className="flex-1 text-center sm:text-left">
+                <h1 className="text-xl font-medium">
+                  {form.firstName} {form.lastName}
+                </h1>
+                <p className="text-sm text-muted-foreground">{t("adminRole")}</p>
+                <Badge variant="outline" className="mt-1">{t("superAdmin")}</Badge>
+              </div>
+            </div>
+            <div className="mt-4 flex justify-center sm:justify-start">
+              <ImageUpload
+                value={imageUrl}
+                onChange={handlePhotoChange}
+                folder="profiles"
+                maxDim={400}
+                quality={0.72}
+                hidePreview
+                enableCrop
+                roundCrop
+              />
             </div>
           </CardContent>
         </Card>
@@ -224,6 +259,7 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
                         email: profile.email,
                         phone: profile.phone ?? "",
                       })
+                      setImageUrl(profile.imageUrl)
                     }
                     setEditing(!editing)
                   }}
