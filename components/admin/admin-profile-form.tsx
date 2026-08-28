@@ -1,9 +1,12 @@
 "use client"
 
-import { useState, useTransition, useMemo, useCallback } from "react"
+import { useState, useTransition, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { motion } from "motion/react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import {
   ChevronRightIcon,
   SaveIcon,
@@ -41,18 +44,44 @@ const sectionVariants = {
   visible: { opacity: 1, y: 0 },
 }
 
-function passwordStrength(pw: string): { score: number; label: string; color: string } {
+const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .regex(/[A-Z]/, "Password must include an uppercase letter")
+  .regex(/[a-z]/, "Password must include a lowercase letter")
+  .regex(/\d/, "Password must include a number")
+  .regex(/[^A-Za-z0-9]/, "Password must include a symbol")
+
+function buildPasswordSchema(t: (key: string) => string) {
+  return z
+    .object({
+      currentPassword: z.string().min(1, t("currentPassword")),
+      newPassword: passwordSchema,
+      confirmPassword: z.string(),
+    })
+    .refine((d) => d.newPassword === d.confirmPassword, {
+      message: t("passwordMismatch"),
+      path: ["confirmPassword"],
+    })
+    .refine((d) => d.currentPassword !== d.newPassword, {
+      message: "New password must be different from current password",
+      path: ["newPassword"],
+    })
+}
+
+type PasswordForm = z.infer<ReturnType<typeof buildPasswordSchema>>
+
+function passwordStrength(pw: string): { score: number; label: string } {
   let score = 0
   if (pw.length >= 8) score++
   if (/[A-Z]/.test(pw)) score++
   if (/[a-z]/.test(pw)) score++
   if (/\d/.test(pw)) score++
   if (/[^A-Za-z0-9]/.test(pw)) score++
-
-  if (score <= 2) return { score, label: "Weak", color: "bg-red-500" }
-  if (score <= 3) return { score, label: "Fair", color: "bg-orange-500" }
-  if (score <= 4) return { score, label: "Good", color: "bg-yellow-500" }
-  return { score, label: "Strong", color: "bg-green-500" }
+  if (score <= 2) return { score, label: "Weak" }
+  if (score <= 3) return { score, label: "Fair" }
+  if (score <= 4) return { score, label: "Good" }
+  return { score, label: "Strong" }
 }
 
 function formatDate(iso: string | null, fmtDate: (d: Date | string | number | null | undefined) => string): string {
@@ -78,26 +107,36 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
     phone: profile.phone ?? "",
   })
 
-  // Password change state
+  // Password change form (react-hook-form + zod)
   const [showPasswordForm, setShowPasswordForm] = useState(false)
-  const [currentPassword, setCurrentPassword] = useState("")
-  const [newPassword, setNewPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
   const [showCurrent, setShowCurrent] = useState(false)
   const [showNew, setShowNew] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [changingPassword, setChangingPassword] = useState(false)
 
-  const strength = useMemo(() => passwordStrength(newPassword), [newPassword])
-  const passwordsMatch = newPassword.length > 0 && confirmPassword.length > 0 && newPassword === confirmPassword
-  const passwordsMismatch = confirmPassword.length > 0 && newPassword !== confirmPassword
+  const {
+    register,
+    watch,
+    handleSubmit,
+    reset: resetPasswordForm,
+    formState: { errors: pwErrors, dirtyFields: pwDirty },
+  } = useForm<PasswordForm>({
+    resolver: zodResolver(buildPasswordSchema(tp)),
+    mode: "onChange",
+    defaultValues: { currentPassword: "", newPassword: "", confirmPassword: "" },
+  })
 
-  const canChangePassword =
-    currentPassword.length > 0 &&
-    newPassword.length > 0 &&
-    confirmPassword.length > 0 &&
-    newPassword === confirmPassword &&
-    !changingPassword
+  const newPasswordVal = watch("newPassword")
+  const confirmPasswordVal = watch("confirmPassword")
+  const strength = passwordStrength(newPasswordVal)
+  const passwordsMatch =
+    pwDirty.confirmPassword && newPasswordVal === confirmPasswordVal && newPasswordVal.length > 0
+
+  const hasMinLen = newPasswordVal.length >= 8
+  const hasUpper = /[A-Z]/.test(newPasswordVal)
+  const hasLower = /[a-z]/.test(newPasswordVal)
+  const hasNumber = /\d/.test(newPasswordVal)
+  const hasSymbol = /[^A-Za-z0-9]/.test(newPasswordVal)
 
   const initials =
     [form.firstName?.[0], form.lastName?.[0]].filter(Boolean).join("").toUpperCase() || "?"
@@ -143,20 +182,16 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
     })
   }
 
-  const handleChangePassword = async () => {
-    if (!canChangePassword) return
-
+  const handleChangePassword = async (data: PasswordForm) => {
     setChangingPassword(true)
     try {
       const result = await changeEmployeePassword({
-        currentPassword,
-        newPassword,
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
       })
       if (result.success) {
         toast.success(result.message)
-        setCurrentPassword("")
-        setNewPassword("")
-        setConfirmPassword("")
+        resetPasswordForm()
         setShowPasswordForm(false)
         router.refresh()
       } else {
@@ -369,7 +404,7 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-4">
+                  <form onSubmit={(e) => { e.preventDefault(); void handleSubmit(handleChangePassword)(e) }} className="flex flex-col gap-4">
                     <div className="flex items-center gap-2">
                       <Shield className="size-4 text-muted-foreground" />
                       <p className="text-sm font-medium">{t("changePassword")}</p>
@@ -382,9 +417,8 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
                         <Input
                           id="profile-current-password"
                           type={showCurrent ? "text" : "password"}
-                          value={currentPassword}
-                          onChange={(e) => setCurrentPassword(e.target.value)}
                           placeholder={tp("currentPassword")}
+                          {...register("currentPassword")}
                         />
                         <button
                           type="button"
@@ -394,6 +428,9 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
                           {showCurrent ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                         </button>
                       </div>
+                      {pwErrors.currentPassword && (
+                        <p className="text-xs text-destructive">{pwErrors.currentPassword.message}</p>
+                      )}
                     </div>
 
                     {/* New Password */}
@@ -403,9 +440,8 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
                         <Input
                           id="profile-new-password"
                           type={showNew ? "text" : "password"}
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
                           placeholder={tp("newPassword")}
+                          {...register("newPassword")}
                         />
                         <button
                           type="button"
@@ -415,8 +451,8 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
                           {showNew ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                         </button>
                       </div>
-                      {newPassword.length > 0 && (
-                        <div className="space-y-1 pt-1">
+                      {newPasswordVal.length > 0 && (
+                        <div className="space-y-1.5 pt-1">
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-muted-foreground">
                               {tp("passwordStrength")}
@@ -437,48 +473,31 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
                           </div>
                           <Progress value={(strength.score / 5) * 100} className="h-1.5" />
                           <div className="flex gap-2 text-xs text-muted-foreground flex-wrap">
-                            <span className={newPassword.length >= 8 ? "text-green-600" : ""}>
-                              {newPassword.length >= 8 ? (
-                                <Check className="inline size-3" />
-                              ) : (
-                                <X className="inline size-3" />
-                              )}{" "}
-                              {tp("minLength")}
+                            <span className={hasMinLen ? "text-green-600" : ""}>
+                              {hasMinLen ? <Check className="inline size-3" /> : <X className="inline size-3" />}
+                              {" "}{tp("minLength")}
                             </span>
-                            <span className={/[A-Z]/.test(newPassword) ? "text-green-600" : ""}>
-                              {/[A-Z]/.test(newPassword) ? (
-                                <Check className="inline size-3" />
-                              ) : (
-                                <X className="inline size-3" />
-                              )}{" "}
-                              {tp("uppercase")}
+                            <span className={hasUpper ? "text-green-600" : ""}>
+                              {hasUpper ? <Check className="inline size-3" /> : <X className="inline size-3" />}
+                              {" "}{tp("uppercase")}
                             </span>
-                            <span className={/[a-z]/.test(newPassword) ? "text-green-600" : ""}>
-                              {/[a-z]/.test(newPassword) ? (
-                                <Check className="inline size-3" />
-                              ) : (
-                                <X className="inline size-3" />
-                              )}{" "}
-                              {tp("lowercase")}
+                            <span className={hasLower ? "text-green-600" : ""}>
+                              {hasLower ? <Check className="inline size-3" /> : <X className="inline size-3" />}
+                              {" "}{tp("lowercase")}
                             </span>
-                            <span className={/\d/.test(newPassword) ? "text-green-600" : ""}>
-                              {/\d/.test(newPassword) ? (
-                                <Check className="inline size-3" />
-                              ) : (
-                                <X className="inline size-3" />
-                              )}{" "}
-                              {tp("number")}
+                            <span className={hasNumber ? "text-green-600" : ""}>
+                              {hasNumber ? <Check className="inline size-3" /> : <X className="inline size-3" />}
+                              {" "}{tp("number")}
                             </span>
-                            <span className={/[^A-Za-z0-9]/.test(newPassword) ? "text-green-600" : ""}>
-                              {/[^A-Za-z0-9]/.test(newPassword) ? (
-                                <Check className="inline size-3" />
-                              ) : (
-                                <X className="inline size-3" />
-                              )}{" "}
-                              {tp("symbol")}
+                            <span className={hasSymbol ? "text-green-600" : ""}>
+                              {hasSymbol ? <Check className="inline size-3" /> : <X className="inline size-3" />}
+                              {" "}{tp("symbol")}
                             </span>
                           </div>
                         </div>
+                      )}
+                      {pwErrors.newPassword && (
+                        <p className="text-xs text-destructive">{pwErrors.newPassword.message}</p>
                       )}
                     </div>
 
@@ -489,9 +508,8 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
                         <Input
                           id="profile-confirm-password"
                           type={showConfirm ? "text" : "password"}
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
                           placeholder={tp("confirmNewPassword")}
+                          {...register("confirmPassword")}
                         />
                         <button
                           type="button"
@@ -501,7 +519,7 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
                           {showConfirm ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                         </button>
                       </div>
-                      {confirmPassword.length > 0 && (
+                      {pwDirty.confirmPassword && confirmPasswordVal.length > 0 && (
                         <p className={`text-xs ${passwordsMatch ? "text-green-600" : "text-red-500"}`}>
                           {passwordsMatch ? (
                             <>
@@ -514,21 +532,23 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
                           )}
                         </p>
                       )}
+                      {pwErrors.confirmPassword && (
+                        <p className="text-xs text-destructive">{pwErrors.confirmPassword.message}</p>
+                      )}
                     </div>
 
                     <div className="flex gap-2 justify-end">
                       <Button
                         variant="outline"
+                        type="button"
                         onClick={() => {
                           setShowPasswordForm(false)
-                          setCurrentPassword("")
-                          setNewPassword("")
-                          setConfirmPassword("")
+                          resetPasswordForm()
                         }}
                       >
                         {tc("cancel")}
                       </Button>
-                      <Button onClick={handleChangePassword} disabled={!canChangePassword}>
+                      <Button type="submit" disabled={changingPassword}>
                         {changingPassword ? (
                           <>
                             <Loader2 className="mr-2 size-4 animate-spin" />
@@ -539,7 +559,7 @@ export function AdminProfileForm({ profile }: { profile: AdminProfileData }) {
                         )}
                       </Button>
                     </div>
-                  </div>
+                  </form>
                 )}
               </CardContent>
             </Card>

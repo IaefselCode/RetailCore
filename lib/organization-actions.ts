@@ -9,6 +9,7 @@ import { getSignedInRole } from "@/lib/auth-utils"
 import { getRequestMeta, type ActionResult } from "@/lib/actions"
 import { logAuditEvent } from "@/lib/audit-log"
 import { notifyAdmins } from "@/lib/notification-actions"
+import { deleteImage } from "@/lib/images-server"
 
 export type EmployeeActionResult = ActionResult & { temporaryPassword?: string }
 
@@ -156,20 +157,30 @@ export async function deleteShop(formData: FormData): Promise<ActionResult> {
     })
     if (!shop) return fail("Shop not found.")
 
+    // Collect profile image URLs of shop employees before deleting
+    const employees = await prisma.employee.findMany({
+      where: { shopId: id },
+      select: { userId: true },
+    })
+    const userIds = employees.map((e) => e.userId)
+    const usersWithImages = userIds.length > 0
+      ? await prisma.user.findMany({ where: { id: { in: userIds } }, select: { imageUrl: true } })
+      : []
+    const imageUrls = usersWithImages.map((u) => u.imageUrl).filter((url): url is string => !!url)
+
     await prisma.$transaction(async (tx) => {
-      const employees = await tx.employee.findMany({
-        where: { shopId: id },
-        select: { userId: true },
-      })
       await tx.sale.deleteMany({ where: { shopId: id } })
       await tx.employee.deleteMany({ where: { shopId: id } })
-      if (employees.length > 0) {
-        await tx.user.deleteMany({
-          where: { id: { in: employees.map((e) => e.userId) } },
-        })
+      if (userIds.length > 0) {
+        await tx.user.deleteMany({ where: { id: { in: userIds } } })
       }
       await tx.shop.delete({ where: { id } })
     })
+
+    // Remove profile images from storage
+    for (const url of imageUrls) {
+      await deleteImage(url).catch(() => {})
+    }
 
     const meta = await getRequestMeta()
     await logAuditEvent("shop_deleted", {
@@ -373,7 +384,7 @@ export async function deleteEmployee(formData: FormData): Promise<ActionResult> 
       select: {
         id: true,
         userId: true,
-        user: { select: { firstName: true, lastName: true, email: true } },
+        user: { select: { firstName: true, lastName: true, email: true, imageUrl: true } },
       },
     })
     if (!employee) return fail("Employee not found.")
@@ -418,6 +429,11 @@ export async function deleteEmployee(formData: FormData): Promise<ActionResult> 
       await tx.user.delete({ where: { id: employee.userId } })
     })
 
+    // Remove profile image from storage
+    if (employee.user.imageUrl) {
+      await deleteImage(employee.user.imageUrl).catch(() => {})
+    }
+
     const meta = await getRequestMeta()
     await logAuditEvent("employee_deleted", {
       actorId,
@@ -442,9 +458,15 @@ export async function deleteAllShops(): Promise<ActionResult> {
     const count = await prisma.shop.count()
     if (count === 0) return fail("No shops to delete.")
 
+    // Collect profile image URLs before deleting
+    const employees = await prisma.employee.findMany({ select: { userId: true } })
+    const userIds = employees.map((e) => e.userId)
+    const usersWithImages = userIds.length > 0
+      ? await prisma.user.findMany({ where: { id: { in: userIds } }, select: { imageUrl: true } })
+      : []
+    const imageUrls = usersWithImages.map((u) => u.imageUrl).filter((url): url is string => !!url)
+
     await prisma.$transaction(async (tx) => {
-      // Delete all shop-related data
-      const employees = await tx.employee.findMany({ select: { userId: true } })
       const sales = await tx.sale.findMany({ select: { id: true } })
       const saleIds = sales.map((s) => s.id)
 
@@ -456,10 +478,15 @@ export async function deleteAllShops(): Promise<ActionResult> {
       await tx.inventory.deleteMany({})
       await tx.employee.deleteMany({})
       if (employees.length > 0) {
-        await tx.user.deleteMany({ where: { id: { in: employees.map((e) => e.userId) } } })
+        await tx.user.deleteMany({ where: { id: { in: userIds } } })
       }
       await tx.shop.deleteMany({})
     })
+
+    // Remove profile images from storage
+    for (const url of imageUrls) {
+      await deleteImage(url).catch(() => {})
+    }
 
     const meta = await getRequestMeta()
     await logAuditEvent("shops_deleted_all", {
@@ -486,12 +513,17 @@ export async function deleteAllEmployees(): Promise<ActionResult> {
     const count = await prisma.employee.count()
     if (count === 0) return fail("No employees to delete.")
 
-    await prisma.$transaction(async (tx) => {
-      const employees = await tx.employee.findMany({ select: { userId: true, id: true } })
-      const empIds = employees.map((e) => e.id)
-      const userIds = employees.map((e) => e.userId)
+    // Collect profile image URLs before deleting
+    const employees = await prisma.employee.findMany({ select: { userId: true, id: true } })
+    const empIds = employees.map((e) => e.id)
+    const userIds = employees.map((e) => e.userId)
+    const usersWithImages = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { imageUrl: true },
+    })
+    const imageUrls = usersWithImages.map((u) => u.imageUrl).filter((url): url is string => !!url)
 
-      // Delete sales and sale items for these employees
+    await prisma.$transaction(async (tx) => {
       const sales = await tx.sale.findMany({ where: { employeeId: { in: empIds } }, select: { id: true } })
       const saleIds = sales.map((s) => s.id)
       if (saleIds.length > 0) {
@@ -509,6 +541,11 @@ export async function deleteAllEmployees(): Promise<ActionResult> {
       await tx.employee.deleteMany({})
       await tx.user.deleteMany({ where: { id: { in: userIds } } })
     })
+
+    // Remove profile images from storage
+    for (const url of imageUrls) {
+      await deleteImage(url).catch(() => {})
+    }
 
     const meta = await getRequestMeta()
     await logAuditEvent("employees_deleted_all", {

@@ -346,16 +346,26 @@ export async function deleteAllProducts(): Promise<ActionResult> {
     const count = await prisma.product.count()
     if (count === 0) return fail("No products to delete.")
 
+    // Collect image URLs before deleting so we can clean up storage
+    const allProducts = await prisma.product.findMany({ select: { id: true, imageUrl: true } })
+    const imageUrls = allProducts
+      .map((p) => p.imageUrl)
+      .filter((url): url is string => !!url)
+
     await prisma.$transaction(async (tx) => {
       // Delete all product-related data
-      const products = await tx.product.findMany({ select: { id: true } })
-      const productIds = products.map((p) => p.id)
+      const productIds = allProducts.map((p) => p.id)
 
       await tx.saleItem.deleteMany({ where: { productId: { in: productIds } } })
       await tx.stockTransaction.deleteMany({ where: { productId: { in: productIds } } })
       await tx.inventory.deleteMany({ where: { productId: { in: productIds } } })
       await tx.product.deleteMany({})
     })
+
+    // Remove product images from storage (local or Supabase)
+    for (const url of imageUrls) {
+      await deleteImage(url).catch(() => {})
+    }
 
     const meta = await getRequestMeta()
     await logAuditEvent("products_deleted_all", {

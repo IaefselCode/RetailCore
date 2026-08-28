@@ -126,12 +126,8 @@ export async function updateAdminProfile(
       },
     })
 
-    // Remove the replaced profile picture from storage
-    if (
-      old.imageUrl &&
-      old.imageUrl !== imageUrl &&
-      old.imageUrl.startsWith("/uploads/profiles/")
-    ) {
+    // Remove the replaced profile picture from storage (works for both local and Supabase)
+    if (old.imageUrl && old.imageUrl !== imageUrl) {
       await deleteImage(old.imageUrl)
     }
 
@@ -170,12 +166,8 @@ export async function updateProfilePhoto(
       data: { imageUrl: imageUrl || null },
     })
 
-    // Remove the old photo from storage if it was a local upload
-    if (
-      current.imageUrl &&
-      current.imageUrl !== imageUrl &&
-      current.imageUrl.startsWith("/uploads/profiles/")
-    ) {
+    // Remove the old photo from storage (works for both local and Supabase)
+    if (current.imageUrl && current.imageUrl !== imageUrl) {
       await deleteImage(current.imageUrl)
     }
 
@@ -248,12 +240,8 @@ export async function updateEmployeeProfile(
       },
     })
 
-    // Remove the replaced profile picture from storage.
-    if (
-      old.imageUrl &&
-      old.imageUrl !== imageUrl &&
-      old.imageUrl.startsWith("/uploads/profiles/")
-    ) {
+    // Remove the replaced profile picture from storage (works for both local and Supabase).
+    if (old.imageUrl && old.imageUrl !== imageUrl) {
       await deleteImage(old.imageUrl)
     }
 

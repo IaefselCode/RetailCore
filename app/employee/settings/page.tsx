@@ -1,10 +1,13 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import { useTranslations } from "next-intl"
 import { motion } from "motion/react"
 import { toast } from "sonner"
 import { Shield, Eye, EyeOff, Check, X, Loader2 } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { changeEmployeePassword } from "@/lib/settings-actions"
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
@@ -18,65 +21,93 @@ const sectionVariants = {
   visible: { opacity: 1, y: 0 },
 }
 
-function passwordStrength(pw: string): { score: number; label: string; color: string } {
+const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .regex(/[A-Z]/, "Password must include an uppercase letter")
+  .regex(/[a-z]/, "Password must include a lowercase letter")
+  .regex(/\d/, "Password must include a number")
+  .regex(/[^A-Za-z0-9]/, "Password must include a symbol")
+
+const buildSchema = (t: (key: string) => string) =>
+  z
+    .object({
+      currentPassword: z.string().min(1, t("fillPasswordFields")),
+      newPassword: passwordSchema,
+      confirmPassword: z.string(),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: t("passwordMismatch"),
+      path: ["confirmPassword"],
+    })
+    .refine((data) => data.currentPassword !== data.newPassword, {
+      message: "New password must be different from current password",
+      path: ["newPassword"],
+    })
+
+type PasswordForm = z.infer<ReturnType<typeof buildSchema>>
+
+function passwordStrength(pw: string): { score: number; label: string } {
   let score = 0
   if (pw.length >= 8) score++
   if (/[A-Z]/.test(pw)) score++
   if (/[a-z]/.test(pw)) score++
   if (/\d/.test(pw)) score++
   if (/[^A-Za-z0-9]/.test(pw)) score++
-
-  if (score <= 2) return { score, label: "Weak", color: "bg-red-500" }
-  if (score <= 3) return { score, label: "Fair", color: "bg-orange-500" }
-  if (score <= 4) return { score, label: "Good", color: "bg-yellow-500" }
-  return { score, label: "Strong", color: "bg-green-500" }
+  if (score <= 2) return { score, label: "Weak" }
+  if (score <= 3) return { score, label: "Fair" }
+  if (score <= 4) return { score, label: "Good" }
+  return { score, label: "Strong" }
 }
 
 export default function EmployeeSettingsPage() {
   const t = useTranslations("employeeSettings")
 
-  // Password change
-  const [currentPassword, setCurrentPassword] = useState("")
-  const [newPassword, setNewPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
+  const {
+    register,
+    watch,
+    handleSubmit,
+    reset,
+    formState: { errors, dirtyFields },
+  } = useForm<PasswordForm>({
+    resolver: zodResolver(buildSchema(t)),
+    mode: "onChange",
+    defaultValues: { currentPassword: "", newPassword: "", confirmPassword: "" },
+  })
+
+  const newPassword = watch("newPassword")
+  const confirmPassword = watch("confirmPassword")
   const [showCurrent, setShowCurrent] = useState(false)
   const [showNew, setShowNew] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
-  const [changingPassword, setChangingPassword] = useState(false)
+  const [changing, setChanging] = useState(false)
 
-  const strength = useMemo(() => passwordStrength(newPassword), [newPassword])
+  const strength = passwordStrength(newPassword)
+  const passwordsMatch = dirtyFields.confirmPassword && newPassword === confirmPassword && newPassword.length > 0
 
-  const passwordsMatch = newPassword.length > 0 && confirmPassword.length > 0 && newPassword === confirmPassword
-  const passwordsMismatch = confirmPassword.length > 0 && newPassword !== confirmPassword
+  const hasMinLen = newPassword.length >= 8
+  const hasUpper = /[A-Z]/.test(newPassword)
+  const hasLower = /[a-z]/.test(newPassword)
+  const hasNumber = /\d/.test(newPassword)
+  const hasSymbol = /[^A-Za-z0-9]/.test(newPassword)
 
-  const canChangePassword =
-    currentPassword.length > 0 &&
-    newPassword.length > 0 &&
-    confirmPassword.length > 0 &&
-    newPassword === confirmPassword &&
-    !changingPassword
-
-  const handleChangePassword = async () => {
-    if (!canChangePassword) return
-
-    setChangingPassword(true)
+  async function onSubmit(data: PasswordForm) {
+    setChanging(true)
     try {
       const result = await changeEmployeePassword({
-        currentPassword,
-        newPassword,
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
       })
       if (result.success) {
         toast.success(result.message)
-        setCurrentPassword("")
-        setNewPassword("")
-        setConfirmPassword("")
+        reset()
       } else {
         toast.error(result.message)
       }
     } catch {
       toast.error(t("somethingWentWrong"))
     } finally {
-      setChangingPassword(false)
+      setChanging(false)
     }
   }
 
@@ -90,7 +121,6 @@ export default function EmployeeSettingsPage() {
         <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </motion.div>
 
-      {/* Change Password */}
       <motion.div
         variants={sectionVariants}
         initial="hidden"
@@ -107,122 +137,130 @@ export default function EmployeeSettingsPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Current Password */}
-            <div className="space-y-1.5">
-              <Label htmlFor="current-password">{t("currentPassword")}</Label>
-              <div className="relative">
-                <Input
-                  id="current-password"
-                  type={showCurrent ? "text" : "password"}
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder={t("currentPassword")}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowCurrent(!showCurrent)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showCurrent ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
-              </div>
-            </div>
-
-            {/* New Password */}
-            <div className="space-y-1.5">
-              <Label htmlFor="new-password">{t("newPassword")}</Label>
-              <div className="relative">
-                <Input
-                  id="new-password"
-                  type={showNew ? "text" : "password"}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder={t("newPassword")}                    />
-                    <button
-                        type="button"
-                        onClick={() => setShowNew(!showNew)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showNew ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
-              </div>
-              {/* Password Strength */}
-              {newPassword.length > 0 && (
-                <div className="space-y-1 pt-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">{t("passwordStrength")}</span>
-                    <span className={`text-xs font-medium ${strength.score <= 2 ? "text-red-500" : strength.score <= 3 ? "text-orange-500" : strength.score <= 4 ? "text-yellow-600" : "text-green-600"}`}>
-                      {strength.label}
-                    </span>
-                  </div>
-                  <Progress value={(strength.score / 5) * 100} className="h-1.5" />
-                  <div className="flex gap-2 text-xs text-muted-foreground">
-                    <span className={newPassword.length >= 8 ? "text-green-600" : ""}>
-                      {newPassword.length >= 8 ? <Check className="inline size-3" /> : <X className="inline size-3" />}
-                      {" "}{t("minLength")}
-                    </span>
-                    <span className={/[A-Z]/.test(newPassword) ? "text-green-600" : ""}>
-                      {/[A-Z]/.test(newPassword) ? <Check className="inline size-3" /> : <X className="inline size-3" />}
-                      {" "}{t("uppercase")}
-                    </span>
-                    <span className={/[a-z]/.test(newPassword) ? "text-green-600" : ""}>
-                      {/[a-z]/.test(newPassword) ? <Check className="inline size-3" /> : <X className="inline size-3" />}
-                      {" "}{t("lowercase")}
-                    </span>
-                    <span className={/\d/.test(newPassword) ? "text-green-600" : ""}>
-                      {/\d/.test(newPassword) ? <Check className="inline size-3" /> : <X className="inline size-3" />}
-                      {" "}{t("number")}
-                    </span>
-                    <span className={/[^A-Za-z0-9]/.test(newPassword) ? "text-green-600" : ""}>
-                      {/[^A-Za-z0-9]/.test(newPassword) ? <Check className="inline size-3" /> : <X className="inline size-3" />}
-                      {" "}{t("symbol")}
-                    </span>
-                  </div>
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              {/* Current Password */}
+              <div className="space-y-1.5">
+                <Label htmlFor="current-password">{t("currentPassword")}</Label>
+                <div className="relative">
+                  <Input
+                    id="current-password"
+                    type={showCurrent ? "text" : "password"}
+                    placeholder={t("currentPassword")}
+                    {...register("currentPassword")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrent(!showCurrent)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    tabIndex={-1}
+                  >
+                    {showCurrent ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
                 </div>
-              )}
-            </div>
-
-            {/* Confirm Password */}
-            <div className="space-y-1.5">
-              <Label htmlFor="confirm-password">{t("confirmNewPassword")}</Label>
-              <div className="relative">
-                <Input
-                  id="confirm-password"
-                  type={showConfirm ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder={t("confirmNewPassword")}                    />
-                    <button
-                        type="button"
-                        onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showConfirm ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
+                {errors.currentPassword && (
+                  <p className="text-xs text-destructive">{errors.currentPassword.message}</p>
+                )}
               </div>
-              {confirmPassword.length > 0 && (
-                <p className={`text-xs ${passwordsMatch ? "text-green-600" : "text-red-500"}`}>
-                  {passwordsMatch ? (
-                    <><Check className="inline size-3" /> {t("passwordsMatch")}</>
-                  ) : (
-                    <><X className="inline size-3" /> {t("passwordMismatch")}</>
-                  )}
-                </p>
-              )}
-            </div>
 
-            <Button
-              variant="outline"
-              onClick={handleChangePassword}
-              disabled={!canChangePassword}
-            >
-              {changingPassword ? (
-                <><Loader2 className="mr-2 size-4 animate-spin" /> {t("changing")}</>
-              ) : (
-                t("updatePassword")
-              )}
-            </Button>
+              {/* New Password */}
+              <div className="space-y-1.5">
+                <Label htmlFor="new-password">{t("newPassword")}</Label>
+                <div className="relative">
+                  <Input
+                    id="new-password"
+                    type={showNew ? "text" : "password"}
+                    placeholder={t("newPassword")}
+                    {...register("newPassword")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNew(!showNew)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    tabIndex={-1}
+                  >
+                    {showNew ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+                {newPassword.length > 0 && (
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">{t("passwordStrength")}</span>
+                      <span className={`text-xs font-medium ${strength.score <= 2 ? "text-red-500" : strength.score <= 3 ? "text-orange-500" : strength.score <= 4 ? "text-yellow-600" : "text-green-600"}`}>
+                        {strength.label}
+                      </span>
+                    </div>
+                    <Progress value={(strength.score / 5) * 100} className="h-1.5" />
+                    <div className="flex gap-2 text-xs text-muted-foreground flex-wrap">
+                      <span className={hasMinLen ? "text-green-600" : ""}>
+                        {hasMinLen ? <Check className="inline size-3" /> : <X className="inline size-3" />}
+                        {" "}{t("minLength")}
+                      </span>
+                      <span className={hasUpper ? "text-green-600" : ""}>
+                        {hasUpper ? <Check className="inline size-3" /> : <X className="inline size-3" />}
+                        {" "}{t("uppercase")}
+                      </span>
+                      <span className={hasLower ? "text-green-600" : ""}>
+                        {hasLower ? <Check className="inline size-3" /> : <X className="inline size-3" />}
+                        {" "}{t("lowercase")}
+                      </span>
+                      <span className={hasNumber ? "text-green-600" : ""}>
+                        {hasNumber ? <Check className="inline size-3" /> : <X className="inline size-3" />}
+                        {" "}{t("number")}
+                      </span>
+                      <span className={hasSymbol ? "text-green-600" : ""}>
+                        {hasSymbol ? <Check className="inline size-3" /> : <X className="inline size-3" />}
+                        {" "}{t("symbol")}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {errors.newPassword && (
+                  <p className="text-xs text-destructive">{errors.newPassword.message}</p>
+                )}
+              </div>
+
+              {/* Confirm Password */}
+              <div className="space-y-1.5">
+                <Label htmlFor="confirm-password">{t("confirmNewPassword")}</Label>
+                <div className="relative">
+                  <Input
+                    id="confirm-password"
+                    type={showConfirm ? "text" : "password"}
+                    placeholder={t("confirmNewPassword")}
+                    {...register("confirmPassword")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    tabIndex={-1}
+                  >
+                    {showConfirm ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+                {dirtyFields.confirmPassword && confirmPassword.length > 0 && (
+                  <p className={`text-xs ${passwordsMatch ? "text-green-600" : "text-red-500"}`}>
+                    {passwordsMatch ? (
+                      <><Check className="inline size-3" /> {t("passwordsMatch")}</>
+                    ) : (
+                      <><X className="inline size-3" /> {t("passwordMismatch")}</>
+                    )}
+                  </p>
+                )}
+                {errors.confirmPassword && (
+                  <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
+                )}
+              </div>
+
+              <Button type="submit" variant="outline" disabled={changing}>
+                {changing ? (
+                  <><Loader2 className="mr-2 size-4 animate-spin" /> {t("changing")}</>
+                ) : (
+                  t("updatePassword")
+                )}
+              </Button>
+            </form>
           </CardContent>
         </Card>
       </motion.div>
