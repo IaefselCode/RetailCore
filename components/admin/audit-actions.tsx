@@ -17,7 +17,7 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { deleteAuthLog, clearAuthLogs, exportAuthLogsCsv } from "@/lib/audit-actions"
+import { deleteAuthLog, clearAuthLogs, exportAuthLogsExcel } from "@/lib/audit-actions"
 
 /** Toolbar with Export and Clear-All actions for the audit log page. */
 export function AuditToolbar() {
@@ -27,18 +27,23 @@ export function AuditToolbar() {
   const [pending, startTransition] = useTransition()
   const [confirmClear, setConfirmClear] = useState(false)
 
-  function exportCsv() {
+  function exportExcel() {
     startTransition(async () => {
-      const csv = await exportAuthLogsCsv()
-      if (!csv) {
-        toast.error(t("exportFailed"))
+      const base64 = await exportAuthLogsExcel()
+      if (!base64) {
+        toast.info(tc("noData") || "No audit logs to export")
         return
       }
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" })
+      const binaryStr = atob(base64)
+      const bytes = new Uint8Array(binaryStr.length)
+      for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i)
+      const blob = new Blob([bytes], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      })
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
-      a.download = `audit-logs-${new Date().toISOString().slice(0, 10)}.csv`
+      a.download = `audit-logs-${new Date().toISOString().slice(0, 10)}.xlsx`
       a.click()
       URL.revokeObjectURL(url)
       toast.success(t("exported"))
@@ -61,7 +66,7 @@ export function AuditToolbar() {
   return (
     <>
       <div className="flex flex-wrap items-center gap-2">
-        <AnimateButton variant="outline" size="sm" disabled={pending} onClick={exportCsv}>
+        <AnimateButton variant="outline" size="sm" disabled={pending} onClick={exportExcel}>
           {pending ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
           {t("export")}
         </AnimateButton>
