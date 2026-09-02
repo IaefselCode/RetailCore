@@ -210,7 +210,7 @@ point-of-sales/
 
 ## Database Schema
 
-The system uses 15 PostgreSQL models via Prisma:
+The system uses 15 PostgreSQL models via PrismaORM:
 
 | Model | Purpose |
 |-------|---------|
