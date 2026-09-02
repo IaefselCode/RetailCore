@@ -3,7 +3,6 @@ import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth-utils"
 import { getTranslations } from "next-intl/server"
-import { ShoppingCart } from "lucide-react"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -182,12 +181,7 @@ export default async function SalesPage() {
           <Link href="/admin/sales/history">
             <AnimateButton variant="outline">{t("viewHistory")}</AnimateButton>
           </Link>
-          <Link href="/employee/record-sale">
-            <AnimateButton variant="accent">
-              <ShoppingCart className="size-4" />
-              {t("recordNewSale")}
-            </AnimateButton>
-          </Link>
+
         </div>
       </div>
 
