@@ -178,7 +178,7 @@ point-of-sales/
 ├── components/
 │   ├── admin/               # Admin-specific UI components
 │   ├── employee/            # Employee-specific UI components
-│   ├── shared/              # Shared components (sidebar, topbar, providers)
+│   ├── shared/              # Shared components (sidebar,topbar,providers)GIT
 │   └── ui/                  # shadcn/ui base components
 ├── lib/
 │   ├── auth.ts              # NextAuth configuration
@@ -202,7 +202,7 @@ point-of-sales/
 │   └── schema.prisma        # Database schema (15 models)
 ├── scripts/                 # Database seed scripts
 ├── public/                  # Static assets
-├── proxy.ts                 # Next.js middleware (auth + route protections)
+├── proxy.ts                 # Next.js middleware (auth + route protection)
 └── next.config.ts           # Next.js configuration
 ```
 
@@ -210,7 +210,7 @@ point-of-sales/
 
 ## Database Schema
 
-The system uses 15 PostgreSQL models via PrismaORM:
+The system uses 15 PostgreSQL models via Prisma:
 
 | Model | Purpose |
 |-------|---------|
