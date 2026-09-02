@@ -113,6 +113,10 @@ export function SalesHistoryTable({
   const locale = useLocale()
 
   async function exportCsv() {
+    if (total === 0) {
+      toast.info(tc("noData") || "No sales data to export")
+      return
+    }
     const base64 = await getCsvExport({
       dateFrom: initialFilters.dateFrom || undefined,
       dateTo: initialFilters.dateTo || undefined,
@@ -230,7 +234,7 @@ export function SalesHistoryTable({
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">{t("title")}</h1>
-        <AnimateButton variant="outline" onClick={exportCsv}>
+        <AnimateButton variant="outline" onClick={exportCsv} disabled={total === 0}>
           <Download className="size-4" />
           {t("exportCsv")}
         </AnimateButton>

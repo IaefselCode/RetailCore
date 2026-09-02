@@ -409,6 +409,10 @@ export function AnalyticsContent({
   const locale = useLocale()
 
   async function exportReport() {
+    if (data.daily.length === 0) {
+      toast.info(t("noData") || "No data available to export")
+      return
+    }
     const wb = new ExcelJS.Workbook()
     wb.creator = "RetailCore"
     wb.created = new Date()
@@ -940,7 +944,7 @@ export function AnalyticsContent({
       </Card>
 
       <div className="flex justify-end">
-        <AnimateButton variant="outline" onClick={exportReport}>
+        <AnimateButton variant="outline" onClick={exportReport} disabled={data.daily.length === 0}>
           <DownloadIcon />
           {t("exportReport")}
         </AnimateButton>
