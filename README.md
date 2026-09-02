@@ -202,7 +202,7 @@ point-of-sales/
 │   └── schema.prisma        # Database schema (15 models)
 ├── scripts/                 # Database seed scripts
 ├── public/                  # Static assets
-├── proxy.ts                 # Next.js middleware (auth + route protection)
+├── proxy.ts                 # Next.js middleware (auth + route protections)
 └── next.config.ts           # Next.js configuration
 ```
 
