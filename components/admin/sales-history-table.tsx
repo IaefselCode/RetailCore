@@ -234,7 +234,7 @@ export function SalesHistoryTable({
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">{t("title")}</h1>
-        <AnimateButton variant="outline" onClick={exportCsv} disabled={total === 0}>
+        <AnimateButton variant="outline" onClick={exportCsv}>
           <Download className="size-4" />
           {t("exportCsv")}
         </AnimateButton>

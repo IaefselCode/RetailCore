@@ -410,7 +410,7 @@ export function AnalyticsContent({
 
   async function exportReport() {
     if (data.daily.length === 0) {
-      toast.info(t("noData") || "No data available to export")
+      toast.info(tc("noData") || "No data available to export")
       return
     }
     const wb = new ExcelJS.Workbook()
@@ -944,7 +944,7 @@ export function AnalyticsContent({
       </Card>
 
       <div className="flex justify-end">
-        <AnimateButton variant="outline" onClick={exportReport} disabled={data.daily.length === 0}>
+        <AnimateButton variant="outline" onClick={exportReport}>
           <DownloadIcon />
           {t("exportReport")}
         </AnimateButton>
