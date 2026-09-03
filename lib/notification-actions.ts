@@ -175,32 +175,41 @@ export async function createNotification(
 
 }
 
-/** Notify all admin users. */
+/** Notify all admin users, excluding the current user (to avoid double toasts). */
 export async function notifyAdmins(notification: { title: string; message: string; type?: string }): Promise<void> {
+  const session = await auth()
+  const currentUserId = session?.user?.id ?? null
   const admins = await prisma.user.findMany({ where: { role: "ADMIN", isActive: true }, select: { id: true } })
   for (const admin of admins) {
+    if (currentUserId && admin.id === currentUserId) continue // skip the user who triggered this action
     await createNotification(admin.id, notification)
   }
 }
 
-/** Notify all active employees. */
+/** Notify all active employees, excluding the current user (to avoid double toasts). */
 export async function notifyEmployees(notification: { title: string; message: string; type?: string }): Promise<void> {
+  const session = await auth()
+  const currentUserId = session?.user?.id ?? null
   const employees = await prisma.user.findMany({ where: { role: "EMPLOYEE", isActive: true }, select: { id: true } })
   for (const emp of employees) {
+    if (currentUserId && emp.id === currentUserId) continue // skip the user who triggered this action
     await createNotification(emp.id, notification)
   }
 }
 
-/** Notify employees at a specific shop. */
+/** Notify employees at a specific shop, excluding the current user (to avoid double toasts). */
 export async function notifyShopEmployees(
   shopId: string,
   notification: { title: string; message: string; type?: string }
 ): Promise<void> {
+  const session = await auth()
+  const currentUserId = session?.user?.id ?? null
   const employees = await prisma.employee.findMany({
     where: { shopId, isActive: true },
     select: { userId: true },
   })
   for (const emp of employees) {
+    if (currentUserId && emp.userId === currentUserId) continue // skip the user who triggered this action
     await createNotification(emp.userId, notification)
   }
 }
