@@ -20,8 +20,8 @@ type LoginForm = z.infer<ReturnType<typeof buildSchema>>
 
 function buildSchema(t: (key: string) => string) {
   return z.object({
-    email: z.string().email(t("invalidEmail")),
-    password: z.string().min(1, t("passwordRequired")),
+    email: z.string().trim().email(t("invalidEmail")),
+    password: z.string().trim().min(1, t("passwordRequired")),
   })
 }
 
