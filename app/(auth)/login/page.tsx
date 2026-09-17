@@ -79,7 +79,11 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        toast.error(t("invalidCredentials"))
+        if (result.error === "rate_limit") {
+          toast.error(t("tooManyAttempts"))
+        } else {
+          toast.error(t("invalidCredentials"))
+        }
         return
       }
 
