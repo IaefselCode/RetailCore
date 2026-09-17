@@ -9,8 +9,8 @@ import { DEFAULT_LOCALE, normalizeLocale } from "@/lib/i18n"
 
 const LOGIN_MAX_ATTEMPTS = 10
 const LOGIN_WINDOW_MS = 15 * 60 * 1000
-const IP_MAX_ATTEMPTS = 20
-const IP_WINDOW_MS = 60 * 1000
+const IP_MAX_ATTEMPTS = 10
+const IP_WINDOW_MS = 15 * 60 * 1000
 
 const DUMMY_HASH = "$2b$12$N0aKAcfB8j9KhRug9..IXe39b/lwZfq4Lr2UQwP5vvpx5aLlU2K.6"
 
@@ -71,8 +71,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const ip = getClientIp(request)
 
         if (!email || !password) return null
-        if (!rateLimit(`email:${email}`, LOGIN_MAX_ATTEMPTS, LOGIN_WINDOW_MS)) return null
-        if (!rateLimit(`ip:${ip}`, IP_MAX_ATTEMPTS, IP_WINDOW_MS)) return null
+        if (!rateLimit(`email:${email}`, LOGIN_MAX_ATTEMPTS, LOGIN_WINDOW_MS)) throw new Error("rate_limit")
+        if (!rateLimit(`ip:${ip}`, IP_MAX_ATTEMPTS, IP_WINDOW_MS)) throw new Error("rate_limit")
 
         const user = await prisma.user.findUnique({ where: { email } })
 
