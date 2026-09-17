@@ -55,6 +55,9 @@ export async function validateRefreshToken(token: string): Promise<string | null
   return record.userId
 }
 
+
+
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: {
     strategy: "jwt",
@@ -71,8 +74,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const ip = getClientIp(request)
 
         if (!email || !password) return null
-        if (!rateLimit(`email:${email}`, LOGIN_MAX_ATTEMPTS, LOGIN_WINDOW_MS)) throw new Error("rate_limit")
-        if (!rateLimit(`ip:${ip}`, IP_MAX_ATTEMPTS, IP_WINDOW_MS)) throw new Error("rate_limit")
+        if (!rateLimit(`email:${email}`, LOGIN_MAX_ATTEMPTS, LOGIN_WINDOW_MS)) return null
+        if (!rateLimit(`ip:${ip}`, IP_MAX_ATTEMPTS, IP_WINDOW_MS)) return null
 
         const user = await prisma.user.findUnique({ where: { email } })
 
