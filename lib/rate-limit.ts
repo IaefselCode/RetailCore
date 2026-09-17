@@ -27,3 +27,12 @@ export function getClientIp(request: Request): string {
   const xff = request.headers.get("x-forwarded-for")
   return xff?.split(",")[0]?.trim() || "unknown"
 }
+
+
+/** Read-only check — returns true if the key has already exceeded max. */
+export function isRateLimited(key: string, max: number): boolean {
+  const now = Date.now()
+  const bucket = store.get(key)
+  if (!bucket || bucket.resetAt <= now) return false
+  return bucket.count >= max
+}

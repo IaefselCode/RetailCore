@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { toast } from "sonner"
 import { checkLoginStatus } from "@/lib/login-check"
+import { checkLoginRateLimit } from "@/lib/login-rate-limit"
 
 type LoginForm = z.infer<ReturnType<typeof buildSchema>>
 
@@ -72,6 +73,13 @@ export default function LoginPage() {
         return
       }
 
+      // Pre-check rate limit before calling signIn
+      const rateCheck = await checkLoginRateLimit(data.email)
+      if (rateCheck.limited) {
+        toast.error(t("tooManyAttempts"))
+        return
+      }
+
       const result = await signIn("credentials", {
         email: data.email,
         password: data.password,
@@ -79,11 +87,7 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        if (result.error === "rate_limit") {
-          toast.error(t("tooManyAttempts"))
-        } else {
-          toast.error(t("invalidCredentials"))
-        }
+        toast.error(t("invalidCredentials"))
         return
       }
 
