@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { toast } from "sonner"
 import { checkLoginStatus } from "@/lib/login-check"
-import { checkLoginRateLimit } from "@/lib/login-rate-limit"
+import { checkLoginRateLimit, recordLoginAttempt, clearLoginAttempts } from "@/lib/login-rate-limit"
 
 type LoginForm = z.infer<ReturnType<typeof buildSchema>>
 
@@ -87,10 +87,18 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        toast.error(t("invalidCredentials"))
+        // Record the failed attempt
+        const rateResult = await recordLoginAttempt()
+        if (rateResult.limited) {
+          toast.error(t("tooManyAttempts"))
+        } else {
+          toast.error(t("invalidCredentials"))
+        }
         return
       }
 
+      // Successful login — clear rate limit counter
+      await clearLoginAttempts()
       toast.success(t("signedIn"))
       router.push("/")
       router.refresh()
