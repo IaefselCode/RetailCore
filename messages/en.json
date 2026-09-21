@@ -83,6 +83,7 @@
     "passwordRequired": "Password is required",
     "invalidCredentials": "Invalid email or password.",
     "tooManyAttempts": "Too many attempts. Try again later.",
+    "unexpectedError": "Something went wrong. Please try again.",
     "signedIn": "Signed in successfully",
     "forgotTitle": "Forgot password?",
     "forgotSubtitle": "Enter your email and we will send you a reset link.",
