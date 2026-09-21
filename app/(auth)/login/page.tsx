@@ -80,28 +80,35 @@ export default function LoginPage() {
         return
       }
 
-      const result = await signIn("credentials", {
+      await signIn("credentials", {
         email: data.email,
         password: data.password,
         redirect: false,
       })
 
-      if (result?.error) {
-        // Record the failed attempt
-        const rateResult = await recordLoginAttempt()
-        if (rateResult.limited) {
-          toast.error(t("tooManyAttempts"))
-        } else {
-          toast.error(t("invalidCredentials"))
-        }
+      // Verify login actually succeeded by checking the session.
+      // NextAuth v5 Credentials provider + redirect:false can return
+      // an error even when the cookie was set successfully, so we
+      // must not rely on result.error alone.
+      const sessionRes = await fetch("/api/auth/session")
+      const session = await sessionRes.json().catch(() => null)
+
+      if (session?.user) {
+        // Login succeeded — clear rate limit counter
+        await clearLoginAttempts()
+        toast.success(t("signedIn"))
+        router.push("/")
+        router.refresh()
         return
       }
 
-      // Successful login — clear rate limit counter
-      await clearLoginAttempts()
-      toast.success(t("signedIn"))
-      router.push("/")
-      router.refresh()
+      // Login genuinely failed
+      const rateResult = await recordLoginAttempt()
+      if (rateResult.limited) {
+        toast.error(t("tooManyAttempts"))
+      } else {
+        toast.error(t("invalidCredentials"))
+      }
     } catch {
       toast.error(t("invalidCredentials"))
     }
