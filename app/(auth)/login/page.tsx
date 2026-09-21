@@ -8,14 +8,12 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Eye, EyeOff, Loader2, Store } from "lucide-react"
-import { signIn } from "next-auth/react"
 import { useTranslations } from "next-intl"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button as AnimateButton } from "@/components/ui/animate-button"
 import { toast } from "sonner"
-import { checkLoginStatus } from "@/lib/login-check"
-import { checkLoginRateLimit, recordLoginAttempt, clearLoginAttempts } from "@/lib/login-rate-limit"
+import { loginAction } from "@/lib/login-action"
 
 type LoginForm = z.infer<ReturnType<typeof buildSchema>>
 
@@ -62,55 +60,38 @@ export default function LoginPage() {
 
   async function onSubmit(data: LoginForm) {
     try {
-      // Pre-check account status for specific error messages
-      const status = await checkLoginStatus(data.email)
-      if (!status.ok) {
-        if (status.error === "account_deactivated") {
-          toast.error(t("accountDeactivated"))
-        } else if (status.error === "shop_deactivated") {
-          toast.error(t("shopDeactivated", { shop: status.shopName || "" }))
-        }
-        return
-      }
+      // Single server action: verifies credentials, checks activation,
+      // rate-limits, and sets the session cookie on success.
+      const result = await loginAction(data.email, data.password)
 
-      // Pre-check rate limit before calling signIn
-      const rateCheck = await checkLoginRateLimit(data.email)
-      if (rateCheck.limited) {
-        toast.error(t("tooManyAttempts"))
-        return
-      }
-
-      await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        redirect: false,
-      })
-
-      // Verify login actually succeeded by checking the session.
-      // NextAuth v5 Credentials provider + redirect:false can return
-      // an error even when the cookie was set successfully, so we
-      // must not rely on result.error alone.
-      const sessionRes = await fetch("/api/auth/session")
-      const session = await sessionRes.json().catch(() => null)
-
-      if (session?.user) {
-        // Login succeeded — clear rate limit counter
-        await clearLoginAttempts()
+      if (result.success) {
         toast.success(t("signedIn"))
-        router.push("/")
-        router.refresh()
+        // Force a full page reload so the browser sends the new
+        // session cookie on the server request (client-side
+        // navigation may not pick up the Set-Cookie immediately).
+        setTimeout(() => {
+          window.location.href = "/"
+        }, 500)
         return
       }
 
-      // Login genuinely failed
-      const rateResult = await recordLoginAttempt()
-      if (rateResult.limited) {
-        toast.error(t("tooManyAttempts"))
-      } else {
-        toast.error(t("invalidCredentials"))
+      switch (result.error) {
+        case "account_deactivated":
+          toast.error(t("accountDeactivated"))
+          break
+        case "shop_deactivated":
+          toast.error(t("shopDeactivated", { shop: result.shopName }))
+          break
+        case "rate_limited":
+          toast.error(t("tooManyAttempts"))
+          break
+        default:
+          toast.error(t("invalidCredentials"))
       }
     } catch {
-      toast.error(t("invalidCredentials"))
+      // Network/server error — do NOT claim bad credentials here;
+      // the session cookie may already have been set.
+      toast.error(t("unexpectedError"))
     }
   }
 

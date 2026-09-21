@@ -83,6 +83,7 @@
     "passwordRequired": "Nenosiri linahitajika",
     "invalidCredentials": "Barua pepe au nenosiri si sahihi.",
     "tooManyAttempts": "Majeraha mengi sana. Jaribu tena baadaye.",
+    "unexpectedError": "Kuna hitilafu imetokea. Tafadhali jaribu tena.",
     "signedIn": "Umeingia kwa mafanikio",
     "forgotTitle": "Umesahau nenosiri?",
     "forgotSubtitle": "Weka barua pepe yako na tutakutumia kiungo cha kuweka upya.",

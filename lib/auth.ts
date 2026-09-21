@@ -12,7 +12,7 @@ const LOGIN_WINDOW_MS = 15 * 60 * 1000
 const IP_MAX_ATTEMPTS = 10
 const IP_WINDOW_MS = 15 * 60 * 1000
 
-const DUMMY_HASH = "$2b$12$N0aKAcfB8j9KhRug9..IXe39b/lwZfq4Lr2UQwP5vvpx5aLlU2K.6"
+export const DUMMY_HASH = "$2b$12$N0aKAcfB8j9KhRug9..IXe39b/lwZfq4Lr2UQwP5vvpx5aLlU2K.6"
 
 // Token lifetimes
 export const ACCESS_TOKEN_MAX_AGE = 15 * 60            // 15 minutes
