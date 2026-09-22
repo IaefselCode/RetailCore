@@ -226,6 +226,15 @@ model SystemSetting {
   value String
 }
 
+model RateLimitBucket {
+  key       String   @id
+  count     Int
+  resetAt   DateTime
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
+}
+
 
 model NotificationPreference {
   id             String  @id @default(cuid())

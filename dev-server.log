@@ -1,0 +1,43 @@
+
+> point-of-sales@0.1.0 dev
+> next dev --turbopack
+
+▲ Next.js 16.2.12 (Turbopack)
+- Local:         http://localhost:61998
+- Network:       http://192.168.1.103:61998
+- Environments: .env
+✓ Ready in 1168ms
+
+ GET /login?callbackUrl=%2F 200 in 1721ms (next.js: 462ms, proxy.ts: 16ms, application-code: 1243ms)
+ GET /api/auth/session 200 in 2.0s (next.js: 1985ms, application-code: 55ms)
+ GET /api/auth/session 200 in 38ms (next.js: 23ms, application-code: 16ms)
+ GET /login?callbackUrl=%2F 200 in 181ms (next.js: 15ms, proxy.ts: 13ms, application-code: 153ms)
+ GET /api/auth/session 200 in 44ms (next.js: 26ms, application-code: 19ms)
+ GET /api/auth/session 200 in 25ms (next.js: 9ms, application-code: 16ms)
+ POST /login?callbackUrl=%2F 200 in 5.4s (next.js: 16ms, proxy.ts: 15ms, application-code: 5.3s)
+  └─ ƒ loginAction("davidmodestus868@gmail.com", "David47@,',") in 5226ms lib/login-action.ts
+ GET /api/auth/session 200 in 64ms (next.js: 26ms, application-code: 38ms)
+ GET /api/auth/session 200 in 46ms (next.js: 8ms, application-code: 39ms)
+ GET / 200 in 1158ms (next.js: 102ms, proxy.ts: 32ms, application-code: 1024ms)
+[browser] Uncaught Error: Rendered more hooks than during the previous render.
+ POST / 200 in 863ms (next.js: 22ms, proxy.ts: 51ms, application-code: 790ms)
+  └─ ƒ checkSessionStatus() in 768ms lib/login-check.ts
+ GET /api/auth/session 200 in 66ms (next.js: 27ms, application-code: 39ms)
+ GET /api/auth/session 200 in 45ms (next.js: 9ms, application-code: 36ms)
+ POST /admin/dashboard 200 in 3.6s (next.js: 15ms, proxy.ts: 52ms, application-code: 3.6s)
+  └─ ƒ checkSessionStatus() in 3510ms lib/login-check.ts
+ GET /admin/dashboard 200 in 5.4s (next.js: 131ms, proxy.ts: 19ms, application-code: 5.2s)
+ GET /api/auth/session 200 in 98ms (next.js: 27ms, application-code: 71ms)
+ GET /api/notifications/stream 200 in 7.0s (next.js: 197ms, application-code: 6.8s)
+ GET /api/auth/session 200 in 41ms (next.js: 8ms, application-code: 33ms)
+ POST /admin/dashboard 200 in 1201ms (next.js: 25ms, proxy.ts: 57ms, application-code: 1119ms)
+  └─ ƒ checkSessionStatus() in 1089ms lib/login-check.ts
+ GET /admin/dashboard 200 in 2.7s (next.js: 13ms, proxy.ts: 17ms, application-code: 2.6s)
+ POST /admin/dashboard 200 in 314ms (next.js: 16ms, proxy.ts: 14ms, application-code: 285ms)
+  └─ ƒ logoutAndRevoke() in 265ms lib/logout-actions.ts
+ GET /api/auth/csrf 200 in 31ms (next.js: 18ms, application-code: 13ms)
+ POST /api/auth/signout 200 in 279ms (next.js: 6ms, application-code: 272ms)
+ GET /login 200 in 140ms (next.js: 13ms, proxy.ts: 9ms, application-code: 118ms)
+ GET /api/auth/session 200 in 23ms (next.js: 8ms, application-code: 15ms)
+ GET /api/notifications/stream 200 in 4.2s (next.js: 8ms, application-code: 4.2s)
+ GET /api/auth/session 200 in 21ms (next.js: 7ms, application-code: 14ms)
