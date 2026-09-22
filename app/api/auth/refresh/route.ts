@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth, createRefreshToken } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { sessionTokenCookie } from "@/lib/session-cookie"
 
 const ACCESS_TOKEN_MAX_AGE = 15 * 60            // 15 minutes
 const REFRESH_TOKEN_MAX_AGE = 30 * 24 * 60 * 60 // 30 days
@@ -32,13 +33,19 @@ export async function POST() {
     await prisma.refreshToken.delete({ where: { id: existingToken.id } })
     const newRefreshToken = await createRefreshToken(userId)
 
-    // Build a new JWT using NextAuth's encode
+    // Build a new JWT using NextAuth's encode. The salt MUST be the
+    // session cookie name (with its production __Secure- prefix) — that's
+    // exactly what auth() uses to decode. An empty salt produced a token
+    // the middleware could never decrypt, kicking users out after a
+    // refresh. The cookie name must match too, or the browser ends up
+    // with two cookies and the session silently disappears.
+    const { name: cookieName, secure } = await sessionTokenCookie()
     const { encode } = await import("next-auth/jwt")
     const now = Math.floor(Date.now() / 1000)
 
     const newJwt = await encode({
       secret: process.env.AUTH_SECRET!,
-      salt: "",
+      salt: cookieName,
       token: {
         uid: userId,
         role: session.user.role,
@@ -52,9 +59,9 @@ export async function POST() {
     })
 
     const response = NextResponse.json({ success: true })
-    response.cookies.set("authjs.session-token", newJwt, {
+    response.cookies.set(cookieName, newJwt, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure,
       sameSite: "lax",
       path: "/",
       maxAge: ACCESS_TOKEN_MAX_AGE,

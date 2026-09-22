@@ -13,6 +13,7 @@ import {
 } from "@/lib/auth"
 import { isRateLimited, rateLimit } from "@/lib/rate-limit"
 import { logAuthEvent } from "@/lib/auth-log"
+import { sessionTokenCookie } from "@/lib/session-cookie"
 
 const LOGIN_MAX_ATTEMPTS = 10
 const IP_MAX_ATTEMPTS = 10
@@ -59,8 +60,8 @@ export async function loginAction(
   // Brute-force protection — only failed attempts consume the budget
   // (checked up front, incremented after a failed verification).
   if (
-    isRateLimited(`login-email:${normalizedEmail}`, LOGIN_MAX_ATTEMPTS) ||
-    (ip !== "unknown" && isRateLimited(`login-ip:${ip}`, IP_MAX_ATTEMPTS))
+    (await isRateLimited(`login-email:${normalizedEmail}`, LOGIN_MAX_ATTEMPTS)) ||
+    (ip !== "unknown" && (await isRateLimited(`login-ip:${ip}`, IP_MAX_ATTEMPTS)))
   ) {
     return { success: false, error: "rate_limited" }
   }
@@ -115,9 +116,9 @@ export async function loginAction(
 
   const valid = await bcrypt.compare(password, user.passwordHash)
   if (!valid) {
-    rateLimit(`login-email:${normalizedEmail}`, LOGIN_MAX_ATTEMPTS, LOGIN_WINDOW_MS)
+    await rateLimit(`login-email:${normalizedEmail}`, LOGIN_MAX_ATTEMPTS, LOGIN_WINDOW_MS)
     if (ip !== "unknown") {
-      rateLimit(`login-ip:${ip}`, IP_MAX_ATTEMPTS, LOGIN_WINDOW_MS)
+      await rateLimit(`login-ip:${ip}`, IP_MAX_ATTEMPTS, LOGIN_WINDOW_MS)
     }
     logFailure(user.id)
     return { success: false, error: "invalid_credentials" }
@@ -133,9 +134,15 @@ export async function loginAction(
   const refreshToken = await createRefreshToken(user.id)
 
   const now = Math.floor(Date.now() / 1000)
+  // Match @auth/core exactly: the JWT salt IS the cookie name, which gains
+  // the __Secure- prefix when the app is served over HTTPS. Hardcoding the
+  // dev name made auth() in the middleware unable to see the session in
+  // production — sign-in succeeded, then bounced straight back to /login.
+  const { name: cookieName, secure } = await sessionTokenCookie()
+
   const token = await encode({
     secret: process.env.AUTH_SECRET!,
-    salt: "authjs.session-token",
+    salt: cookieName,
     token: {
       uid: user.id,
       role: user.role,
@@ -149,9 +156,9 @@ export async function loginAction(
   })
 
   const cookieStore = await cookies()
-  cookieStore.set("authjs.session-token", token, {
+  cookieStore.set(cookieName, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure,
     sameSite: "lax",
     path: "/",
     maxAge: ACCESS_TOKEN_MAX_AGE,

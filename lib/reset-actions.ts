@@ -55,10 +55,10 @@ export async function requestPasswordReset(
     return { success: false, message: "Enter a valid email address." }
   }
 
-  if (!rateLimit(`reset-email:${email}`, 5, 15 * 60 * 1000)) {
+  if (!(await rateLimit(`reset-email:${email}`, 5, 15 * 60 * 1000))) {
     return { success: false, message: "Too many requests. Try again later." }
   }
-  if (!rateLimit(`reset-ip:${ip}`, 10, 15 * 60 * 1000)) {
+  if (!(await rateLimit(`reset-ip:${ip}`, 10, 15 * 60 * 1000))) {
     return { success: false, message: "Too many requests. Try again later." }
   }
 
