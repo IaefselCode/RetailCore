@@ -562,7 +562,8 @@
     "processing": "Processing...",
     "completeSale": "Complete Sale",
     "noProductsFound": "No products found",
-    "productDeactivated": "This product is deactivated and cannot be sold"
+    "productDeactivated": "This product is deactivated and cannot be sold",
+    "cartLimitExceeded": "A sale can contain at most 10 different products"
   },
   "imageUpload": {
     "upload": "Upload image",

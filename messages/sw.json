@@ -543,7 +543,8 @@
     "processing": "Inachakatua...",
     "completeSale": "Kamilisha Muamala",
     "noProductsFound": "Hakuna bidhaa zilizopatikana",
-    "productDeactivated": "Bidhaa hii imezimwa na haiwezi kuuza"
+    "productDeactivated": "Bidhaa hii imezimwa na haiwezi kuuza",
+    "cartLimitExceeded": "Muamala mmoja unaweza kuwa na bidhaa 10 tofauti tu"
   },
   "imageUpload": {
     "upload": "Pakia picha",

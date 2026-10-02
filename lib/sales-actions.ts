@@ -20,17 +20,47 @@ function str(value: FormDataEntryValue | null): string {
 
 type CartItem = { productId: string; quantity: number }
 
-function parseCart(raw: string): CartItem[] | null {
+/**
+ * A sale may contain at most this many distinct product lines. Enforced on
+ * the client (block adding another product) and re-checked here so the
+ * server never trusts the client.
+ */
+const MAX_CART_LINES = 10
+
+/**
+ * The cart JSON is sent as a single form field, so it needs a much larger
+ * cap than the default `sanitize` maxLength (500) — a legitimate cart of
+ * 10 product lines is ~550 chars and used to be silently truncated, which
+ * made JSON.parse fail and surfaced the wrong "Add at least one item" toast.
+ */
+const CART_JSON_MAX_LENGTH = 4096
+
+type CartParseResult =
+  | { ok: true; items: CartItem[] }
+  | { ok: false; reason: "empty" | "invalid" | "too_many" }
+
+function parseCart(raw: string): CartParseResult {
+  if (!raw) return { ok: false, reason: "empty" }
+
+  let parsed: unknown
   try {
-    const parsed = JSON.parse(raw) as CartItem[]
-    if (!Array.isArray(parsed) || parsed.length === 0) return null
-    for (const item of parsed) {
-      if (!item.productId || !Number.isInteger(item.quantity) || item.quantity <= 0) return null
-    }
-    return parsed
+    parsed = JSON.parse(raw)
   } catch {
-    return null
+    // Truncated or otherwise corrupted payload — never report this as
+    // "cart is empty".
+    return { ok: false, reason: "invalid" }
   }
+
+  if (!Array.isArray(parsed)) return { ok: false, reason: "invalid" }
+  if (parsed.length === 0) return { ok: false, reason: "empty" }
+  if (parsed.length > MAX_CART_LINES) return { ok: false, reason: "too_many" }
+
+  for (const item of parsed as CartItem[]) {
+    if (!item?.productId || !Number.isInteger(item.quantity) || item.quantity <= 0) {
+      return { ok: false, reason: "invalid" }
+    }
+  }
+  return { ok: true, items: parsed as CartItem[] }
 }
 
 export async function recordSale(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
@@ -38,15 +68,23 @@ export async function recordSale(_prev: ActionResult | null, formData: FormData)
   if (!ctx) return fail("You do not have permission to do that.")
 
   try {
-    const cart = parseCart(str(formData.get("items")))
+    const itemsResult = parseCart(sanitize(formData.get("items"), CART_JSON_MAX_LENGTH))
     const paymentMethod = str(formData.get("paymentMethod")) || "CASH"
     const customerName = str(formData.get("customerName")) || null
     const customerEmail = str(formData.get("customerEmail")) || null
     const discountRaw = str(formData.get("discount"))
     const discount = discountRaw ? parseFloat(discountRaw) : 0
 
-    if (!cart) return fail("Add at least one item to the cart.")
+    if (!itemsResult.ok) {
+      if (itemsResult.reason === "empty") return fail("Add at least one item to the cart.")
+      if (itemsResult.reason === "too_many") {
+        return fail(`A sale can contain at most ${MAX_CART_LINES} items in the cart.`)
+      }
+      return fail("Invalid cart data. Please refresh the page and try again.")
+    }
     if (Number.isNaN(discount) || discount < 0) return fail("Enter a valid discount.")
+
+    const cart = itemsResult.items
 
     const products = await prisma.product.findMany({
       where: { id: { in: cart.map((c) => c.productId) }, isActive: true },
