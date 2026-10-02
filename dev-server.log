@@ -41,3 +41,65 @@
  GET /api/auth/session 200 in 23ms (next.js: 8ms, application-code: 15ms)
  GET /api/notifications/stream 200 in 4.2s (next.js: 8ms, application-code: 4.2s)
  GET /api/auth/session 200 in 21ms (next.js: 7ms, application-code: 14ms)
+ POST /login 200 in 3.6s (next.js: 13ms, proxy.ts: 14ms, application-code: 3.5s)
+  └─ ƒ loginAction("davidmodestus868@gmail.com", "David47@,',") in 3458ms lib/login-action.ts
+ GET /api/auth/session 200 in 43ms (next.js: 23ms, application-code: 20ms)
+ GET /api/auth/session 200 in 36ms (next.js: 10ms, application-code: 27ms)
+ POST / 200 in 852ms (next.js: 18ms, proxy.ts: 45ms, application-code: 789ms)
+  └─ ƒ checkSessionStatus() in 776ms lib/login-check.ts
+ GET / 200 in 1337ms (next.js: 14ms, proxy.ts: 19ms, application-code: 1304ms)
+ GET /api/auth/session 200 in 33ms (next.js: 5ms, application-code: 28ms)
+ GET /api/auth/session 200 in 80ms (next.js: 9ms, application-code: 71ms)
+ POST /admin/dashboard 200 in 2.9s (next.js: 13ms, proxy.ts: 89ms, application-code: 2.8s)
+  └─ ƒ checkSessionStatus() in 2752ms lib/login-check.ts
+ GET /admin/dashboard 200 in 3.8s (next.js: 12ms, proxy.ts: 14ms, application-code: 3.8s)
+ GET /api/auth/session 200 in 58ms (next.js: 30ms, application-code: 28ms)
+ GET /api/auth/session 200 in 29ms (next.js: 7ms, application-code: 21ms)
+ GET /api/auth/session 200 in 34ms (next.js: 7ms, application-code: 27ms)
+ GET /api/auth/session 200 in 25ms (next.js: 6ms, application-code: 19ms)
+ POST /admin/dashboard 200 in 827ms (next.js: 12ms, proxy.ts: 17ms, application-code: 798ms)
+  └─ ƒ checkSessionStatus() in 783ms lib/login-check.ts
+ POST /admin/dashboard 200 in 803ms (next.js: 11ms, proxy.ts: 14ms, application-code: 778ms)
+  └─ ƒ checkSessionStatus() in 764ms lib/login-check.ts
+ GET /api/auth/session 200 in 67ms (next.js: 35ms, application-code: 32ms)
+ GET /api/auth/session 200 in 25ms (next.js: 7ms, application-code: 18ms)
+ POST /admin/dashboard 200 in 824ms (next.js: 11ms, proxy.ts: 18ms, application-code: 795ms)
+  └─ ƒ checkSessionStatus() in 779ms lib/login-check.ts
+ POST /admin/dashboard 200 in 820ms (next.js: 13ms, proxy.ts: 17ms, application-code: 791ms)
+  └─ ƒ checkSessionStatus() in 776ms lib/login-check.ts
+ POST /admin/dashboard 200 in 822ms (next.js: 12ms, proxy.ts: 17ms, application-code: 793ms)
+  └─ ƒ checkSessionStatus() in 778ms lib/login-check.ts
+ POST /admin/dashboard 200 in 803ms (next.js: 13ms, proxy.ts: 15ms, application-code: 776ms)
+  └─ ƒ checkSessionStatus() in 761ms lib/login-check.ts
+ POST /admin/dashboard 200 in 1210ms (next.js: 11ms, proxy.ts: 16ms, application-code: 1183ms)
+  └─ ƒ checkSessionStatus() in 1164ms lib/login-check.ts
+ POST /admin/dashboard 200 in 866ms (next.js: 29ms, proxy.ts: 40ms, application-code: 796ms)
+  └─ ƒ checkSessionStatus() in 765ms lib/login-check.ts
+ POST /admin/dashboard 200 in 1927ms (next.js: 93ms, proxy.ts: 28ms, application-code: 1806ms)
+  └─ ƒ checkSessionStatus() in 1741ms lib/login-check.ts
+ POST /admin/dashboard 200 in 818ms (next.js: 17ms, proxy.ts: 22ms, application-code: 778ms)
+  └─ ƒ checkSessionStatus() in 760ms lib/login-check.ts
+ POST /admin/dashboard 200 in 803ms (next.js: 14ms, proxy.ts: 20ms, application-code: 768ms)
+  └─ ƒ checkSessionStatus() in 748ms lib/login-check.ts
+ POST /admin/dashboard 200 in 33.5s (next.js: 31.6s, proxy.ts: 15ms, application-code: 1814ms)
+  └─ ƒ checkSessionStatus() in 1786ms lib/login-check.ts
+ POST /admin/dashboard 200 in 810ms (next.js: 17ms, proxy.ts: 24ms, application-code: 769ms)
+  └─ ƒ checkSessionStatus() in 755ms lib/login-check.ts
+ GET /api/auth/session 200 in 55ms (next.js: 26ms, application-code: 29ms)
+ GET /api/auth/session 200 in 27ms (next.js: 7ms, application-code: 19ms)
+ GET /api/auth/session 200 in 42ms (next.js: 23ms, application-code: 19ms)
+ GET /api/auth/session 200 in 23ms (next.js: 5ms, application-code: 17ms)
+ POST /admin/dashboard 200 in 318ms (next.js: 13ms, proxy.ts: 16ms, application-code: 289ms)
+  └─ ƒ logoutAndRevoke() in 274ms lib/logout-actions.ts
+ GET /api/auth/csrf 200 in 30ms (next.js: 18ms, application-code: 12ms)
+ POST /api/auth/signout 200 in 268ms (next.js: 6ms, application-code: 262ms)
+ GET /login 200 in 176ms (next.js: 13ms, proxy.ts: 11ms, application-code: 152ms)
+ GET /api/notifications/stream 200 in 10.2min (next.js: 26ms, application-code: 10.2min)
+ GET /api/auth/session 200 in 17ms (next.js: 7ms, application-code: 10ms)
+ GET /api/auth/session 200 in 42ms (next.js: 34ms, application-code: 8ms)
+ GET /login 200 in 136ms (next.js: 10ms, proxy.ts: 8ms, application-code: 118ms)
+ GET /api/auth/session 200 in 27ms (next.js: 16ms, application-code: 11ms)
+ GET /api/auth/session 200 in 15ms (next.js: 5ms, application-code: 9ms)
+ GET /login 200 in 130ms (next.js: 9ms, proxy.ts: 8ms, application-code: 113ms)
+ GET /api/auth/session 200 in 17ms (next.js: 7ms, application-code: 10ms)
+ GET /api/auth/session 200 in 18ms (next.js: 9ms, application-code: 9ms)
