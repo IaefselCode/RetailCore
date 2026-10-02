@@ -52,6 +52,10 @@ interface CartItem {
 
 const initialState: ActionResult | null = null
 
+/** Mirrors MAX_CART_LINES in lib/sales-actions.ts — a sale may hold at most
+ * 10 distinct product lines (quantities are capped by stock only). */
+const MAX_CART_LINES = 10
+
 const cartHelper = createAppColumnHelper<CartItem>()
 
 function RecordSaleFormBody({
@@ -98,6 +102,10 @@ function RecordSaleFormBody({
         return prev.map((item) =>
           item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
         )
+      }
+      if (prev.length >= MAX_CART_LINES) {
+        toast.error(t("cartLimitExceeded"))
+        return prev
       }
       return [...prev, { ...product, quantity: 1, maxStock: product.stock }]
     })
