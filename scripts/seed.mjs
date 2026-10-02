@@ -1,8 +1,15 @@
+import "dotenv/config"
 import bcrypt from "bcryptjs"
 import { randomUUID } from "crypto"
 import pg from "pg"
 
-const pool = new pg.Pool({ connectionString: process.env.DIRECT_URL })
+if (!process.env.DIRECT_URL) {
+  throw new Error("DIRECT_URL is missing from .env")
+}
+
+const pool = new pg.Pool({
+  connectionString: process.env.DIRECT_URL,
+})
 
 function mulberry32(seed) {
   return function () {
